@@ -24,6 +24,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    self.view.backgroundColor = [UIColor grayColor];
     
     self.leftViewDragDropController = [[DragDropController alloc] init];
     self.leftViewDragDropController.dragDropDataSource = (NSObject <DragDropControllerDatasource>*)self;
@@ -33,13 +34,13 @@
     self.rightViewDragDropController.dragDropDataSource = (NSObject <DragDropControllerDatasource>*)self;
     self.rightViewDragDropController.dragDropDelegate = (NSObject <DragDropControllerDelegate>*)self;
 
-    self.leftView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width/2 - 10, self.view.frame.size.height)];
-    self.leftView.backgroundColor = [UIColor redColor];
+    self.leftView = [[UIView alloc] initWithFrame:CGRectMake(5, 20, self.view.frame.size.width/2 - 10, self.view.frame.size.height - 40)];
+    self.leftView.backgroundColor = [UIColor whiteColor];
     [self.view addSubview:self.leftView];
     self.leftViewDragDropController.view = self.leftView;
 
-    self.rightView = [[UIView alloc] initWithFrame:CGRectMake(self.view.frame.size.width/2, 0, self.view.frame.size.width/2 - 10, self.view.frame.size.height)];
-    self.rightView.backgroundColor = [UIColor redColor];
+    self.rightView = [[UIView alloc] initWithFrame:CGRectMake(self.view.frame.size.width/2 + 5, 20, self.view.frame.size.width/2 - 10, self.view.frame.size.height - 40)];
+    self.rightView.backgroundColor = [UIColor whiteColor];
     [self.view addSubview:self.rightView];
     self.rightViewDragDropController.view = self.rightView;
     
@@ -48,7 +49,7 @@
     CGFloat xMargin = 5;
     CGFloat yMargin = 5;
     
-    NSInteger viewCount = 10;
+    NSInteger viewCount = 5;
     
     for (int i = 0; i < viewCount; i++){
         if (xMargin + width > self.leftView.frame.size.width) {
@@ -56,16 +57,16 @@
             yMargin += height + 5;
         }
 
-        DragView *view = [DragView new];
+        DragView *view = [[DragView alloc] init];
         view.dragDropController = self.leftViewDragDropController;
         view.frame = CGRectMake(xMargin, yMargin, width, height);
-        view.backgroundColor = [UIColor blueColor];
+        view.backgroundColor = [UIColor blackColor];
         [self.leftView addSubview:view];
         
         xMargin += width + 5;
     }
     
-
+    viewCount = 6;
     xMargin = 5;
     yMargin = 5;
     
@@ -75,15 +76,14 @@
             yMargin += height + 5;
         }
         
-        DragView *view = [DragView new];
+        DragView *view = [[DragView alloc] init];
         view.dragDropController = self.rightViewDragDropController;
         view.frame = CGRectMake(xMargin, yMargin, width, height);
-        view.backgroundColor = [UIColor greenColor];
+        view.backgroundColor = [UIColor blackColor];
         [self.rightView addSubview:view];
         
         xMargin += width + 5;
     }
-
 }
 
 #pragma mark - DragDropController Delegate
@@ -102,8 +102,6 @@
 - (void)dragDropController:(DragDropController *)controller
             isDraggingView:(UIView *)sourceView
                    AtPoint:(CGPoint)point {
-    NSLog(@"%s", __PRETTY_FUNCTION__);
-    NSLog(@"sourceView: %@", sourceView);
 }
 
 - (void)dragDropController:(DragDropController *)controller
@@ -118,77 +116,36 @@
 }
 
 - (void)dragDropController:(DragDropController *)controller
-              isMovingView:(UIView *)view
-            toNewSuperView:(UIView *)superview {
-    NSLog(@"%s", __PRETTY_FUNCTION__);
+               didMoveView:(UIView *)view
+             toDestination:(DragDropController *)destination {
 }
 
 - (void)dragDropController:(DragDropController *)controller
          isDraggingAtPoint:(CGPoint)point {
-//    NSLog(@"%s", __PRETTY_FUNCTION__);
 }
 
 - (void)dragDropController:(DragDropController *)controller
       didFinishDragAtPoint:(CGPoint)point {
-//    NSLog(@"%s", __PRETTY_FUNCTION__);
 }
 
 #pragma mark - DragDropController Datasource
 
-- (CGRect)dragDropController:(DragDropController *)controller
-                frameForView:(UIView *)view
-     animatingToNewSuperView:(UIView *)superview {
-    NSLog(@"%s", __PRETTY_FUNCTION__);
-    return CGRectZero;
-}
-
-- (CGRect)dragDropController:(DragDropController *)controller
-                frameForView:(UIView *)view
-              inNewSuperView:(UIView *)superview {
-    NSLog(@"%s", __PRETTY_FUNCTION__);
-    return CGRectZero;
-}
-
 - (BOOL)dragDropController:(DragDropController *)controller
             shouldDragView:(UIView *)subview {
-    NSLog(@"%s", __PRETTY_FUNCTION__);
-    NSLog(@"subview: %@", subview);
     return YES;
 }
 
-- (UIView *)dragDropController:(DragDropController *)controller
-           draggingViewAtPoint:(CGPoint)point
-                        inView:(UIView *)baseView {
-//    NSLog(@"%s", __PRETTY_FUNCTION__);
-    return nil;
-}
-
-- (UIView *)dragDropController:(DragDropController *)controller
-           dropRecieverAtPoint:(CGPoint)point {
-    
-    NSArray *controllers = @[self.leftViewDragDropController,
-                             self.rightViewDragDropController];
-
-    UIView *v = nil;
-    for (DragDropController *c in controllers) {
-        if (c == controller) continue;
-        
-        if (CGRectContainsPoint(c.view.frame, point)) {
-            v = c.view;
-            break;
-        }
-    }
-
-    return v;
-}
-
 - (BOOL)dragDropController:(DragDropController *)controller
-            shouldDropView:(UIView *)target
-                    ToView:(UIView *)destination {
-    NSLog(@"%s", __PRETTY_FUNCTION__);
-    NSLog(@"target %@", target);
-    NSLog(@"destination %@", destination);
-    return NO;
+               canDropView:(UIView *)target
+             toDestination:(DragDropController *)destination {
+    if (controller == destination) return NO;
+    return YES;
+}
+
+- (CGRect)dragDropController:(DragDropController *)controller
+                frameForView:(UIView *)view
+               inDestination:(DragDropController *)destination {
+    return view.frame;
 }
 
 @end

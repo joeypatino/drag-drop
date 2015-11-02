@@ -17,8 +17,8 @@
 		D4ED0C0D1BE62BE80014C85B /* Drag_DropUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ED0C0C1BE62BE80014C85B /* Drag_DropUITests.m */; };
 		D4ED0C1F1BE62C440014C85B /* DragDropController.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ED0C1E1BE62C440014C85B /* DragDropController.m */; };
 		D4ED0C221BE62CD30014C85B /* DragDrop.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ED0C211BE62CD30014C85B /* DragDrop.m */; };
-		D4ED0C251BE638960014C85B /* UIViewController+TopMostController.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ED0C241BE638960014C85B /* UIViewController+TopMostController.m */; };
 		D4ED0C281BE6437A0014C85B /* DragView.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ED0C271BE6437A0014C85B /* DragView.m */; };
+		D4ED0C2B1BE7BB2B0014C85B /* DragInteractionView.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ED0C2A1BE7BB2B0014C85B /* DragInteractionView.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -59,10 +59,10 @@
 		D4ED0C1E1BE62C440014C85B /* DragDropController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DragDropController.m; sourceTree = "<group>"; };
 		D4ED0C201BE62CD30014C85B /* DragDrop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DragDrop.h; sourceTree = "<group>"; };
 		D4ED0C211BE62CD30014C85B /* DragDrop.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DragDrop.m; sourceTree = "<group>"; };
-		D4ED0C231BE638960014C85B /* UIViewController+TopMostController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIViewController+TopMostController.h"; sourceTree = "<group>"; };
-		D4ED0C241BE638960014C85B /* UIViewController+TopMostController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIViewController+TopMostController.m"; sourceTree = "<group>"; };
 		D4ED0C261BE6437A0014C85B /* DragView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DragView.h; sourceTree = "<group>"; };
 		D4ED0C271BE6437A0014C85B /* DragView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DragView.m; sourceTree = "<group>"; };
+		D4ED0C291BE7BB2B0014C85B /* DragInteractionView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DragInteractionView.h; sourceTree = "<group>"; };
+		D4ED0C2A1BE7BB2B0014C85B /* DragInteractionView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DragInteractionView.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -156,14 +156,14 @@
 		D4ED0C1A1BE62BFB0014C85B /* DragDropController */ = {
 			isa = PBXGroup;
 			children = (
-				D4ED0C231BE638960014C85B /* UIViewController+TopMostController.h */,
-				D4ED0C241BE638960014C85B /* UIViewController+TopMostController.m */,
 				D4ED0C1D1BE62C440014C85B /* DragDropController.h */,
 				D4ED0C1E1BE62C440014C85B /* DragDropController.m */,
 				D4ED0C201BE62CD30014C85B /* DragDrop.h */,
 				D4ED0C211BE62CD30014C85B /* DragDrop.m */,
 				D4ED0C261BE6437A0014C85B /* DragView.h */,
 				D4ED0C271BE6437A0014C85B /* DragView.m */,
+				D4ED0C291BE7BB2B0014C85B /* DragInteractionView.h */,
+				D4ED0C2A1BE7BB2B0014C85B /* DragInteractionView.m */,
 			);
 			name = DragDropController;
 			sourceTree = "<group>";
@@ -299,12 +299,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				D4ED0BEF1BE62BE80014C85B /* ViewController.m in Sources */,
+				D4ED0C2B1BE7BB2B0014C85B /* DragInteractionView.m in Sources */,
 				D4ED0BEC1BE62BE80014C85B /* AppDelegate.m in Sources */,
 				D4ED0C1F1BE62C440014C85B /* DragDropController.m in Sources */,
 				D4ED0C281BE6437A0014C85B /* DragView.m in Sources */,
 				D4ED0BE91BE62BE70014C85B /* main.m in Sources */,
 				D4ED0C221BE62CD30014C85B /* DragDrop.m in Sources */,
-				D4ED0C251BE638960014C85B /* UIViewController+TopMostController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

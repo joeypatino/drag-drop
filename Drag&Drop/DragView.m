@@ -12,6 +12,7 @@
 @interface DragView ()
 @property (nonatomic, assign) BOOL isDragging;
 @property (nonatomic, strong) UIView *dragRepresentationView;
+@property (nonatomic, assign) CGPoint firstTouchOffset;
 @end
 
 @implementation DragView
@@ -36,12 +37,25 @@
     
     if (!_dragRepresentationView) {
         _dragRepresentationView = [[UIView alloc] initWithFrame:self.bounds];
-        _dragRepresentationView.backgroundColor = [UIColor yellowColor];
+        _dragRepresentationView.backgroundColor = [UIColor redColor];
         _dragRepresentationView.hidden = YES;
         [self addSubview:_dragRepresentationView];
     }
     
     return _dragRepresentationView;
+}
+
+- (DragDrop *)dragForTouch:(UITouch *)touch {
+    
+    DragDrop *d = [[DragDrop alloc] init];
+    d.view = self;
+    d.dragRepresentation = self.dragRepresentationView;
+    
+    d.frame = self.frame;
+    d.currentLocation = [touch locationInView:nil];
+    d.firstTouchOffset = self.firstTouchOffset;
+    
+    return d;
 }
 
 #pragma mark - Touches
@@ -55,60 +69,31 @@
     d.view = self;
     d.dragRepresentation = self.dragRepresentationView;
 
+    d.frame = self.frame;
     d.currentLocation = [[touches anyObject] locationInView:self];
-    d.frame = [self.dragDropController.dragInteractionView convertRect:self.frame fromView:self.superview];
+    self.firstTouchOffset = d.currentLocation;
     
-    self.dragRepresentationView.hidden = NO;
-    [self.dragDropController dragDropStarted:d];
+    BOOL startedDrag = [self.dragDropController dragDropStarted:d];
+    self.dragRepresentationView.hidden = !startedDrag;
 }
 
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event{
     
     if (![self canDrag]) return;
     
-    DragDrop *d = [[DragDrop alloc] init];
-    d.view = self;
-    d.dragRepresentation = self.dragRepresentationView;
-    
-    d.frame = self.frame;
-    
-    NSLog(@"S.D.D: %@", NSStringFromCGPoint([[touches anyObject] locationInView:self.dragDropController.dragInteractionView]));
-    NSLog(@"NIL: %@", NSStringFromCGPoint([[touches anyObject] locationInView:nil]));
-    
-    d.currentLocation = [[touches anyObject] locationInView:self.dragDropController.dragInteractionView];
-    
-    [self.dragDropController dragDropMoved:d];
-    
+    [self.dragDropController dragDropMoved:[self dragForTouch:[touches anyObject]]];
 }
 
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event{
     
     if (![self canDrag]) return;
     
-    DragDrop *d = [[DragDrop alloc] init];
-    d.view = self;
-    d.dragRepresentation = self.dragRepresentationView;
-    
-    d.frame = self.frame;
-    d.currentLocation = [[touches anyObject] locationInView:self.dragDropController.dragInteractionView];
-    
-    [self.dragDropController dragDropEnded:d];
+    [self.dragDropController dragDropEnded:[self dragForTouch:[touches anyObject]]];
     self.isDragging = NO;
 }
 
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
-    
-    if (![self canDrag]) return;
-    
-    DragDrop *d = [[DragDrop alloc] init];
-    d.view = self;
-    d.dragRepresentation = self.dragRepresentationView;
-    
-    d.frame = self.frame;
-    d.currentLocation = [[touches anyObject] locationInView:self.dragDropController.dragInteractionView];
-    
-    [self.dragDropController dragDropEnded:d];
-    self.isDragging = NO;
+    [self touchesEnded:touches withEvent:event];
 }
 
 - (BOOL)canDrag {

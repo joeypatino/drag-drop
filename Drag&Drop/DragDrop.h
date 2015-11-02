@@ -8,23 +8,12 @@
 
 #import <UIKit/UIKit.h>
 
+@class DragView;
 @interface DragDrop : NSObject
-@property (nonatomic, weak) UIView *view;
-@property (nonatomic, weak) UIView *dragRepresentation;
-@property (nonatomic, weak) UIView *dragDropTarget;
+@property (nonatomic, weak) DragView *view;               // this is the view.
+@property (nonatomic, weak) UIView *dragRepresentation; // this is the dragging representation of the view.
 
-@property (nonatomic, assign) CGRect frame;
-@property (nonatomic, assign) CGPoint currentLocation;
-
+@property (nonatomic, assign) CGRect frame;             // this is the views frame in its original superviews coordinate.
+@property (nonatomic, assign) CGPoint currentLocation;  // this is the current position of the view as it is being dragged.
+@property (nonatomic, assign) CGPoint firstTouchOffset; // dd.currentLocation
 @end
-
-
-/*
- UIView *view;                  // this is the IconView instance.
- UIView *dragRepresentation;    // this is the dragging representation view.
- UIView *dragDropTarget;        // this view is set once the view is dropped. it is the view that baseView will move to.
- 
- CGRect frame;                  // this is the views frame in its original superviews coordinate
- CGPoint currentLocation;       // this is the current position of the dragging view.
- 
- */

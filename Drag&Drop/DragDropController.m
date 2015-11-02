@@ -6,107 +6,105 @@
 //  Copyright © 2015 Joseph Patino. All rights reserved.
 //
 
-#import "UIViewController+TopMostController.h"
 #import "DragDropController.h"
+#import "DragInteractionView.h"
+#import "DragView.h"
 #import "DragDrop.h"
 
 
-typedef UIView * (^HitTestBlock)(CGPoint, UIEvent *);
-@interface DragInteractionView : UIView
-@property (nonatomic, copy) HitTestBlock hitTest;
+#pragma mark - DragDropControllerManager
+
+@interface DragDropControllerManager : NSObject
+@property (nonatomic, strong) NSMutableArray *dragDropControllers;
++ (DragDropControllerManager *)sharedInstance;
 @end
 
-@implementation DragInteractionView
+static DragDropControllerManager *instance = nil;
 
-- (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event {
-    
-    if (self.hitTest) {
-        UIView *hitView = self.hitTest(point, event);
-        if (hitView) return hitView;
-    }
-    
-    return [super hitTest:point withEvent:event];
+@implementation DragDropControllerManager
++ (DragDropControllerManager *)sharedInstance {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        instance = [[DragDropControllerManager alloc] init];
+    });
+    return instance;
 }
-
+- (id)init {
+    self = [super init];
+    self.dragDropControllers = [self mutableArrayUsingWeakReferences];
+    return self;
+}
+- (void)addDragDropController:(DragDropController *)controller {
+    [self.dragDropControllers addObject:controller];
+}
+- (void)removeDragDropController:(DragDropController *)controller {
+    [self.dragDropControllers removeObject:controller];
+}
+- (NSArray *)allControllers {
+    return [NSArray arrayWithArray:self.dragDropControllers];
+}
+- (id)mutableArrayUsingWeakReferences {
+    return [self mutableArrayUsingWeakReferencesWithCapacity:0];
+}
+- (id)mutableArrayUsingWeakReferencesWithCapacity:(NSUInteger)capacity {
+    CFArrayCallBacks callbacks = {0, NULL, NULL, CFCopyDescription, CFEqual};
+    // We create a weak reference array
+    return (id)CFBridgingRelease(CFArrayCreateMutable(0, capacity, &callbacks));
+}
 @end
 
+#pragma mark - DragDropController
 
 @interface DragDropController ()
-@property (nonatomic, strong, readwrite) DragInteractionView *dragInteractionView;
-@property (nonatomic, assign) CGPoint firstTouchOffset;
+@property (nonatomic, strong) DragInteractionView *dragInteractionView;
 @end
 
 @implementation DragDropController
 
-- (DragInteractionView *)dragInteractionView {
-    
-    if (!_dragInteractionView) {
-        
-        UIViewController *top = [UIViewController topMostController];
-        __weak DragDropController *this = self;
-        _dragInteractionView = [[DragInteractionView alloc] initWithFrame:top.view.frame];
-        [(DragInteractionView *)_dragInteractionView setHitTest: ^(CGPoint point, UIEvent *event){
-            
-            UIView *hitView = nil;
-            for (UIView *subview in this.dragInteractionView.subviews) {
-                hitView = subview;
-            }
-            
-            if (hitView) [this.dragDropDelegate dragDropController:this
-                                                 isDraggingAtPoint:point];
-            
-            // we we found a view then we should return it so that it receives the
-            // touch events.
-            if (hitView) {
-                return hitView;
-            }
-            
-            return hitView;
-        }];
-        
-        [top.view addSubview:_dragInteractionView];
-    }
-    
-    return (DragInteractionView *)_dragInteractionView;
+#pragma mark -
+
+- (id)init {
+    self = [super init];
+    [[DragDropControllerManager sharedInstance] addDragDropController:self];
+    return self;
 }
 
-- (void)dragDropStarted:(DragDrop *)dd {
-    //    NSLog(@"%s", __PRETTY_FUNCTION__);
+- (void)dealloc {
+    [[DragDropControllerManager sharedInstance] removeDragDropController:self];
+}
+
+#pragma mark -
+
+- (BOOL)dragDropStarted:(DragDrop *)dd {
     
-    if ([self.dragDropDataSource dragDropController:self
-                                     shouldDragView:dd.view]){
+    if ([self.dragDropDataSource dragDropController:self shouldDragView:dd.view]){
         self.isDragging = YES;
         self.isDropping = NO;
-        
-        self.firstTouchOffset = dd.currentLocation;
 
-//        dd.frame = [self.dragInteractionView convertRect:dd.view.frame fromView:dd.view.superview];
-        dd.dragRepresentation.frame = dd.frame;
+        dd.dragRepresentation.frame = [self.dragInteractionView convertRect:dd.view.frame fromView:dd.view.superview];
         [self.dragInteractionView addSubview:dd.dragRepresentation];
         
         [UIView animateWithDuration:kDragDropPickupAnimationDuration
                               delay:0
                             options:UIViewAnimationOptionCurveEaseIn
                          animations:^{
-                             
-                             [self.dragDropDelegate dragDropController:self
-                                                         willStartDrag:dd
-                                                              animated:YES];
+                                 [self.dragDropDelegate dragDropController:self willStartDrag:dd animated:YES];
                          }
                          completion:^ (BOOL finished){
-                             [self.dragDropDelegate dragDropController:self
-                                                          didStartDrag:dd];
+                             [self.dragDropDelegate dragDropController:self didStartDrag:dd];
                          }];
+        
+        return YES;
     }
+    
+    return NO;
 }
 
 - (void)dragDropMoved:(DragDrop *)dd {
-    //    NSLog(@"%s", __PRETTY_FUNCTION__);
+    if (!self.isDragging) return;
     
-
     CGPoint location = dd.currentLocation;
-    UIView *subview = [self.dragInteractionView hitTest:location
-                                                  withEvent:nil];
+    UIView *subview = [self.dragInteractionView hitTest:location withEvent:nil];
     
     if (subview) {
         
@@ -124,8 +122,10 @@ typedef UIView * (^HitTestBlock)(CGPoint, UIEvent *);
                                                  (r.size.height - CGRectGetHeight(dd.view.frame)) / 2);
         }
         
-        CGRect updatedFrame = CGRectMake(location.x - self.firstTouchOffset.x - adjustmentForTransform.x, location.y - self.firstTouchOffset.y - adjustmentForTransform.y,
-                                         subview.frame.size.width, subview.frame.size.height);;
+        CGRect updatedFrame = CGRectMake(location.x - dd.firstTouchOffset.x - adjustmentForTransform.x,
+                                         location.y - dd.firstTouchOffset.y - adjustmentForTransform.y,
+                                         subview.frame.size.width,
+                                         subview.frame.size.height);;
         
         subview.frame = updatedFrame;
     }
@@ -133,86 +133,139 @@ typedef UIView * (^HitTestBlock)(CGPoint, UIEvent *);
 }
 
 - (void)dragDropEnded:(DragDrop *)dd {
-    //    NSLog(@"%s", __PRETTY_FUNCTION__);
+
+    if (!self.isDragging) return;
     
     self.isDropping = YES;
-    
-    UIView *dragDropDestination = [self.dragDropDataSource dragDropController:self
-                                                          dropRecieverAtPoint:dd.currentLocation];
 
-    
-    DragDrop *drop = [[DragDrop alloc] init];
-    drop.view = dd.view;
-    drop.dragRepresentation = dd.dragRepresentation;
-    drop.currentLocation = dd.currentLocation;
-    drop.dragDropTarget = dragDropDestination;
-    
     CGRect firstStepFrame = CGRectZero;
-    //    CGRect secondStepFrame = CGRectZero;
+    CGRect secondStepFrame = CGRectZero;
     void (^animationCompletionBlock)(BOOL) = NULL;
+    __weak DragDropController *this = self;
     
-    // there are two cases here.
-    if ([self.dragDropDataSource dragDropController:self
-                                     shouldDropView:drop.view
-                                             ToView:drop.dragDropTarget]) {
+    DragDropController *dropDestination = [self controllerForDropAtPoint:dd.currentLocation];
+
+    if (dropDestination && [self.dragDropDataSource dragDropController:self
+                                                           canDropView:dd.view
+                                                         toDestination:dropDestination]) {
         
         // call the datasource and have them return the proper frames
         firstStepFrame = [self.dragDropDataSource dragDropController:self
-                                                        frameForView:drop.view
-                                             animatingToNewSuperView:drop.dragDropTarget];
+                                                        frameForView:dd.view
+                                                       inDestination:dropDestination];
         
-        //        secondStepFrame = [self.dragDropDataSource dragDropController:self
-        //                                                         frameForView:drop.view
-        //                                                       inNewSuperView:drop.dragDropTarget];
-        
+        secondStepFrame = firstStepFrame;
+        firstStepFrame = [dropDestination.view convertRect:firstStepFrame toView:nil];
+
         animationCompletionBlock = ^ (BOOL finished){
-            self.isDragging = NO;
-            self.isDropping = NO;
+            this.isDragging = NO;
+            this.isDropping = NO;
             
-            [drop.dragDropTarget addSubview:drop.dragRepresentation];
-            
-            [self.dragDropDelegate dragDropController:self isMovingView:drop.view
-                                       toNewSuperView:drop.dragDropTarget];
-            [self.dragDropDelegate dragDropController:self didEndDrag:drop];
+            dd.view.frame = [dropDestination.view convertRect:secondStepFrame toView:dropDestination.view];
+            [dropDestination.view addSubview:dd.view];
+
+            dd.view.dragDropController = dropDestination;
+            [this.dragDropDelegate dragDropController:this didMoveView:dd.view toDestination:dropDestination];
         };
         
     }
     else {
         
-        firstStepFrame = [drop.view.superview convertRect:drop.view.frame
-                                                   toView:self.dragInteractionView];
-        //        secondStepFrame = drop.view.bounds;
-        
-        animationCompletionBlock = ^ (BOOL finished){
-            self.isDragging = NO;
-            self.isDropping = NO;
-            
-            [self.dragDropDelegate dragDropController:self didEndDrag:drop];
-            
-            [drop.dragRepresentation removeFromSuperview];
-            drop.dragRepresentation = nil;
+        firstStepFrame = [dd.view.superview convertRect:dd.view.frame toView:self.dragInteractionView];
 
-            [_dragInteractionView removeFromSuperview];
-            _dragInteractionView = nil;
+        animationCompletionBlock = ^ (BOOL finished){
+            this.isDragging = NO;
+            this.isDropping = NO;
         };
     }
     
-    [UIView animateWithDuration:kDropAnimationDuration
+    void (^commonCompletionBlock)(BOOL) = ^(BOOL finished){
+    
+        [this.dragDropDelegate dragDropController:this didEndDrag:dd];
+        
+        [dd.dragRepresentation removeFromSuperview];
+        dd.dragRepresentation = nil;
+        
+        [_dragInteractionView removeFromSuperview];
+        _dragInteractionView = nil;
+    };
+
+    
+    [UIView animateWithDuration: kDropAnimationDuration
                           delay:0
                         options:UIViewAnimationOptionCurveEaseIn
                      animations:^{
-                         // firstStepFrame
-                         
-                         drop.dragRepresentation.frame = firstStepFrame;
+
+                         dd.dragRepresentation.frame = firstStepFrame;
                          [self.dragDropDelegate dragDropController:self
-                                                       willEndDrag:drop
+                                                       willEndDrag:dd
                                                           animated:YES];
-                         
                      }
-                     completion:animationCompletionBlock];
+                     completion:^(BOOL finished){
+                         
+                         if (animationCompletionBlock)
+                             animationCompletionBlock(finished);
+                         
+                         commonCompletionBlock(finished);
+                     }];
     
 }
 
+- (DragDropController *)controllerForDropAtPoint:(CGPoint)point {
+    
+    DragDropController *controller = nil;
+    for (DragDropController *dragDropController in [[DragDropControllerManager sharedInstance] allControllers]) {
+        if (CGRectContainsPoint(dragDropController.view.frame, point)) {
+            controller = dragDropController;
+            break;
+        }
+    }
+    
+    return controller;
+}
 
+#pragma mark -
+
+- (DragInteractionView *)dragInteractionView {
+    
+    if (!_dragInteractionView) {
+        
+        UIViewController *top = [DragDropController topMostViewController];
+        __weak DragDropController *this = self;
+        _dragInteractionView = [[DragInteractionView alloc] initWithFrame:top.view.frame];
+        [(DragInteractionView *)_dragInteractionView setHitTest: ^(CGPoint point, UIEvent *event){
+            
+            UIView *hitView = nil;
+            for (UIView *subview in this.dragInteractionView.subviews) {
+                hitView = subview;
+            }
+            
+            //            if (hitView) [this.dragDropDelegate dragDropController:this isDraggingAtPoint:point];
+            
+            // we we found a view then we should return it so that it receives the
+            // touch events.
+            if (hitView) {
+                return hitView;
+            }
+            
+            return hitView;
+        }];
+        
+        [top.view addSubview:_dragInteractionView];
+    }
+    
+    return (DragInteractionView *)_dragInteractionView;
+}
+
++ (UIViewController *) topMostViewController {
+    
+    UIViewController *topViewController = [UIApplication sharedApplication].keyWindow.rootViewController;
+    
+    while (topViewController.presentedViewController) {
+        topViewController = topViewController.presentedViewController;
+    }
+    
+    return topViewController;
+}
 
 @end
