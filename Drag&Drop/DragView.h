@@ -1,5 +1,5 @@
 //
-//  ViewController.h
+//  DragView.h
 //  Drag&Drop
 //
 //  Created by Joey Patino on 11/1/15.
@@ -7,8 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
-
-@interface ViewController : UIViewController
-
+#import "DragDropController.h"
+@interface DragView : UIView
+@property (nonatomic, assign) DragDropController *dragDropController;
 @end
-

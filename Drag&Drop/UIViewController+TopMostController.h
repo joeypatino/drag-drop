@@ -1,5 +1,5 @@
 //
-//  ViewController.h
+//  UIViewController+TopMostController.h
 //  Drag&Drop
 //
 //  Created by Joey Patino on 11/1/15.
@@ -8,7 +8,6 @@
 
 #import <UIKit/UIKit.h>
 
-@interface ViewController : UIViewController
-
+@interface UIViewController (TopMostController)
++ (UIViewController*) topMostController;
 @end
-
