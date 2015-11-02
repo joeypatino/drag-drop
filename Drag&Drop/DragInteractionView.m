@@ -15,7 +15,7 @@
         UIView *hitView = self.hitTest(point, event);
         if (hitView) return hitView;
     }
-    
+
     return [super hitTest:point withEvent:event];
 }
 @end

@@ -16,27 +16,27 @@
 #define kDropAnimationDuration              .4
 #define kDragDropPickupAnimationDuration    .15
 
-@class DragDrop;
+@class Drag;
 @class DragDropController;
 @protocol DragDropControllerDelegate
 @optional
 - (void)dragDropController:(DragDropController *)controller
-             willStartDrag:(DragDrop *)dd
+             willStartDrag:(Drag *)dd
                   animated:(BOOL)animated;
 
 - (void)dragDropController:(DragDropController *)controller
-              didStartDrag:(DragDrop *)dd;
+              didStartDrag:(Drag *)dd;
 
 - (void)dragDropController:(DragDropController *)controller
             isDraggingView:(UIView *)sourceView
                    AtPoint:(CGPoint)point;
 
 - (void)dragDropController:(DragDropController *)controller
-               willEndDrag:(DragDrop *)dd
+               willEndDrag:(Drag *)dd
                   animated:(BOOL)animated;
 
 - (void)dragDropController:(DragDropController *)controller
-                didEndDrag:(DragDrop *)dd;
+                didEndDrag:(Drag *)dd;
 
 - (void)dragDropController:(DragDropController *)controller
                didMoveView:(UIView *)view
@@ -77,7 +77,7 @@
 
 @end
 
-@class DragDrop;
+@class Drag;
 @interface DragDropController : NSObject
 @property (nonatomic, weak) NSObject <DragDropControllerDatasource>  *dragDropDataSource;
 @property (nonatomic, weak) NSObject <DragDropControllerDelegate>    *dragDropDelegate;
@@ -86,8 +86,8 @@
 @property (nonatomic, weak) UIView *view;
 
 // Returns YES if the drag was successfuly started.. Otherwise returns NO.
-- (BOOL)dragDropStarted:(DragDrop *)dd;
-- (void)dragDropMoved:(DragDrop *)dd;
-- (void)dragDropEnded:(DragDrop *)dd;
+- (BOOL)dragDropStarted:(Drag *)dd;
+- (void)dragDropMoved:(Drag *)dd;
+- (void)dragDropEnded:(Drag *)dd;
 
 @end

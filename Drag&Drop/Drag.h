@@ -9,7 +9,7 @@
 #import <UIKit/UIKit.h>
 
 @class DragView;
-@interface DragDrop : NSObject
+@interface Drag : NSObject
 @property (nonatomic, weak) DragView *view;               // this is the view.
 @property (nonatomic, weak) UIView *dragRepresentation; // this is the dragging representation of the view.
 

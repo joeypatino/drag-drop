@@ -9,7 +9,7 @@
 #import "DragDropController.h"
 #import "DragInteractionView.h"
 #import "DragView.h"
-#import "DragDrop.h"
+#import "Drag.h"
 
 
 #pragma mark - DragDropControllerManager
@@ -75,15 +75,15 @@ static DragDropControllerManager *instance = nil;
 
 #pragma mark -
 
-- (BOOL)dragDropStarted:(DragDrop *)dd {
-    
+- (BOOL)dragDropStarted:(Drag *)dd {
+
     if ([self.dragDropDataSource dragDropController:self shouldDragView:dd.view]){
         self.isDragging = YES;
         self.isDropping = NO;
 
         dd.dragRepresentation.frame = [self.dragInteractionView convertRect:dd.view.frame fromView:dd.view.superview];
         [self.dragInteractionView addSubview:dd.dragRepresentation];
-        
+
         [UIView animateWithDuration:kDragDropPickupAnimationDuration
                               delay:0
                             options:UIViewAnimationOptionCurveEaseIn
@@ -100,7 +100,7 @@ static DragDropControllerManager *instance = nil;
     return NO;
 }
 
-- (void)dragDropMoved:(DragDrop *)dd {
+- (void)dragDropMoved:(Drag *)dd {
     if (!self.isDragging) return;
     
     CGPoint location = dd.currentLocation;
@@ -132,7 +132,7 @@ static DragDropControllerManager *instance = nil;
     
 }
 
-- (void)dragDropEnded:(DragDrop *)dd {
+- (void)dragDropEnded:(Drag *)dd {
 
     if (!self.isDragging) return;
     

@@ -9,7 +9,7 @@
 #import "DragDropController.h"
 
 #import "ViewController.h"
-#import "DragDrop.h"
+#import "Drag.h"
 #import "DragView.h"
 
 @interface ViewController ()  <DragDropControllerDatasource, DragDropControllerDatasource>
@@ -89,14 +89,14 @@
 #pragma mark - DragDropController Delegate
 
 - (void)dragDropController:(DragDropController *)controller
-             willStartDrag:(DragDrop *)dd
+             willStartDrag:(Drag *)dd
                   animated:(BOOL)animated {
     dd.dragRepresentation.transform = CGAffineTransformMakeScale(1.5, 1.5);
     dd.view.alpha = 0.0;
 }
 
 - (void)dragDropController:(DragDropController *)controller
-              didStartDrag:(DragDrop *)dd {
+              didStartDrag:(Drag *)dd {
 }
 
 - (void)dragDropController:(DragDropController *)controller
@@ -105,12 +105,12 @@
 }
 
 - (void)dragDropController:(DragDropController *)controller
-               willEndDrag:(DragDrop *)dd
+               willEndDrag:(Drag *)dd
                   animated:(BOOL)animated {
 }
 
 - (void)dragDropController:(DragDropController *)controller
-                didEndDrag:(DragDrop *)dd {
+                didEndDrag:(Drag *)dd {
     dd.dragRepresentation.transform = CGAffineTransformIdentity;
     dd.view.alpha = 1.0;
 }

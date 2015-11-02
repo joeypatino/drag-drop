@@ -7,7 +7,7 @@
 //
 
 #import "DragView.h"
-#import "DragDrop.h"
+#import "Drag.h"
 
 @interface DragView ()
 @property (nonatomic, assign) BOOL isDragging;
@@ -45,9 +45,9 @@
     return _dragRepresentationView;
 }
 
-- (DragDrop *)dragForTouch:(UITouch *)touch {
+- (Drag *)dragForTouch:(UITouch *)touch {
     
-    DragDrop *d = [[DragDrop alloc] init];
+    Drag *d = [[Drag alloc] init];
     d.view = self;
     d.dragRepresentation = self.dragRepresentationView;
     
@@ -65,7 +65,7 @@
     if (![self canDrag]) return;
     self.isDragging = YES;
     
-    DragDrop *d = [[DragDrop alloc] init];
+    Drag *d = [[Drag alloc] init];
     d.view = self;
     d.dragRepresentation = self.dragRepresentationView;
 
@@ -98,10 +98,6 @@
 
 - (BOOL)canDrag {
     return YES;
-}
-
-- (BOOL)beingDragged {
-    return self.isDragging;
 }
 
 @end
