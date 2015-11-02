@@ -17,7 +17,7 @@
 		D4ED0C0D1BE62BE80014C85B /* Drag_DropUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ED0C0C1BE62BE80014C85B /* Drag_DropUITests.m */; };
 		D4ED0C1F1BE62C440014C85B /* DragDropController.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ED0C1E1BE62C440014C85B /* DragDropController.m */; };
 		D4ED0C221BE62CD30014C85B /* Drag.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ED0C211BE62CD30014C85B /* Drag.m */; };
-		D4ED0C281BE6437A0014C85B /* DragView.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ED0C271BE6437A0014C85B /* DragView.m */; };
+		D4ED0C281BE6437A0014C85B /* DragAndDropView.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ED0C271BE6437A0014C85B /* DragAndDropView.m */; };
 		D4ED0C2B1BE7BB2B0014C85B /* DragInteractionView.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ED0C2A1BE7BB2B0014C85B /* DragInteractionView.m */; };
 /* End PBXBuildFile section */
 
@@ -59,8 +59,8 @@
 		D4ED0C1E1BE62C440014C85B /* DragDropController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DragDropController.m; sourceTree = "<group>"; };
 		D4ED0C201BE62CD30014C85B /* Drag.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Drag.h; sourceTree = "<group>"; };
 		D4ED0C211BE62CD30014C85B /* Drag.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Drag.m; sourceTree = "<group>"; };
-		D4ED0C261BE6437A0014C85B /* DragView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DragView.h; sourceTree = "<group>"; };
-		D4ED0C271BE6437A0014C85B /* DragView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DragView.m; sourceTree = "<group>"; };
+		D4ED0C261BE6437A0014C85B /* DragAndDropView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DragAndDropView.h; sourceTree = "<group>"; };
+		D4ED0C271BE6437A0014C85B /* DragAndDropView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DragAndDropView.m; sourceTree = "<group>"; };
 		D4ED0C291BE7BB2B0014C85B /* DragInteractionView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DragInteractionView.h; sourceTree = "<group>"; };
 		D4ED0C2A1BE7BB2B0014C85B /* DragInteractionView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DragInteractionView.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -160,8 +160,8 @@
 				D4ED0C1E1BE62C440014C85B /* DragDropController.m */,
 				D4ED0C201BE62CD30014C85B /* Drag.h */,
 				D4ED0C211BE62CD30014C85B /* Drag.m */,
-				D4ED0C261BE6437A0014C85B /* DragView.h */,
-				D4ED0C271BE6437A0014C85B /* DragView.m */,
+				D4ED0C261BE6437A0014C85B /* DragAndDropView.h */,
+				D4ED0C271BE6437A0014C85B /* DragAndDropView.m */,
 				D4ED0C291BE7BB2B0014C85B /* DragInteractionView.h */,
 				D4ED0C2A1BE7BB2B0014C85B /* DragInteractionView.m */,
 			);
@@ -302,7 +302,7 @@
 				D4ED0C2B1BE7BB2B0014C85B /* DragInteractionView.m in Sources */,
 				D4ED0BEC1BE62BE80014C85B /* AppDelegate.m in Sources */,
 				D4ED0C1F1BE62C440014C85B /* DragDropController.m in Sources */,
-				D4ED0C281BE6437A0014C85B /* DragView.m in Sources */,
+				D4ED0C281BE6437A0014C85B /* DragAndDropView.m in Sources */,
 				D4ED0BE91BE62BE70014C85B /* main.m in Sources */,
 				D4ED0C221BE62CD30014C85B /* Drag.m in Sources */,
 			);

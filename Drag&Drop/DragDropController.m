@@ -8,7 +8,7 @@
 
 #import "DragDropController.h"
 #import "DragInteractionView.h"
-#import "DragView.h"
+#import "DragAndDropView.h"
 #import "Drag.h"
 
 
@@ -75,23 +75,23 @@ static DragDropControllerManager *instance = nil;
 
 #pragma mark -
 
-- (BOOL)dragDropStarted:(Drag *)dd {
+- (BOOL)dragStarted:(Drag *)drag {
 
-    if ([self.dragDropDataSource dragDropController:self shouldDragView:dd.view]){
+    if ([self.dragDropDataSource dragDropController:self shouldDragView:drag.view]){
         self.isDragging = YES;
         self.isDropping = NO;
 
-        dd.dragRepresentation.frame = [self.dragInteractionView convertRect:dd.view.frame fromView:dd.view.superview];
-        [self.dragInteractionView addSubview:dd.dragRepresentation];
+        drag.dragRepresentation.frame = [self.dragInteractionView convertRect:drag.view.frame fromView:drag.view.superview];
+        [self.dragInteractionView addSubview:drag.dragRepresentation];
 
         [UIView animateWithDuration:kDragDropPickupAnimationDuration
                               delay:0
                             options:UIViewAnimationOptionCurveEaseIn
                          animations:^{
-                                 [self.dragDropDelegate dragDropController:self willStartDrag:dd animated:YES];
+                                 [self.dragDropDelegate dragDropController:self willStartDrag:drag animated:YES];
                          }
                          completion:^ (BOOL finished){
-                             [self.dragDropDelegate dragDropController:self didStartDrag:dd];
+                             [self.dragDropDelegate dragDropController:self didStartDrag:drag];
                          }];
         
         return YES;
@@ -100,30 +100,30 @@ static DragDropControllerManager *instance = nil;
     return NO;
 }
 
-- (void)dragDropMoved:(Drag *)dd {
+- (void)dragMoved:(Drag *)drag {
     if (!self.isDragging) return;
     
-    CGPoint location = dd.currentLocation;
+    CGPoint location = drag.currentLocation;
     UIView *subview = [self.dragInteractionView hitTest:location withEvent:nil];
     
     if (subview) {
         
         [self.dragDropDelegate dragDropController:self
-                                   isDraggingView:dd.view
-                                          AtPoint:location];
+                                   isDraggingView:drag.view
+                                          atPoint:location];
         
         CGPoint adjustmentForTransform = CGPointZero;
         
-        if (CGAffineTransformEqualToTransform(dd.dragRepresentation.transform, CGAffineTransformIdentity) == NO) {
+        if (CGAffineTransformEqualToTransform(drag.dragRepresentation.transform, CGAffineTransformIdentity) == NO) {
             
-            CGRect r = CGRectApplyAffineTransform(dd.view.frame, dd.dragRepresentation.transform);
+            CGRect r = CGRectApplyAffineTransform(drag.view.frame, drag.dragRepresentation.transform);
             
-            adjustmentForTransform = CGPointMake((r.size.width - CGRectGetWidth(dd.view.frame)) / 2,
-                                                 (r.size.height - CGRectGetHeight(dd.view.frame)) / 2);
+            adjustmentForTransform = CGPointMake((r.size.width - CGRectGetWidth(drag.view.frame)) / 2,
+                                                 (r.size.height - CGRectGetHeight(drag.view.frame)) / 2);
         }
         
-        CGRect updatedFrame = CGRectMake(location.x - dd.firstTouchOffset.x - adjustmentForTransform.x,
-                                         location.y - dd.firstTouchOffset.y - adjustmentForTransform.y,
+        CGRect updatedFrame = CGRectMake(location.x - drag.firstTouchOffset.x - adjustmentForTransform.x,
+                                         location.y - drag.firstTouchOffset.y - adjustmentForTransform.y,
                                          subview.frame.size.width,
                                          subview.frame.size.height);;
         
@@ -132,10 +132,9 @@ static DragDropControllerManager *instance = nil;
     
 }
 
-- (void)dragDropEnded:(Drag *)dd {
+- (void)dragEnded:(Drag *)drag {
 
     if (!self.isDragging) return;
-    
     self.isDropping = YES;
 
     CGRect firstStepFrame = CGRectZero;
@@ -143,15 +142,15 @@ static DragDropControllerManager *instance = nil;
     void (^animationCompletionBlock)(BOOL) = NULL;
     __weak DragDropController *this = self;
     
-    DragDropController *dropDestination = [self controllerForDropAtPoint:dd.currentLocation];
+    DragDropController *dropDestination = [self controllerForDropAtPoint:drag.currentLocation];
 
     if (dropDestination && [self.dragDropDataSource dragDropController:self
-                                                           canDropView:dd.view
+                                                           canDropView:drag.view
                                                          toDestination:dropDestination]) {
         
         // call the datasource and have them return the proper frames
         firstStepFrame = [self.dragDropDataSource dragDropController:self
-                                                        frameForView:dd.view
+                                                        frameForView:drag.view
                                                        inDestination:dropDestination];
         
         secondStepFrame = firstStepFrame;
@@ -161,17 +160,17 @@ static DragDropControllerManager *instance = nil;
             this.isDragging = NO;
             this.isDropping = NO;
             
-            dd.view.frame = [dropDestination.view convertRect:secondStepFrame toView:dropDestination.view];
-            [dropDestination.view addSubview:dd.view];
+            drag.view.frame = [dropDestination.view convertRect:secondStepFrame toView:dropDestination.view];
+            [dropDestination.view addSubview:drag.view];
 
-            dd.view.dragDropController = dropDestination;
-            [this.dragDropDelegate dragDropController:this didMoveView:dd.view toDestination:dropDestination];
+            drag.view.dragDropController = dropDestination;
+            [this.dragDropDelegate dragDropController:this didMoveView:drag.view toDestination:dropDestination];
         };
         
     }
     else {
         
-        firstStepFrame = [dd.view.superview convertRect:dd.view.frame toView:self.dragInteractionView];
+        firstStepFrame = [drag.view.superview convertRect:drag.view.frame toView:self.dragInteractionView];
 
         animationCompletionBlock = ^ (BOOL finished){
             this.isDragging = NO;
@@ -181,10 +180,10 @@ static DragDropControllerManager *instance = nil;
     
     void (^commonCompletionBlock)(BOOL) = ^(BOOL finished){
     
-        [this.dragDropDelegate dragDropController:this didEndDrag:dd];
+        [this.dragDropDelegate dragDropController:this didEndDrag:drag];
         
-        [dd.dragRepresentation removeFromSuperview];
-        dd.dragRepresentation = nil;
+        [drag.dragRepresentation removeFromSuperview];
+        drag.dragRepresentation = nil;
         
         [_dragInteractionView removeFromSuperview];
         _dragInteractionView = nil;
@@ -196,9 +195,9 @@ static DragDropControllerManager *instance = nil;
                         options:UIViewAnimationOptionCurveEaseIn
                      animations:^{
 
-                         dd.dragRepresentation.frame = firstStepFrame;
+                         drag.dragRepresentation.frame = firstStepFrame;
                          [self.dragDropDelegate dragDropController:self
-                                                       willEndDrag:dd
+                                                       willEndDrag:drag
                                                           animated:YES];
                      }
                      completion:^(BOOL finished){
@@ -214,10 +213,27 @@ static DragDropControllerManager *instance = nil;
 - (DragDropController *)controllerForDropAtPoint:(CGPoint)point {
     
     DragDropController *controller = nil;
+    NSMutableArray *controllers = [NSMutableArray array];
+
     for (DragDropController *dragDropController in [[DragDropControllerManager sharedInstance] allControllers]) {
         if (CGRectContainsPoint(dragDropController.view.frame, point)) {
-            controller = dragDropController;
-            break;
+            [controllers addObject:dragDropController];
+        }
+    }
+    
+    if (controllers.count > 0) {
+        if (controllers.count == 1) {
+            controller = [controllers firstObject];
+        }
+        else {
+            for (DragDropController *c in controllers) {
+                for (DragDropController *innerC in controllers) {
+                    if ([innerC.view isDescendantOfView:c.view]){
+                        controller = innerC;
+                        break;
+                    }
+                }
+            }
         }
     }
     
@@ -239,15 +255,7 @@ static DragDropControllerManager *instance = nil;
             for (UIView *subview in this.dragInteractionView.subviews) {
                 hitView = subview;
             }
-            
-            //            if (hitView) [this.dragDropDelegate dragDropController:this isDraggingAtPoint:point];
-            
-            // we we found a view then we should return it so that it receives the
-            // touch events.
-            if (hitView) {
-                return hitView;
-            }
-            
+
             return hitView;
         }];
         

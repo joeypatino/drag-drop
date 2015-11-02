@@ -6,16 +6,16 @@
 //  Copyright © 2015 Joseph Patino. All rights reserved.
 //
 
-#import "DragView.h"
+#import "DragAndDropView.h"
 #import "Drag.h"
 
-@interface DragView ()
+@interface DragAndDropView ()
 @property (nonatomic, assign) BOOL isDragging;
 @property (nonatomic, strong) UIView *dragRepresentationView;
 @property (nonatomic, assign) CGPoint firstTouchOffset;
 @end
 
-@implementation DragView
+@implementation DragAndDropView
 
 - (id)initWithFrame:(CGRect)frame {
     self = [super initWithFrame:frame];
@@ -73,7 +73,7 @@
     d.currentLocation = [[touches anyObject] locationInView:self];
     self.firstTouchOffset = d.currentLocation;
     
-    BOOL startedDrag = [self.dragDropController dragDropStarted:d];
+    BOOL startedDrag = [self.dragDropController dragStarted:d];
     self.dragRepresentationView.hidden = !startedDrag;
 }
 
@@ -81,14 +81,14 @@
     
     if (![self canDrag]) return;
     
-    [self.dragDropController dragDropMoved:[self dragForTouch:[touches anyObject]]];
+    [self.dragDropController dragMoved:[self dragForTouch:[touches anyObject]]];
 }
 
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event{
     
     if (![self canDrag]) return;
     
-    [self.dragDropController dragDropEnded:[self dragForTouch:[touches anyObject]]];
+    [self.dragDropController dragEnded:[self dragForTouch:[touches anyObject]]];
     self.isDragging = NO;
 }
 

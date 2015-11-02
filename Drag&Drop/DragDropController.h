@@ -6,7 +6,6 @@
 //  Copyright © 2015 Joseph Patino. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
 /**
@@ -20,61 +19,44 @@
 @class DragDropController;
 @protocol DragDropControllerDelegate
 @optional
+
 - (void)dragDropController:(DragDropController *)controller
-             willStartDrag:(Drag *)dd
+             willStartDrag:(Drag *)drag
                   animated:(BOOL)animated;
 
 - (void)dragDropController:(DragDropController *)controller
-              didStartDrag:(Drag *)dd;
+              didStartDrag:(Drag *)drag;
 
 - (void)dragDropController:(DragDropController *)controller
-            isDraggingView:(UIView *)sourceView
-                   AtPoint:(CGPoint)point;
-
-- (void)dragDropController:(DragDropController *)controller
-               willEndDrag:(Drag *)dd
+               willEndDrag:(Drag *)drag
                   animated:(BOOL)animated;
 
 - (void)dragDropController:(DragDropController *)controller
-                didEndDrag:(Drag *)dd;
-
-- (void)dragDropController:(DragDropController *)controller
-               didMoveView:(UIView *)view
-               toSuperView:(UIView *)superview __attribute__((deprecated));
+                didEndDrag:(Drag *)drag;
 
 - (void)dragDropController:(DragDropController *)controller
                didMoveView:(UIView *)view
              toDestination:(DragDropController *)destination;
 
-- (void)dragDropController:(DragDropController *)controller
-         isDraggingAtPoint:(CGPoint)point;
 
 - (void)dragDropController:(DragDropController *)controller
-      didFinishDragAtPoint:(CGPoint)point;
+            isDraggingView:(UIView *)view
+                   atPoint:(CGPoint)point;
 
 @end
 
 @protocol DragDropControllerDatasource
 
 - (BOOL)dragDropController:(DragDropController *)controller
-            shouldDragView:(UIView *)subview;
+            shouldDragView:(UIView *)view;
 
 - (CGRect)dragDropController:(DragDropController *)controller
                 frameForView:(UIView *)view
                inDestination:(DragDropController *)destination;
 
-//- (CGRect)dragDropController:(DragDropController *)controller
-//                frameForView:(UIView *)view
-//     animatingToNewSuperView:(UIView *)superview __attribute__((deprecated));
-//
-//- (CGRect)dragDropController:(DragDropController *)controller
-//                frameForView:(UIView *)view
-//              inNewSuperView:(UIView *)superview __attribute__((deprecated));
-
 - (BOOL)dragDropController:(DragDropController *)controller
                canDropView:(UIView *)target
              toDestination:(DragDropController *)destination;
-
 @end
 
 @class Drag;
@@ -85,9 +67,11 @@
 @property (nonatomic, assign) BOOL isDropping;
 @property (nonatomic, weak) UIView *view;
 
+
 // Returns YES if the drag was successfuly started.. Otherwise returns NO.
-- (BOOL)dragDropStarted:(Drag *)dd;
-- (void)dragDropMoved:(Drag *)dd;
-- (void)dragDropEnded:(Drag *)dd;
+- (BOOL)dragStarted:(Drag *)drag;
+
+- (void)dragMoved:(Drag *)drag;
+- (void)dragEnded:(Drag *)drag;
 
 @end

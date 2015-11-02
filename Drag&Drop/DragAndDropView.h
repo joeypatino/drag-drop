@@ -9,6 +9,6 @@
 #import <UIKit/UIKit.h>
 #import "DragDropController.h"
 
-@interface DragView : UIView
+@interface DragAndDropView : UIView
 @property (nonatomic, weak) DragDropController *dragDropController;
 @end
