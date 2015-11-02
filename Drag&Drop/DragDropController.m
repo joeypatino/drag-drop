@@ -216,11 +216,27 @@ static DragDropControllerManager *instance = nil;
     NSMutableArray *controllers = [NSMutableArray array];
 
     for (DragDropController *dragDropController in [[DragDropControllerManager sharedInstance] allControllers]) {
-        if (CGRectContainsPoint(dragDropController.view.frame, point)) {
+//        CGRect r = [dragDropController.view convertRect:dragDropController.view.frame toView:self.dragInteractionView];
+//        CGPoint p = [self.dragInteractionView convertPoint:point toView:nil];
+        CGRect r = [dragDropController.view convertRect:dragDropController.view.bounds toView:self.dragInteractionView];
+        CGPoint p = point;//[dragDropController.view convertPoint:point toView:dragDropController.view];
+        
+        NSLog(@"p: %@", NSStringFromCGPoint(p));
+        NSLog(@"r: %@", NSStringFromCGRect(r));
+        NSLog(@"-----");
+        // works when embedded in subview...
+//        r = [self.dragInteractionView convertRect:r fromView:dragDropController.view];
+        
+        // works when side by side views...
+//        r = [self.dragInteractionView convertRect:r toView:self.dragInteractionView];
+
+//        NSLog(@"r: %@", NSStringFromCGRect(r));
+
+        if (CGRectContainsPoint(r, p)) {
             [controllers addObject:dragDropController];
         }
     }
-    
+
     if (controllers.count > 0) {
         if (controllers.count == 1) {
             controller = [controllers firstObject];
