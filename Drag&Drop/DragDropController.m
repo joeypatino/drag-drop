@@ -17,11 +17,14 @@
 @interface DragDropControllerManager : NSObject
 @property (nonatomic, strong) NSMutableArray *dragDropControllers;
 + (DragDropControllerManager *)sharedInstance;
+- (void)addDragDropController:(DragDropController *)controller;
+- (void)removeDragDropController:(DragDropController *)controller;
 @end
 
 static DragDropControllerManager *instance = nil;
 
 @implementation DragDropControllerManager
+
 + (DragDropControllerManager *)sharedInstance {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
@@ -29,6 +32,9 @@ static DragDropControllerManager *instance = nil;
     });
     return instance;
 }
+
+#pragma mark -
+
 - (id)init {
     self = [super init];
     self.dragDropControllers = [self mutableArrayUsingWeakReferences];
@@ -40,9 +46,15 @@ static DragDropControllerManager *instance = nil;
 - (void)removeDragDropController:(DragDropController *)controller {
     [self.dragDropControllers removeObject:controller];
 }
+
+#pragma mark -
+
 - (NSArray *)allControllers {
     return [NSArray arrayWithArray:self.dragDropControllers];
 }
+
+#pragma mark -
+
 - (id)mutableArrayUsingWeakReferences {
     return [self mutableArrayUsingWeakReferencesWithCapacity:0];
 }
@@ -75,11 +87,16 @@ static DragDropControllerManager *instance = nil;
 
 #pragma mark -
 
-- (BOOL)dragStarted:(Drag *)drag {
+- (BOOL)startDrag:(Drag *)drag {
 
     if ([self.dragDropDataSource dragDropController:self shouldDragView:drag.view]){
         self.isDragging = YES;
         self.isDropping = NO;
+
+        UIScrollView *scrollViewAncestor = [self tableViewAnscenstorOfView:self.view];
+        if (scrollViewAncestor) {
+            scrollViewAncestor.scrollEnabled = NO;
+        }
 
         drag.dragRepresentation.frame = [self.dragInteractionView convertRect:drag.view.frame fromView:drag.view.superview];
         [self.dragInteractionView addSubview:drag.dragRepresentation];
@@ -100,7 +117,7 @@ static DragDropControllerManager *instance = nil;
     return NO;
 }
 
-- (void)dragMoved:(Drag *)drag {
+- (void)moveDrag:(Drag *)drag {
     if (!self.isDragging) return;
     
     CGPoint location = drag.currentLocation;
@@ -132,7 +149,7 @@ static DragDropControllerManager *instance = nil;
     
 }
 
-- (void)dragEnded:(Drag *)drag {
+- (void)endDrag:(Drag *)drag {
 
     if (!self.isDragging) return;
     self.isDropping = YES;
@@ -187,6 +204,11 @@ static DragDropControllerManager *instance = nil;
         
         [_dragInteractionView removeFromSuperview];
         _dragInteractionView = nil;
+        
+        UIScrollView *scrollViewAncestor = [self tableViewAnscenstorOfView:this.view];
+        if (scrollViewAncestor) {
+            scrollViewAncestor.scrollEnabled = YES;
+        }
     };
 
     
@@ -210,29 +232,17 @@ static DragDropControllerManager *instance = nil;
     
 }
 
+#pragma mark -
+
 - (DragDropController *)controllerForDropAtPoint:(CGPoint)point {
-    
+
     DragDropController *controller = nil;
     NSMutableArray *controllers = [NSMutableArray array];
 
     for (DragDropController *dragDropController in [[DragDropControllerManager sharedInstance] allControllers]) {
-//        CGRect r = [dragDropController.view convertRect:dragDropController.view.frame toView:self.dragInteractionView];
-//        CGPoint p = [self.dragInteractionView convertPoint:point toView:nil];
+
         CGRect r = [dragDropController.view convertRect:dragDropController.view.bounds toView:self.dragInteractionView];
-        CGPoint p = point;//[dragDropController.view convertPoint:point toView:dragDropController.view];
-        
-        NSLog(@"p: %@", NSStringFromCGPoint(p));
-        NSLog(@"r: %@", NSStringFromCGRect(r));
-        NSLog(@"-----");
-        // works when embedded in subview...
-//        r = [self.dragInteractionView convertRect:r fromView:dragDropController.view];
-        
-        // works when side by side views...
-//        r = [self.dragInteractionView convertRect:r toView:self.dragInteractionView];
-
-//        NSLog(@"r: %@", NSStringFromCGRect(r));
-
-        if (CGRectContainsPoint(r, p)) {
+        if (CGRectContainsPoint(r, point)) {
             [controllers addObject:dragDropController];
         }
     }
@@ -254,6 +264,17 @@ static DragDropControllerManager *instance = nil;
     }
     
     return controller;
+}
+
+- (UITableView *)tableViewAnscenstorOfView:(UIView *)view {
+
+    if ([view isKindOfClass:[UITableView class]]){
+        return (UITableView *)view;
+    }
+
+    if (!view.superview) return nil;
+
+    return [self tableViewAnscenstorOfView:view.superview];
 }
 
 #pragma mark -

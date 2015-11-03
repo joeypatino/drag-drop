@@ -73,7 +73,7 @@
     d.currentLocation = [[touches anyObject] locationInView:self];
     self.firstTouchOffset = d.currentLocation;
     
-    BOOL startedDrag = [self.dragDropController dragStarted:d];
+    BOOL startedDrag = [self.dragDropController startDrag:d];
     self.dragRepresentationView.hidden = !startedDrag;
 }
 
@@ -81,14 +81,14 @@
     
     if (![self canDrag]) return;
     
-    [self.dragDropController dragMoved:[self dragForTouch:[touches anyObject]]];
+    [self.dragDropController moveDrag:[self dragForTouch:[touches anyObject]]];
 }
 
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event{
     
     if (![self canDrag]) return;
     
-    [self.dragDropController dragEnded:[self dragForTouch:[touches anyObject]]];
+    [self.dragDropController endDrag:[self dragForTouch:[touches anyObject]]];
     self.isDragging = NO;
 }
 

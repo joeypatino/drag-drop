@@ -69,9 +69,9 @@
 
 
 // Returns YES if the drag was successfuly started.. Otherwise returns NO.
-- (BOOL)dragStarted:(Drag *)drag;
+- (BOOL)startDrag:(Drag *)drag;
 
-- (void)dragMoved:(Drag *)drag;
-- (void)dragEnded:(Drag *)drag;
+- (void)moveDrag:(Drag *)drag;
+- (void)endDrag:(Drag *)drag;
 
 @end

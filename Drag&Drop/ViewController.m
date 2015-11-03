@@ -12,7 +12,7 @@
 #import "Drag.h"
 #import "DragAndDropView.h"
 
-@interface ViewController ()  <DragDropControllerDatasource, DragDropControllerDatasource>
+@interface ViewController ()  <DragDropControllerDatasource, DragDropControllerDatasource, UITableViewDataSource, UITableViewDelegate>
 @property (nonatomic, strong) UIView *leftView1;
 @property (nonatomic, strong) UIView *rightView1;
 
@@ -25,6 +25,8 @@
 @property (nonatomic, strong) DragDropController *leftViewDdc2;
 @property (nonatomic, strong) DragDropController *rightViewDdc2;
 
+@property (nonatomic, strong) UITableView *table;
+@property (nonatomic, strong) NSMutableArray *tableCellDragControllers;
 @end
 
 @implementation ViewController
@@ -166,15 +168,111 @@
     [self populateView:self.leftView2 withCount:3 andDragDropController:self.leftViewDdc2];
 }
 
+- (void)loadDoubleDoubleEmbeddedDragView {
+    self.leftViewDdc1 = [self controller];
+    self.leftViewDdc2 = [self controller];
+    
+    UIView *dummyView1 = [[UIView alloc] initWithFrame:CGRectMake(5,
+                                                                  CGRectGetHeight(self.view.frame)/2,
+                                                                  CGRectGetWidth(self.view.frame) - 10,
+                                                                  CGRectGetHeight(self.view.frame)/2)];
+    dummyView1.backgroundColor = [UIColor blackColor];
+    [self.view addSubview:dummyView1];
+
+    UIView *dummyView2 = [[UIView alloc] initWithFrame:CGRectInset(dummyView1.bounds, 10, 10)];
+    dummyView2.backgroundColor = [UIColor whiteColor];
+    [dummyView1 addSubview:dummyView2];
+
+    self.leftView1 = [[UIView alloc] initWithFrame:CGRectInset(dummyView2.bounds, 10, 10)];
+    self.leftView1.backgroundColor = [UIColor orangeColor];
+    [dummyView2 addSubview:self.leftView1];
+    self.leftViewDdc1.view = self.leftView1;
+    [self applyLabel:@"Double-Inset Subview" toView:self.leftView1];
+    
+    self.leftView2 = [[UIView alloc] initWithFrame:CGRectMake(5, 25, self.view.frame.size.width - 10, self.view.frame.size.height/2 - 60)];
+    self.leftView2.backgroundColor = [UIColor whiteColor];
+    [self.view addSubview:self.leftView2];
+    self.leftViewDdc2.view = self.leftView2;
+    [self applyLabel:@"Normal" toView:self.leftView2];
+    
+    
+    [self populateView:self.leftView1 withCount:5 andDragDropController:self.leftViewDdc1];
+    [self populateView:self.leftView2 withCount:3 andDragDropController:self.leftViewDdc2];
+}
+
+- (void)loadTableDragView {
+    self.rightViewDdc1 = [self controller];
+    self.tableCellDragControllers = [NSMutableArray array];
+    
+    self.table = [[UITableView alloc] initWithFrame:CGRectMake(0,
+                                                               20,
+                                                               CGRectGetWidth(self.view.frame) * .75,
+                                                               CGRectGetHeight(self.view.frame) - 20)
+                                              style:UITableViewStylePlain];
+    
+    self.table.separatorColor = [UIColor blackColor];
+    self.table.separatorStyle = UITableViewCellSeparatorStyleSingleLine;
+    self.table.delegate = self;
+    self.table.dataSource = self;
+    [self.view addSubview:self.table];
+    [self.table reloadData];
+    
+    self.rightView1 = [[UIView alloc] initWithFrame:CGRectMake(CGRectGetWidth(self.view.frame) * .75,
+                                                              20,
+                                                              CGRectGetWidth(self.view.frame) * .25,
+                                                              self.view.frame.size.height - 20)];
+    self.rightView1.backgroundColor = [UIColor whiteColor];
+    [self.view addSubview:self.rightView1];
+    self.rightViewDdc1.view = self.rightView1;
+    [self applyLabel:@"Right" toView:self.rightView1];
+
+}
+
+#pragma mark -
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    return 10;
+}
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
+    return 1;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
+    return 90;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    UITableViewCell *cell = [[UITableViewCell alloc] init];
+
+    DragAndDropView *dragview = [[DragAndDropView alloc] init];
+    dragview.frame = CGRectMake(10, 10, CGRectGetWidth(tableView.frame) - 20, 70);
+    dragview.backgroundColor = [UIColor blueColor];
+    DragDropController *c = [self controller];
+    c.view = cell.contentView;
+    [self.tableCellDragControllers addObject:c];
+    dragview.dragDropController = c;
+    [cell addSubview:dragview];
+
+    return cell;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+}
+
+#pragma mark -
+
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.view.backgroundColor = [UIColor grayColor];
 
-    [self load4By4DragViews];
+//    [self load4By4DragViews];
 //    [self load4EmbeddedDragViews];
 //    [self loadDoubleEmbeddedDragView];
 //    [self loadDoubleDragView];
-    
+//    [self loadDoubleDoubleEmbeddedDragView];
+    [self loadTableDragView];
 }
 
 - (void)populateView:(UIView *)view withCount:(NSInteger)viewCount andDragDropController:(DragDropController *)dragDropController {
@@ -232,6 +330,7 @@
 - (void)dragDropController:(DragDropController *)controller
                didMoveView:(UIView *)view
              toDestination:(DragDropController *)destination {
+    NSLog(@"%s", __PRETTY_FUNCTION__);
 }
 
 #pragma mark - DragDropController Datasource
@@ -245,13 +344,23 @@
                canDropView:(UIView *)target
              toDestination:(DragDropController *)destination {
     if (controller == destination) return NO;
+    if (controller == self.rightViewDdc1) return YES;
+    if ([self.tableCellDragControllers containsObject:controller] && destination != self.rightViewDdc1) return NO;
+
     return YES;
 }
 
 - (CGRect)dragDropController:(DragDropController *)controller
                 frameForView:(UIView *)view
                inDestination:(DragDropController *)destination {
-    return view.frame;
+    
+    if ([self.tableCellDragControllers containsObject:destination]) {
+        return CGRectMake(10, 10, CGRectGetWidth(self.table.frame) - 20, 70);
+    }
+    
+    return CGRectMake(10, 10, 40, 40);
+
+//    return view.frame;
 }
 
 @end
