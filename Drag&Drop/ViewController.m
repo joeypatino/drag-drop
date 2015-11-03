@@ -7,10 +7,7 @@
 //
 
 #import "DragDropController.h"
-
 #import "ViewController.h"
-#import "Drag.h"
-#import "DragAndDropView.h"
 
 @interface ViewController ()  <DragDropControllerDatasource, DragDropControllerDatasource, UITableViewDataSource, UITableViewDelegate>
 @property (nonatomic, strong) UIView *leftView1;
@@ -59,7 +56,7 @@
                                                               self.view.frame.size.height /2 - 40)];
     self.leftView1.backgroundColor = [UIColor whiteColor];
     [self.view addSubview:self.leftView1];
-    self.leftViewDdc1.view = self.leftView1;
+    self.leftViewDdc1.dropTargetView = self.leftView1;
     [self applyLabel:@"TopLeft" toView:self.leftView1];
     
 
@@ -69,7 +66,7 @@
                                                               self.view.frame.size.height /2 - 40)];
     self.leftView2.backgroundColor = [UIColor whiteColor];
     [self.view addSubview:self.leftView2];
-    self.leftViewDdc2.view = self.leftView2;
+    self.leftViewDdc2.dropTargetView = self.leftView2;
     [self applyLabel:@"TopRight" toView:self.leftView2];
     
     
@@ -79,7 +76,7 @@
                                                                self.view.frame.size.height /2 - 40)];
     self.rightView1.backgroundColor = [UIColor whiteColor];
     [self.view addSubview:self.rightView1];
-    self.rightViewDdc1.view = self.rightView1;
+    self.rightViewDdc1.dropTargetView = self.rightView1;
     [self applyLabel:@"BottomRight" toView:self.rightView1];
     
     self.rightView2 = [[UIView alloc] initWithFrame:CGRectMake(5,
@@ -88,7 +85,7 @@
                                                                self.view.frame.size.height /2 - 40)];
     self.rightView2.backgroundColor = [UIColor whiteColor];
     [self.view addSubview:self.rightView2];
-    self.rightViewDdc2.view = self.rightView2;
+    self.rightViewDdc2.dropTargetView = self.rightView2;
     [self applyLabel:@"BottomLeft" toView:self.rightView2];
     
     [self populateView:self.leftView1 withCount:5 andDragDropController:self.leftViewDdc1];
@@ -105,14 +102,14 @@
     self.leftView1 = [[UIView alloc] initWithFrame:CGRectMake(5, 25, self.view.frame.size.width - 10, self.view.frame.size.height - 30)];
     self.leftView1.backgroundColor = [UIColor whiteColor];
     [self.view addSubview:self.leftView1];
-    self.leftViewDdc1.view = self.leftView1;
+    self.leftViewDdc1.dropTargetView = self.leftView1;
     [self applyLabel:@"Container" toView:self.leftView1];
     
     
     self.leftView2 = [[UIView alloc] initWithFrame:CGRectMake(5, self.view.frame.size.height/2 + 5, self.view.frame.size.width - 20, self.view.frame.size.height/2 - 40)];
     self.leftView2.backgroundColor = [UIColor whiteColor];
     [self.view addSubview:self.leftView2];
-    self.leftViewDdc2.view = self.leftView2;
+    self.leftViewDdc2.dropTargetView = self.leftView2;
     [self applyLabel:@"Inner" toView:self.leftView2];
 
     self.leftView2.layer.borderColor = [UIColor blackColor].CGColor;
@@ -125,22 +122,25 @@
 - (void)loadDoubleDragView {
     self.leftViewDdc1 = [self controller];
     self.leftViewDdc2 = [self controller];
+    self.rightViewDdc1 = [self controller];
 
     self.leftView1 = [[UIView alloc] initWithFrame:CGRectMake(0, CGRectGetHeight(self.view.frame)/2 + 10, CGRectGetWidth(self.view.frame) - 10, CGRectGetHeight(self.view.frame)/2 - 20)];
     self.leftView1.backgroundColor = [UIColor whiteColor];
     [self.view addSubview:self.leftView1];
-    self.leftViewDdc1.view = self.leftView1;
+    self.leftViewDdc1.dropTargetView = self.leftView1;
     [self applyLabel:@"InsetSubview" toView:self.leftView1];
     
     self.leftView2 = [[UIView alloc] initWithFrame:CGRectMake(5, 25, self.view.frame.size.width - 10, self.view.frame.size.height/2 - 60)];
     self.leftView2.backgroundColor = [UIColor whiteColor];
     [self.view addSubview:self.leftView2];
-    self.leftViewDdc2.view = self.leftView2;
+    self.leftViewDdc2.dropTargetView = self.leftView2;
     [self applyLabel:@"Normal" toView:self.leftView2];
 
     
     [self populateView:self.leftView1 withCount:5 andDragDropController:self.leftViewDdc1];
     [self populateView:self.leftView2 withCount:3 andDragDropController:self.leftViewDdc2];
+    
+    self.rightViewDdc1.dropTargetView = self.leftView1.subviews[1];
 }
 
 - (void)loadDoubleEmbeddedDragView {
@@ -154,13 +154,13 @@
     self.leftView1 = [[UIView alloc] initWithFrame:CGRectMake(0, 10, CGRectGetWidth(dummyView.frame), CGRectGetHeight(dummyView.frame) - 20)];
     self.leftView1.backgroundColor = [UIColor whiteColor];
     [dummyView addSubview:self.leftView1];
-    self.leftViewDdc1.view = self.leftView1;
+    self.leftViewDdc1.dropTargetView = self.leftView1;
     [self applyLabel:@"InsetSubview" toView:self.leftView1];
     
     self.leftView2 = [[UIView alloc] initWithFrame:CGRectMake(5, 25, self.view.frame.size.width - 10, self.view.frame.size.height/2 - 60)];
     self.leftView2.backgroundColor = [UIColor whiteColor];
     [self.view addSubview:self.leftView2];
-    self.leftViewDdc2.view = self.leftView2;
+    self.leftViewDdc2.dropTargetView = self.leftView2;
     [self applyLabel:@"Normal" toView:self.leftView2];
     
     
@@ -186,13 +186,13 @@
     self.leftView1 = [[UIView alloc] initWithFrame:CGRectInset(dummyView2.bounds, 10, 10)];
     self.leftView1.backgroundColor = [UIColor orangeColor];
     [dummyView2 addSubview:self.leftView1];
-    self.leftViewDdc1.view = self.leftView1;
+    self.leftViewDdc1.dropTargetView = self.leftView1;
     [self applyLabel:@"Double-Inset Subview" toView:self.leftView1];
     
     self.leftView2 = [[UIView alloc] initWithFrame:CGRectMake(5, 25, self.view.frame.size.width - 10, self.view.frame.size.height/2 - 60)];
     self.leftView2.backgroundColor = [UIColor whiteColor];
     [self.view addSubview:self.leftView2];
-    self.leftViewDdc2.view = self.leftView2;
+    self.leftViewDdc2.dropTargetView = self.leftView2;
     [self applyLabel:@"Normal" toView:self.leftView2];
     
     
@@ -212,6 +212,7 @@
     
     self.table.separatorColor = [UIColor blackColor];
     self.table.separatorStyle = UITableViewCellSeparatorStyleSingleLine;
+
     self.table.delegate = self;
     self.table.dataSource = self;
     [self.view addSubview:self.table];
@@ -223,8 +224,36 @@
                                                               self.view.frame.size.height - 20)];
     self.rightView1.backgroundColor = [UIColor whiteColor];
     [self.view addSubview:self.rightView1];
-    self.rightViewDdc1.view = self.rightView1;
+    self.rightViewDdc1.dropTargetView = self.rightView1;
     [self applyLabel:@"Right" toView:self.rightView1];
+    
+    self.leftViewDdc1 = [self controller];
+    self.leftViewDdc1.dropTargetView = self.table;
+
+}
+
+- (void)loadRandomDragDropView {
+    self.leftViewDdc1 = [self controller];
+    
+    UIView *dummyView1 = [[UIView alloc] initWithFrame:CGRectInset(CGRectMake(5,
+                                                                              CGRectGetHeight(self.view.frame)/2,
+                                                                              CGRectGetWidth(self.view.frame) - 10,
+                                                                              CGRectGetHeight(self.view.frame)/2), 80, 80)];
+    dummyView1.backgroundColor = [UIColor blackColor];
+    [self.view addSubview:dummyView1];
+
+    [self.leftViewDdc1 enableDragActionForView:dummyView1];
+    
+    self.leftViewDdc2 = [self controller];
+    
+
+    UIView *dummyView2 = [[UIView alloc] initWithFrame:CGRectInset(CGRectMake(5,
+                                                                              25,
+                                                                              CGRectGetWidth(self.view.frame) - 10,
+                                                                              CGRectGetHeight(self.view.frame)/2), 100, 100)];
+    dummyView2.backgroundColor = [UIColor yellowColor];
+    [self.view addSubview:dummyView2];
+    self.leftViewDdc2.dropTargetView = dummyView2;
 
 }
 
@@ -244,15 +273,17 @@
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     UITableViewCell *cell = [[UITableViewCell alloc] init];
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
 
-    DragAndDropView *dragview = [[DragAndDropView alloc] init];
-    dragview.frame = CGRectMake(10, 10, CGRectGetWidth(tableView.frame) - 20, 70);
-    dragview.backgroundColor = [UIColor blueColor];
+    UIView *dragView = [[UIView alloc] init];
+    dragView.frame = CGRectMake(10, 10, CGRectGetWidth(tableView.frame) - 20, 70);
+    dragView.backgroundColor = [UIColor blueColor];
+    [cell addSubview:dragView];
+    
     DragDropController *c = [self controller];
-    c.view = cell.contentView;
+    c.dropTargetView = cell;
+    [c enableDragActionForView:dragView];
     [self.tableCellDragControllers addObject:c];
-    dragview.dragDropController = c;
-    [cell addSubview:dragview];
 
     return cell;
 }
@@ -273,6 +304,7 @@
 //    [self loadDoubleDragView];
 //    [self loadDoubleDoubleEmbeddedDragView];
     [self loadTableDragView];
+//    [self loadRandomDragDropView];
 }
 
 - (void)populateView:(UIView *)view withCount:(NSInteger)viewCount andDragDropController:(DragDropController *)dragDropController {
@@ -287,50 +319,69 @@
             yMargin += height + 5;
         }
         
-        DragAndDropView *dragview = [[DragAndDropView alloc] init];
-        dragview.dragDropController = dragDropController;
+        UIView *dragview = [[UIView alloc] init];
+        [dragDropController enableDragActionForView:dragview];
         dragview.frame = CGRectMake(xMargin, yMargin, width, height);
         dragview.backgroundColor = [UIColor blackColor];
         [view addSubview:dragview];
         
         xMargin += width + 5;
     }
-
 }
 
 #pragma mark - DragDropController Delegate
 
 - (void)dragDropController:(DragDropController *)controller
-             willStartDrag:(Drag *)drag
+             willStartDrag:(DragAction *)drag
                   animated:(BOOL)animated {
     drag.dragRepresentation.transform = CGAffineTransformMakeScale(1.5, 1.5);
     drag.view.alpha = 0.0;
 }
 
 - (void)dragDropController:(DragDropController *)controller
-              didStartDrag:(Drag *)drag {
+              didStartDrag:(DragAction *)drag {
 }
 
 - (void)dragDropController:(DragDropController *)controller
-            isDraggingView:(UIView *)view
-                   atPoint:(CGPoint)point {
-}
-
-- (void)dragDropController:(DragDropController *)controller
-               willEndDrag:(Drag *)drag
+               willEndDrag:(DragAction *)drag
                   animated:(BOOL)animated {
 }
 
 - (void)dragDropController:(DragDropController *)controller
-                didEndDrag:(Drag *)drag {
+                didEndDrag:(DragAction *)drag {
     drag.dragRepresentation.transform = CGAffineTransformIdentity;
     drag.view.alpha = 1.0;
 }
 
+#pragma mark -
+
+- (void)dragDropController:(DragDropController *)controller
+      didStartDraggingView:(UIView *)view
+                atLocation:(CGPoint)location
+           withDestination:(DragDropController *)destination {
+    destination.dropTargetView.layer.borderColor = [UIColor redColor].CGColor;
+    destination.dropTargetView.layer.borderWidth = 2.0;
+}
+
+- (void)dragDropController:(DragDropController *)controller
+            isDraggingView:(UIView *)view
+                atLocation:(CGPoint)location
+           withDestination:(DragDropController *)destination {
+}
+
+- (void)dragDropController:(DragDropController *)controller
+        didEndDraggingView:(UIView *)view
+                atLocation:(CGPoint)location
+           withDestination:(DragDropController *)destination {
+    destination.dropTargetView.layer.borderColor = [UIColor clearColor].CGColor;
+    destination.dropTargetView.layer.borderWidth = 0.0;
+}
+
+#pragma mark -
+
 - (void)dragDropController:(DragDropController *)controller
                didMoveView:(UIView *)view
              toDestination:(DragDropController *)destination {
-    NSLog(@"%s", __PRETTY_FUNCTION__);
 }
 
 #pragma mark - DragDropController Datasource
@@ -344,23 +395,20 @@
                canDropView:(UIView *)target
              toDestination:(DragDropController *)destination {
     if (controller == destination) return NO;
-    if (controller == self.rightViewDdc1) return YES;
-    if ([self.tableCellDragControllers containsObject:controller] && destination != self.rightViewDdc1) return NO;
-
     return YES;
 }
 
 - (CGRect)dragDropController:(DragDropController *)controller
                 frameForView:(UIView *)view
                inDestination:(DragDropController *)destination {
-    
-    if ([self.tableCellDragControllers containsObject:destination]) {
-        return CGRectMake(10, 10, CGRectGetWidth(self.table.frame) - 20, 70);
-    }
-    
-    return CGRectMake(10, 10, 40, 40);
-
-//    return view.frame;
+    return view.frame;
 }
+
+- (UIView *)dragDropController:(DragDropController *)controller dragRepresentationForView:(UIView *)view {
+    UIView *dragView = [[UIView alloc] initWithFrame:view.bounds];
+    dragView.backgroundColor = [UIColor redColor];
+    return dragView;
+}
+
 
 @end

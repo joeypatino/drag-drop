@@ -7,6 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "DragAction.h"
 
 /**
  The duration of the animation when the icon is released
@@ -14,64 +15,80 @@
  */
 #define kDropAnimationDuration              .4
 #define kDragDropPickupAnimationDuration    .15
+#define kDragPickupBeginDelay               .16
 
-@class Drag;
+@class DragAction;
 @class DragDropController;
 @protocol DragDropControllerDelegate
 @optional
 
+#pragma mark - Drag callbacks
+
 - (void)dragDropController:(DragDropController *)controller
-             willStartDrag:(Drag *)drag
+             willStartDrag:(DragAction *)drag
                   animated:(BOOL)animated;
 
 - (void)dragDropController:(DragDropController *)controller
-              didStartDrag:(Drag *)drag;
+              didStartDrag:(DragAction *)drag;
 
 - (void)dragDropController:(DragDropController *)controller
-               willEndDrag:(Drag *)drag
+               willEndDrag:(DragAction *)drag
                   animated:(BOOL)animated;
 
 - (void)dragDropController:(DragDropController *)controller
-                didEndDrag:(Drag *)drag;
+                didEndDrag:(DragAction *)drag;
+
+#pragma mark - Drop callbacks
+
+- (void)dragDropController:(DragDropController *)controller
+      didStartDraggingView:(UIView *)view
+                atLocation:(CGPoint)location
+           withDestination:(DragDropController *)destination;
+
+- (void)dragDropController:(DragDropController *)controller
+            isDraggingView:(UIView *)view
+                atLocation:(CGPoint)location
+           withDestination:(DragDropController *)destination;
+
+- (void)dragDropController:(DragDropController *)controller
+        didEndDraggingView:(UIView *)view
+                atLocation:(CGPoint)location
+           withDestination:(DragDropController *)destination;
+
+#pragma mark -
 
 - (void)dragDropController:(DragDropController *)controller
                didMoveView:(UIView *)view
              toDestination:(DragDropController *)destination;
 
-
-- (void)dragDropController:(DragDropController *)controller
-            isDraggingView:(UIView *)view
-                   atPoint:(CGPoint)point;
-
 @end
 
 @protocol DragDropControllerDatasource
 
+@optional
 - (BOOL)dragDropController:(DragDropController *)controller
             shouldDragView:(UIView *)view;
+
+- (BOOL)dragDropController:(DragDropController *)controller
+               canDropView:(UIView *)target
+             toDestination:(DragDropController *)destination;
+
+@required
+- (UIView *)dragDropController:(DragDropController *)controller
+     dragRepresentationForView:(UIView *)view;
 
 - (CGRect)dragDropController:(DragDropController *)controller
                 frameForView:(UIView *)view
                inDestination:(DragDropController *)destination;
 
-- (BOOL)dragDropController:(DragDropController *)controller
-               canDropView:(UIView *)target
-             toDestination:(DragDropController *)destination;
 @end
 
-@class Drag;
 @interface DragDropController : NSObject
 @property (nonatomic, weak) NSObject <DragDropControllerDatasource>  *dragDropDataSource;
 @property (nonatomic, weak) NSObject <DragDropControllerDelegate>    *dragDropDelegate;
-@property (nonatomic, assign) BOOL isDragging;
-@property (nonatomic, assign) BOOL isDropping;
-@property (nonatomic, weak) UIView *view;
+@property (nonatomic, weak) UIView *dropTargetView;
 
-
-// Returns YES if the drag was successfuly started.. Otherwise returns NO.
-- (BOOL)startDrag:(Drag *)drag;
-
-- (void)moveDrag:(Drag *)drag;
-- (void)endDrag:(Drag *)drag;
+- (void)enableDragActionForView:(UIView *)view;
+- (void)disableDragActionForView:(UIView *)view;
 
 @end

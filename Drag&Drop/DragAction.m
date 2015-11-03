@@ -6,8 +6,8 @@
 //  Copyright © 2015 Joseph Patino. All rights reserved.
 //
 
-#import "Drag.h"
+#import "DragAction.h"
 
-@implementation Drag
+@implementation DragAction
 
 @end
