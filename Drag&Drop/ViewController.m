@@ -298,12 +298,12 @@
     [super viewDidLoad];
     self.view.backgroundColor = [UIColor grayColor];
 
-//    [self load4By4DragViews];
+    [self load4By4DragViews];
 //    [self load4EmbeddedDragViews];
 //    [self loadDoubleEmbeddedDragView];
 //    [self loadDoubleDragView];
 //    [self loadDoubleDoubleEmbeddedDragView];
-    [self loadTableDragView];
+//    [self loadTableDragView];
 //    [self loadRandomDragDropView];
 }
 
@@ -329,74 +329,74 @@
     }
 }
 
-#pragma mark - DragDropController Delegate
-
-- (void)dragDropController:(DragDropController *)controller
-             willStartDrag:(DragAction *)drag
-                  animated:(BOOL)animated {
-    drag.dragRepresentation.transform = CGAffineTransformMakeScale(1.5, 1.5);
-    drag.view.alpha = 0.0;
-}
-
-- (void)dragDropController:(DragDropController *)controller
-              didStartDrag:(DragAction *)drag {
-}
-
-- (void)dragDropController:(DragDropController *)controller
-               willEndDrag:(DragAction *)drag
-                  animated:(BOOL)animated {
-}
-
-- (void)dragDropController:(DragDropController *)controller
-                didEndDrag:(DragAction *)drag {
-    drag.dragRepresentation.transform = CGAffineTransformIdentity;
-    drag.view.alpha = 1.0;
-}
-
-#pragma mark -
-
-- (void)dragDropController:(DragDropController *)controller
-      didStartDraggingView:(UIView *)view
-                atLocation:(CGPoint)location
-           withDestination:(DragDropController *)destination {
-    destination.dropTargetView.layer.borderColor = [UIColor redColor].CGColor;
-    destination.dropTargetView.layer.borderWidth = 2.0;
-}
-
-- (void)dragDropController:(DragDropController *)controller
-            isDraggingView:(UIView *)view
-                atLocation:(CGPoint)location
-           withDestination:(DragDropController *)destination {
-}
-
-- (void)dragDropController:(DragDropController *)controller
-        didEndDraggingView:(UIView *)view
-                atLocation:(CGPoint)location
-           withDestination:(DragDropController *)destination {
-    destination.dropTargetView.layer.borderColor = [UIColor clearColor].CGColor;
-    destination.dropTargetView.layer.borderWidth = 0.0;
-}
-
-#pragma mark -
-
-- (void)dragDropController:(DragDropController *)controller
-               didMoveView:(UIView *)view
-             toDestination:(DragDropController *)destination {
-}
+//#pragma mark - DragDropController Delegate
+//
+//- (void)dragDropController:(DragDropController *)controller
+//             willStartDrag:(DragAction *)drag
+//                  animated:(BOOL)animated {
+//    drag.dragRepresentation.transform = CGAffineTransformMakeScale(1.5, 1.5);
+//    drag.view.alpha = 0.0;
+//}
+//
+//- (void)dragDropController:(DragDropController *)controller
+//              didStartDrag:(DragAction *)drag {
+//}
+//
+//- (void)dragDropController:(DragDropController *)controller
+//               willEndDrag:(DragAction *)drag
+//                  animated:(BOOL)animated {
+//}
+//
+//- (void)dragDropController:(DragDropController *)controller
+//                didEndDrag:(DragAction *)drag {
+//    drag.dragRepresentation.transform = CGAffineTransformIdentity;
+//    drag.view.alpha = 1.0;
+//}
+//
+//#pragma mark -
+//
+//- (void)dragDropController:(DragDropController *)controller
+//      didStartDraggingView:(UIView *)view
+//                atLocation:(CGPoint)location
+//           withDestination:(DragDropController *)destination {
+//    destination.dropTargetView.layer.borderColor = [UIColor redColor].CGColor;
+//    destination.dropTargetView.layer.borderWidth = 2.0;
+//}
+//
+//- (void)dragDropController:(DragDropController *)controller
+//            isDraggingView:(UIView *)view
+//                atLocation:(CGPoint)location
+//           withDestination:(DragDropController *)destination {
+//}
+//
+//- (void)dragDropController:(DragDropController *)controller
+//        didEndDraggingView:(UIView *)view
+//                atLocation:(CGPoint)location
+//           withDestination:(DragDropController *)destination {
+//    destination.dropTargetView.layer.borderColor = [UIColor clearColor].CGColor;
+//    destination.dropTargetView.layer.borderWidth = 0.0;
+//}
+//
+//#pragma mark -
+//
+//- (void)dragDropController:(DragDropController *)controller
+//               didMoveView:(UIView *)view
+//             toDestination:(DragDropController *)destination {
+//}
 
 #pragma mark - DragDropController Datasource
 
-- (BOOL)dragDropController:(DragDropController *)controller
-            shouldDragView:(UIView *)view {
-    return YES;
-}
-
-- (BOOL)dragDropController:(DragDropController *)controller
-               canDropView:(UIView *)target
-             toDestination:(DragDropController *)destination {
-    if (controller == destination) return NO;
-    return YES;
-}
+//- (BOOL)dragDropController:(DragDropController *)controller
+//            shouldDragView:(UIView *)view {
+//    return YES;
+//}
+//
+//- (BOOL)dragDropController:(DragDropController *)controller
+//               canDropView:(UIView *)target
+//             toDestination:(DragDropController *)destination {
+//    if (controller == destination) return NO;
+//    return YES;
+//}
 
 - (CGRect)dragDropController:(DragDropController *)controller
                 frameForView:(UIView *)view

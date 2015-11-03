@@ -296,7 +296,7 @@ static DragDropControllerManager *instance = nil;
     
     // Check if we can drop to the found reciever. The default behaviour is YES.
     BOOL canDrop =
-    ([self.dragDropDataSource dragDropController:self canDropView:drag.view toDestination:dropDestination])
+    ([self.dragDropDataSource respondsToSelector:@selector(dragDropController:canDropView:toDestination:)])
     ? [self.dragDropDataSource dragDropController:self canDropView:drag.view toDestination:dropDestination]
     : YES;
     
