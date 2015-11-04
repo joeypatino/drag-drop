@@ -9,8 +9,8 @@
 #import "DragDropGesture.h"
 
 @interface DragDropGesture ()
-@property (nonatomic, assign) NSTimeInterval diff;
-@property (nonatomic, assign) CGPoint start;
+@property (nonatomic, assign, readwrite) CGPoint touchBeginOffset;
+@property (nonatomic, assign) NSTimeInterval touchBeginTimestamp;
 @end
 @implementation DragDropGesture
 
@@ -24,21 +24,19 @@
     [super touchesBegan:touches withEvent:event];
     
     self.state = UIGestureRecognizerStatePossible;
-    self.diff = event.timestamp;
-    self.start = [[touches anyObject] locationInView:nil];
+    self.touchBeginTimestamp = event.timestamp;
+    self.touchBeginOffset = [self locationInView:self.view];
 }
 
 - (void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
     [super touchesMoved:touches withEvent:event];
+
+    NSTimeInterval touchMoveDelay = event.timestamp - self.touchBeginTimestamp;
     
-    NSTimeInterval i = event.timestamp - self.diff;
     if (self.state == UIGestureRecognizerStatePossible) {
-        if (i > self.gestureBeginDelay) {
-            self.state = UIGestureRecognizerStateBegan;
-        }
-        else {
-            self.state = UIGestureRecognizerStateFailed;
-        }
+        self.state = (touchMoveDelay > self.gestureBeginDelay)
+        ? UIGestureRecognizerStateBegan
+        : UIGestureRecognizerStateFailed;
     }
     else {
         self.state = UIGestureRecognizerStateChanged;
@@ -56,7 +54,7 @@
 }
 
 - (void)reset {
-    self.diff = 0;
+    self.touchBeginTimestamp = 0;
     self.state = UIGestureRecognizerStatePossible;
 }
 

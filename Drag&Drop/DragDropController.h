@@ -9,12 +9,22 @@
 #import <UIKit/UIKit.h>
 #import "DragAction.h"
 
-/**
- The duration of the animation when the icon is released
- and moves back to its original position
+/*
+ * The duration of the animation when the icon is released
+ * and moves to its next position.
  */
 #define kDropAnimationDuration              .4
+
+/*
+ * The duration of the drag pickup animation.
+ */
 #define kDragDropPickupAnimationDuration    .15
+
+/*
+ * The delay in seconds before the drag operation begins.
+ * This is used when the view being dragged is contained
+ * within a UIScrollView, UITableView, or UICollectionView.
+ */
 #define kDragPickupBeginDelay               .16
 
 @class DragAction;
@@ -83,12 +93,21 @@
 
 @end
 
+
+/*
+ * DragDropController manages the drag actions of registered views and the drop
+ * actions within it's own dropTargetView. It uses a datasource and delegate
+ * pattern to allow your code to customize the drag and drop behavious and respond
+ * to drag and drop actions.
+ *
+ */
 @interface DragDropController : NSObject
 @property (nonatomic, weak) NSObject <DragDropControllerDatasource>  *dragDropDataSource;
 @property (nonatomic, weak) NSObject <DragDropControllerDelegate>    *dragDropDelegate;
-@property (nonatomic, weak) UIView *dropTargetView;
 
-- (void)enableDragActionForView:(UIView *)view;
-- (void)disableDragActionForView:(UIView *)view;
+@property (nonatomic, weak) UIView *dropTargetView;     // This is a drop target for views. If set, this view will be able to recieve dropped views
+
+- (void)enableDragActionForView:(UIView *)view;         // Call this to enable drag actions for the view.
+- (void)disableDragActionForView:(UIView *)view;        // Call this to disable drag actions for the view.
 
 @end

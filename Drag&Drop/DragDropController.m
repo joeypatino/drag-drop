@@ -13,6 +13,10 @@
 
 #pragma mark - DragDropControllerManager
 
+/*
+ * DragDropControllerManager automatically tracks all created DragDropControllers
+ * You should not use this class yourself, but the DragDropController uses this internally.
+ */
 @interface DragDropControllerManager : NSObject
 @property (nonatomic, strong) NSMutableArray *dragDropControllers;
 + (DragDropControllerManager *)sharedInstance;
@@ -102,9 +106,8 @@ static DragDropControllerManager *instance = nil;
     
     // Add a delay on the gesture begin when embedded in a tableview, or tableview cell.
     // This prevents the table from scrolling before the drag has begun..
-    UITableView *t = [self tableViewAnscenstorOfView:view];
-    UITableViewCell *c = [self tableCellAnscenstorOfView:view];
-    if (t || c) gest.gestureBeginDelay = kDragPickupBeginDelay;
+    UIView *tv = [self scrollingSuperViewOfView:view];
+    if (tv) gest.gestureBeginDelay = kDragPickupBeginDelay;
     
 }
 
@@ -144,16 +147,19 @@ static DragDropControllerManager *instance = nil;
 }
 
 - (void)touchBegan:(DragDropGesture *)gesture {
-    DragAction *d = [[DragAction alloc] init];
-    d.view = gesture.view;
+    DragAction *d = [DragAction dragActionWithView:gesture.view];
+//    d.currentLocation = gesture.touchBeginOffset;
     
-    gesture.dragRepresentation = [self dragRepresentationViewForDrag:d];
-    gesture.dragStartOffset = [gesture locationInView:gesture.view];
+    // On the start of the drag, we should create a drag representation view..
+    // this is done through our datasouce.
+    d.dragRepresentation = [self dragRepresentationViewForDrag:d];
+
+    // we store the drag representation on the gesture, then
+    // on gesture moved, we can grab the drag representation view
+    // and translate it across the screen..
+    gesture.dragRepresentation = d.dragRepresentation;
     
-    d.dragRepresentation = gesture.dragRepresentation;
-    d.frame = gesture.view.frame;
-    d.currentLocation = [gesture locationInView:gesture.view];
-    
+
     BOOL startedDrag = [self startDrag:d];
     d.dragRepresentation.hidden = !startedDrag;
 }
@@ -168,13 +174,19 @@ static DragDropControllerManager *instance = nil;
 
 // Helper method to create DragAction on touch move/end
 - (DragAction *)dragWithGesture:(DragDropGesture *)gesture {
-    DragAction *d = [[DragAction alloc] init];
-    d.view = gesture.view;
-    
-    d.dragRepresentation = gesture.dragRepresentation;
-    d.frame = gesture.view.frame;
+
+    DragAction *d = [DragAction dragActionWithView:gesture.view];
+
+    // Set the drags current location to the location of the drag in the window's coordinates..
     d.currentLocation = [gesture locationInView:nil];
-    d.firstTouchOffset = gesture.dragStartOffset;
+    
+    // Copy over the existing drag representation from the drag.
+    // This was originally created when the drag began.
+    d.dragRepresentation = gesture.dragRepresentation;
+    
+    // Copy over the existing drag touch begin offset
+    // This was originally set when the drag began.
+    d.firstTouchOffset = gesture.touchBeginOffset;
     
     return d;
 }
@@ -186,6 +198,8 @@ static DragDropControllerManager *instance = nil;
     
     UIView *dragView = [self.dragDropDataSource dragDropController:self dragRepresentationForView:drag.view];
     
+    // start with the drag representation hidden, it will
+    // unhide when/if the drag starts
     dragView.hidden = YES;
     [drag.view addSubview:dragView];
     
@@ -195,6 +209,7 @@ static DragDropControllerManager *instance = nil;
 #pragma mark -
 
 - (BOOL)startDrag:(DragAction *)drag {
+    if (self.isDragging || self.isDropping) return NO;
     
     // make sure the datasource allows dragging this view..
     // This check allows the datasource to have more granular control
@@ -225,14 +240,10 @@ static DragDropControllerManager *instance = nil;
                          completion:^ (BOOL finished){
                              
                              // In case we have already dropped the view....
-                             if (!self.isDropping) {
-                                 
+                             if (self.isDragging && !self.isDropping) {
                                  // if not, notify the delgate that the start of the drag has begun..
                                  if ([self.dragDropDataSource respondsToSelector:@selector(dragDropController:didStartDrag:)])
                                      [self.dragDropDelegate dragDropController:self didStartDrag:drag];
-                                 
-                                 // and notify any drop targets that the drag is occuring..
-                                 [self notifyDropTarget:[self controllerForDropAtPoint:drag.dragRepresentation.center] ofDragAction:drag];
                              }
                          }];
         
@@ -246,7 +257,7 @@ static DragDropControllerManager *instance = nil;
 }
 
 - (void)dragMoved:(DragAction *)drag {
-    if (!self.isDragging) return;
+    if (!self.isDragging || self.isDropping) return;
     
     CGPoint location = drag.currentLocation;
     
@@ -283,7 +294,7 @@ static DragDropControllerManager *instance = nil;
 }
 
 - (void)endDrag:(DragAction *)drag {
-    if (!self.isDragging) return;
+    if (!self.isDragging || self.isDropping) return;
     self.isDropping = YES;
     
     CGRect firstStepFrame = CGRectZero;
@@ -472,26 +483,17 @@ static DragDropControllerManager *instance = nil;
     return controller;
 }
 
-- (UITableView *)tableViewAnscenstorOfView:(UIView *)view {
-    
-    if ([view isKindOfClass:[UITableView class]]){
-        return (UITableView *)view;
-    }
-    
-    if (!view.superview) return nil;
-    
-    return [self tableViewAnscenstorOfView:view.superview];
-}
+- (UIView *)scrollingSuperViewOfView:(UIView *)view {
 
-- (UITableViewCell *)tableCellAnscenstorOfView:(UIView *)view {
-    
-    if ([view isKindOfClass:[UITableViewCell class]]){
-        return (UITableViewCell *)view;
+    if ([view isKindOfClass:[UITableView class]] || [view isKindOfClass:[UICollectionView class]] ||
+        [view isKindOfClass:[UITableViewCell class]] || [view isKindOfClass:[UICollectionViewCell class]] ||
+        [view isKindOfClass:[UIScrollView class]]){
+        return view;
     }
     
     if (!view.superview) return nil;
     
-    return [self tableCellAnscenstorOfView:view.superview];
+    return [self scrollingSuperViewOfView:view.superview];
 }
 
 #pragma mark -

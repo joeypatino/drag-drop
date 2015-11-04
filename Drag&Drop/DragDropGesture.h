@@ -10,7 +10,7 @@
 #import <UIKit/UIGestureRecognizerSubclass.h>
 
 @interface DragDropGesture : UIGestureRecognizer
-@property (nonatomic, assign) CGPoint dragStartOffset;
+@property (nonatomic, assign, readonly) CGPoint touchBeginOffset;
 @property (nonatomic, assign) NSTimeInterval gestureBeginDelay;
 @property (nonatomic, weak) UIView *dragRepresentation;
 

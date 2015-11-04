@@ -9,7 +9,11 @@
 #import "DragDropController.h"
 #import "ViewController.h"
 
-@interface ViewController ()  <DragDropControllerDatasource, DragDropControllerDatasource, UITableViewDataSource, UITableViewDelegate>
+@interface ViewController ()  <DragDropControllerDatasource, DragDropControllerDatasource,
+UITableViewDataSource, UITableViewDelegate,
+UICollectionViewDataSource, UICollectionViewDelegate,
+UICollectionViewDelegateFlowLayout>
+
 @property (nonatomic, strong) UIView *leftView1;
 @property (nonatomic, strong) UIView *rightView1;
 
@@ -23,7 +27,13 @@
 @property (nonatomic, strong) DragDropController *rightViewDdc2;
 
 @property (nonatomic, strong) UITableView *table;
+
 @property (nonatomic, strong) NSMutableArray *tableCellDragControllers;
+
+@property (nonatomic, strong) NSMutableDictionary *collectionCells;
+@property (nonatomic, strong) UICollectionView *collection;
+@property (nonatomic, strong) UICollectionViewFlowLayout *layout;
+@property (nonatomic, assign) NSInteger collectionViewIndexPath;
 @end
 
 @implementation ViewController
@@ -257,6 +267,31 @@
 
 }
 
+- (void)loadCollectionViewDragDrop {
+
+    self.leftViewDdc1 = [self controller];
+    self.collectionCells = [NSMutableDictionary dictionary];
+    self.collectionViewIndexPath = -1;
+    
+    self.layout = [[UICollectionViewFlowLayout alloc] init];
+    self.layout.minimumInteritemSpacing = 10;
+    self.layout.minimumLineSpacing = 10;
+
+    self.collection = [[UICollectionView alloc] initWithFrame:CGRectMake(0, 20,
+                                                                         self.view.bounds.size.width,
+                                                                         self.view.bounds.size.height-20)
+
+                                         collectionViewLayout:self.layout];
+    self.collection.delegate = self;
+    self.collection.dataSource = self;
+    [self.view addSubview:self.collection];
+    [self.collection registerClass:[UICollectionViewCell class] forCellWithReuseIdentifier:@"CCell"];
+    
+    [self.collection reloadData];
+    
+    self.leftViewDdc1.dropTargetView = self.collection;
+}
+
 #pragma mark -
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
@@ -294,17 +329,53 @@
 
 #pragma mark -
 
+- (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
+    return 300;
+}
+
+- (NSInteger)numberOfSectionsInCollectionView:(UICollectionView *)collectionView {
+    return 1;
+}
+
+- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
+    
+    UICollectionViewCell *cell = nil;
+    cell = [self.collectionCells objectForKey:[NSString stringWithFormat:@"%li", (long)indexPath.row]];
+
+    if (!cell) {
+        cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"CCell" forIndexPath:indexPath];
+        cell.backgroundColor = [UIColor clearColor];
+        cell.contentView.backgroundColor = [UIColor clearColor];
+        
+        UIView *v = [[UIView alloc] initWithFrame:cell.bounds];
+        v.backgroundColor = [UIColor blueColor];
+        [cell.contentView addSubview:v];
+        
+        [self.leftViewDdc1 enableDragActionForView:v];
+        [self.collectionCells setObject:cell forKey:[NSString stringWithFormat:@"%li", (long)indexPath.row]];
+    }
+    
+    return cell;
+}
+
+- (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath {
+    return CGSizeMake(80, 80);
+}
+
+#pragma mark -
+
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.view.backgroundColor = [UIColor grayColor];
 
-    [self load4By4DragViews];
+//    [self load4By4DragViews];
 //    [self load4EmbeddedDragViews];
 //    [self loadDoubleEmbeddedDragView];
 //    [self loadDoubleDragView];
 //    [self loadDoubleDoubleEmbeddedDragView];
 //    [self loadTableDragView];
 //    [self loadRandomDragDropView];
+    [self loadCollectionViewDragDrop];
 }
 
 - (void)populateView:(UIView *)view withCount:(NSInteger)viewCount andDragDropController:(DragDropController *)dragDropController {
@@ -329,84 +400,102 @@
     }
 }
 
-//#pragma mark - DragDropController Delegate
-//
-//- (void)dragDropController:(DragDropController *)controller
-//             willStartDrag:(DragAction *)drag
-//                  animated:(BOOL)animated {
-//    drag.dragRepresentation.transform = CGAffineTransformMakeScale(1.5, 1.5);
-//    drag.view.alpha = 0.0;
-//}
-//
-//- (void)dragDropController:(DragDropController *)controller
-//              didStartDrag:(DragAction *)drag {
-//}
-//
-//- (void)dragDropController:(DragDropController *)controller
-//               willEndDrag:(DragAction *)drag
-//                  animated:(BOOL)animated {
-//}
-//
-//- (void)dragDropController:(DragDropController *)controller
-//                didEndDrag:(DragAction *)drag {
-//    drag.dragRepresentation.transform = CGAffineTransformIdentity;
-//    drag.view.alpha = 1.0;
-//}
-//
-//#pragma mark -
-//
-//- (void)dragDropController:(DragDropController *)controller
-//      didStartDraggingView:(UIView *)view
-//                atLocation:(CGPoint)location
-//           withDestination:(DragDropController *)destination {
-//    destination.dropTargetView.layer.borderColor = [UIColor redColor].CGColor;
-//    destination.dropTargetView.layer.borderWidth = 2.0;
-//}
-//
-//- (void)dragDropController:(DragDropController *)controller
-//            isDraggingView:(UIView *)view
-//                atLocation:(CGPoint)location
-//           withDestination:(DragDropController *)destination {
-//}
-//
-//- (void)dragDropController:(DragDropController *)controller
-//        didEndDraggingView:(UIView *)view
-//                atLocation:(CGPoint)location
-//           withDestination:(DragDropController *)destination {
-//    destination.dropTargetView.layer.borderColor = [UIColor clearColor].CGColor;
-//    destination.dropTargetView.layer.borderWidth = 0.0;
-//}
-//
-//#pragma mark -
-//
-//- (void)dragDropController:(DragDropController *)controller
-//               didMoveView:(UIView *)view
-//             toDestination:(DragDropController *)destination {
-//}
+#pragma mark - DragDropController Delegate
+
+- (void)dragDropController:(DragDropController *)controller
+             willStartDrag:(DragAction *)drag
+                  animated:(BOOL)animated {
+    drag.dragRepresentation.transform = CGAffineTransformMakeScale(1.5, 1.5);
+    drag.view.alpha = 0.0;
+}
+
+- (void)dragDropController:(DragDropController *)controller
+              didStartDrag:(DragAction *)drag {
+}
+
+- (void)dragDropController:(DragDropController *)controller
+               willEndDrag:(DragAction *)drag
+                  animated:(BOOL)animated {
+}
+
+- (void)dragDropController:(DragDropController *)controller
+                didEndDrag:(DragAction *)drag {
+    drag.dragRepresentation.transform = CGAffineTransformIdentity;
+    drag.view.alpha = 1.0;
+}
+
+#pragma mark -
+
+- (void)dragDropController:(DragDropController *)controller
+      didStartDraggingView:(UIView *)view
+                atLocation:(CGPoint)location
+           withDestination:(DragDropController *)destination {
+    destination.dropTargetView.layer.borderColor = [UIColor redColor].CGColor;
+    destination.dropTargetView.layer.borderWidth = 2.0;
+    
+    NSIndexPath *i = [self.collection indexPathForItemAtPoint:location];
+    self.collectionViewIndexPath = i.row;
+}
+
+- (void)dragDropController:(DragDropController *)controller
+            isDraggingView:(UIView *)view
+                atLocation:(CGPoint)location
+           withDestination:(DragDropController *)destination {
+    
+    NSIndexPath *i = [self.collection indexPathForItemAtPoint:location];
+    
+    if (i && self.collectionViewIndexPath != i.row && self.collectionViewIndexPath != -1) {
+        [self.collection moveItemAtIndexPath:[NSIndexPath indexPathForRow:self.collectionViewIndexPath inSection:0]
+                                 toIndexPath:[NSIndexPath indexPathForRow:i.row inSection:0]];
+    
+        self.collectionViewIndexPath = i.row;
+    }
+}
+
+- (void)dragDropController:(DragDropController *)controller
+        didEndDraggingView:(UIView *)view
+                atLocation:(CGPoint)location
+           withDestination:(DragDropController *)destination {
+    destination.dropTargetView.layer.borderColor = [UIColor clearColor].CGColor;
+    destination.dropTargetView.layer.borderWidth = 0.0;
+    self.collectionViewIndexPath = -1;
+}
+
+#pragma mark -
+
+- (void)dragDropController:(DragDropController *)controller
+               didMoveView:(UIView *)view
+             toDestination:(DragDropController *)destination {
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+}
 
 #pragma mark - DragDropController Datasource
 
-//- (BOOL)dragDropController:(DragDropController *)controller
-//            shouldDragView:(UIView *)view {
-//    return YES;
-//}
-//
-//- (BOOL)dragDropController:(DragDropController *)controller
-//               canDropView:(UIView *)target
-//             toDestination:(DragDropController *)destination {
+- (BOOL)dragDropController:(DragDropController *)controller
+            shouldDragView:(UIView *)view {
+    return YES;
+}
+
+- (BOOL)dragDropController:(DragDropController *)controller
+               canDropView:(UIView *)target
+             toDestination:(DragDropController *)destination {
 //    if (controller == destination) return NO;
-//    return YES;
-//}
+    return YES;
+}
 
 - (CGRect)dragDropController:(DragDropController *)controller
                 frameForView:(UIView *)view
                inDestination:(DragDropController *)destination {
-    return view.frame;
+//    return view.frame;
+    return [self.collection cellForItemAtIndexPath:[NSIndexPath indexPathForRow:self.collectionViewIndexPath inSection:0]].frame;
 }
 
-- (UIView *)dragDropController:(DragDropController *)controller dragRepresentationForView:(UIView *)view {
+- (UIView *)dragDropController:(DragDropController *)controller
+     dragRepresentationForView:(UIView *)view {
+    
     UIView *dragView = [[UIView alloc] initWithFrame:view.bounds];
     dragView.backgroundColor = [UIColor redColor];
+    
     return dragView;
 }
 

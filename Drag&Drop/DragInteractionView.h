@@ -8,7 +8,7 @@
 
 #import <UIKit/UIKit.h>
 
-typedef UIView * (^HitTestBlock)(CGPoint, UIEvent *);
+typedef UIView* (^HitTestBlock)(CGPoint, UIEvent *);
 @interface DragInteractionView : UIView
 @property (nonatomic, copy) HitTestBlock hitTest;
 @end
