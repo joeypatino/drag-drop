@@ -30,10 +30,13 @@ UICollectionViewDelegateFlowLayout>
 
 @property (nonatomic, strong) NSMutableArray *tableCellDragControllers;
 
+@property (nonatomic, copy) dispatch_block_t reverseBlock;
+@property (nonatomic, strong) NSMutableArray *collectionSource;
 @property (nonatomic, strong) NSMutableDictionary *collectionCells;
 @property (nonatomic, strong) UICollectionView *collection;
 @property (nonatomic, strong) UICollectionViewFlowLayout *layout;
 @property (nonatomic, assign) NSInteger collectionViewIndexPath;
+@property (nonatomic, assign) NSInteger startingCollectionViewIndexPath;
 @end
 
 @implementation ViewController
@@ -273,6 +276,11 @@ UICollectionViewDelegateFlowLayout>
     self.collectionCells = [NSMutableDictionary dictionary];
     self.collectionViewIndexPath = -1;
     
+    self.collectionSource = [NSMutableArray array];
+    for (int i = 0; i < 300; i++) {
+        [self.collectionSource addObject:@(i)];
+    }
+    
     self.layout = [[UICollectionViewFlowLayout alloc] init];
     self.layout.minimumInteritemSpacing = 10;
     self.layout.minimumLineSpacing = 10;
@@ -330,7 +338,7 @@ UICollectionViewDelegateFlowLayout>
 #pragma mark -
 
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
-    return 300;
+    return self.collectionSource.count;
 }
 
 - (NSInteger)numberOfSectionsInCollectionView:(UICollectionView *)collectionView {
@@ -340,7 +348,7 @@ UICollectionViewDelegateFlowLayout>
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
     
     UICollectionViewCell *cell = nil;
-    cell = [self.collectionCells objectForKey:[NSString stringWithFormat:@"%li", (long)indexPath.row]];
+//    cell = [self.collectionCells objectForKey:[NSString stringWithFormat:@"%li", (long)indexPath.row]];
 
     if (!cell) {
         cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"CCell" forIndexPath:indexPath];
@@ -352,7 +360,10 @@ UICollectionViewDelegateFlowLayout>
         [cell.contentView addSubview:v];
         
         [self.leftViewDdc1 enableDragActionForView:v];
-        [self.collectionCells setObject:cell forKey:[NSString stringWithFormat:@"%li", (long)indexPath.row]];
+//        [self.collectionCells setObject:cell forKey:[NSString stringWithFormat:@"%li", (long)indexPath.row]];
+        
+        NSNumber *n = self.collectionSource[indexPath.row];
+        [self applyLabel:[NSString stringWithFormat:@"%li", (long)n.integerValue] toView:v];
     }
     
     return cell;
@@ -360,6 +371,11 @@ UICollectionViewDelegateFlowLayout>
 
 - (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath {
     return CGSizeMake(80, 80);
+}
+
+- (void)collectionView:(UICollectionView *)collectionView moveItemAtIndexPath:(NSIndexPath *)sourceIndexPath toIndexPath:(NSIndexPath*)destinationIndexPath {
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+    [self.collectionSource exchangeObjectAtIndex:sourceIndexPath.row withObjectAtIndex:destinationIndexPath.row];
 }
 
 #pragma mark -
@@ -373,9 +389,9 @@ UICollectionViewDelegateFlowLayout>
 //    [self loadDoubleEmbeddedDragView];
 //    [self loadDoubleDragView];
 //    [self loadDoubleDoubleEmbeddedDragView];
-//    [self loadTableDragView];
+    [self loadTableDragView];
 //    [self loadRandomDragDropView];
-    [self loadCollectionViewDragDrop];
+//    [self loadCollectionViewDragDrop];
 }
 
 - (void)populateView:(UIView *)view withCount:(NSInteger)viewCount andDragDropController:(DragDropController *)dragDropController {
@@ -435,6 +451,7 @@ UICollectionViewDelegateFlowLayout>
     
     NSIndexPath *i = [self.collection indexPathForItemAtPoint:location];
     self.collectionViewIndexPath = i.row;
+    self.startingCollectionViewIndexPath = i.row;
 }
 
 - (void)dragDropController:(DragDropController *)controller
@@ -445,9 +462,19 @@ UICollectionViewDelegateFlowLayout>
     NSIndexPath *i = [self.collection indexPathForItemAtPoint:location];
     
     if (i && self.collectionViewIndexPath != i.row && self.collectionViewIndexPath != -1) {
-        [self.collection moveItemAtIndexPath:[NSIndexPath indexPathForRow:self.collectionViewIndexPath inSection:0]
-                                 toIndexPath:[NSIndexPath indexPathForRow:i.row inSection:0]];
-    
+        
+        NSIndexPath *fromIndexPath = [NSIndexPath indexPathForRow:self.self.startingCollectionViewIndexPath inSection:0];
+        NSIndexPath *toIndexPath = [NSIndexPath indexPathForRow:i.row inSection:0];
+        if (fromIndexPath.row == toIndexPath.row) return;
+        
+        [self.collection.dataSource collectionView:self.collection
+                               moveItemAtIndexPath:fromIndexPath
+                                       toIndexPath:toIndexPath];
+        
+        [self.collection moveItemAtIndexPath:fromIndexPath
+                                 toIndexPath:toIndexPath];
+        
+        self.startingCollectionViewIndexPath = i.row;
         self.collectionViewIndexPath = i.row;
     }
 }
@@ -458,6 +485,9 @@ UICollectionViewDelegateFlowLayout>
            withDestination:(DragDropController *)destination {
     destination.dropTargetView.layer.borderColor = [UIColor clearColor].CGColor;
     destination.dropTargetView.layer.borderWidth = 0.0;
+
+    
+    [self.collection reloadItemsAtIndexPaths:[self.collection indexPathsForVisibleItems]];
     self.collectionViewIndexPath = -1;
 }
 

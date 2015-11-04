@@ -19,6 +19,13 @@
 		D4ED0C221BE62CD30014C85B /* DragAction.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ED0C211BE62CD30014C85B /* DragAction.m */; };
 		D4ED0C2B1BE7BB2B0014C85B /* DragInteractionView.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ED0C2A1BE7BB2B0014C85B /* DragInteractionView.m */; };
 		D4ED0C331BE8BF4D0014C85B /* DragDropGesture.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ED0C321BE8BF4D0014C85B /* DragDropGesture.m */; };
+		D4ED0C361BEA44470014C85B /* ExamplesTableViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ED0C351BEA44470014C85B /* ExamplesTableViewController.m */; };
+		D4ED0C391BEA484A0014C85B /* 4x4ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ED0C381BEA484A0014C85B /* 4x4ViewController.m */; };
+		D4ED0C3D1BEA488A0014C85B /* EmbeddedViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ED0C3C1BEA488A0014C85B /* EmbeddedViewController.m */; };
+		D4ED0C401BEA4B840014C85B /* DoubleEmbeddedViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ED0C3F1BEA4B840014C85B /* DoubleEmbeddedViewController.m */; };
+		D4ED0C431BEA4C4E0014C85B /* EmbeddedDropTargetViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ED0C421BEA4C4E0014C85B /* EmbeddedDropTargetViewController.m */; };
+		D4ED0C461BEA4DFE0014C85B /* NormalTableViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ED0C451BEA4DFE0014C85B /* NormalTableViewController.m */; };
+		D4ED0C491BEA4F2C0014C85B /* NormalCollectionViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ED0C481BEA4F2C0014C85B /* NormalCollectionViewController.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -63,6 +70,20 @@
 		D4ED0C2A1BE7BB2B0014C85B /* DragInteractionView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DragInteractionView.m; sourceTree = "<group>"; };
 		D4ED0C311BE8BF4D0014C85B /* DragDropGesture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DragDropGesture.h; sourceTree = "<group>"; };
 		D4ED0C321BE8BF4D0014C85B /* DragDropGesture.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DragDropGesture.m; sourceTree = "<group>"; };
+		D4ED0C341BEA44470014C85B /* ExamplesTableViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ExamplesTableViewController.h; sourceTree = "<group>"; };
+		D4ED0C351BEA44470014C85B /* ExamplesTableViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ExamplesTableViewController.m; sourceTree = "<group>"; };
+		D4ED0C371BEA484A0014C85B /* 4x4ViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = 4x4ViewController.h; sourceTree = "<group>"; };
+		D4ED0C381BEA484A0014C85B /* 4x4ViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = 4x4ViewController.m; sourceTree = "<group>"; };
+		D4ED0C3B1BEA488A0014C85B /* EmbeddedViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EmbeddedViewController.h; sourceTree = "<group>"; };
+		D4ED0C3C1BEA488A0014C85B /* EmbeddedViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EmbeddedViewController.m; sourceTree = "<group>"; };
+		D4ED0C3E1BEA4B840014C85B /* DoubleEmbeddedViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DoubleEmbeddedViewController.h; sourceTree = "<group>"; };
+		D4ED0C3F1BEA4B840014C85B /* DoubleEmbeddedViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DoubleEmbeddedViewController.m; sourceTree = "<group>"; };
+		D4ED0C411BEA4C4E0014C85B /* EmbeddedDropTargetViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EmbeddedDropTargetViewController.h; sourceTree = "<group>"; };
+		D4ED0C421BEA4C4E0014C85B /* EmbeddedDropTargetViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EmbeddedDropTargetViewController.m; sourceTree = "<group>"; };
+		D4ED0C441BEA4DFE0014C85B /* NormalTableViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NormalTableViewController.h; sourceTree = "<group>"; };
+		D4ED0C451BEA4DFE0014C85B /* NormalTableViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NormalTableViewController.m; sourceTree = "<group>"; };
+		D4ED0C471BEA4F2C0014C85B /* NormalCollectionViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NormalCollectionViewController.h; sourceTree = "<group>"; };
+		D4ED0C481BEA4F2C0014C85B /* NormalCollectionViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NormalCollectionViewController.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -116,6 +137,9 @@
 				D4ED0C1A1BE62BFB0014C85B /* DragDropController */,
 				D4ED0BEA1BE62BE70014C85B /* AppDelegate.h */,
 				D4ED0BEB1BE62BE80014C85B /* AppDelegate.m */,
+				D4ED0C3A1BEA48520014C85B /* ExampleViewControllers */,
+				D4ED0C341BEA44470014C85B /* ExamplesTableViewController.h */,
+				D4ED0C351BEA44470014C85B /* ExamplesTableViewController.m */,
 				D4ED0BED1BE62BE80014C85B /* ViewController.h */,
 				D4ED0BEE1BE62BE80014C85B /* ViewController.m */,
 				D4ED0BF01BE62BE80014C85B /* Main.storyboard */,
@@ -166,6 +190,25 @@
 				D4ED0C321BE8BF4D0014C85B /* DragDropGesture.m */,
 			);
 			name = DragDropController;
+			sourceTree = "<group>";
+		};
+		D4ED0C3A1BEA48520014C85B /* ExampleViewControllers */ = {
+			isa = PBXGroup;
+			children = (
+				D4ED0C371BEA484A0014C85B /* 4x4ViewController.h */,
+				D4ED0C381BEA484A0014C85B /* 4x4ViewController.m */,
+				D4ED0C3B1BEA488A0014C85B /* EmbeddedViewController.h */,
+				D4ED0C3C1BEA488A0014C85B /* EmbeddedViewController.m */,
+				D4ED0C3E1BEA4B840014C85B /* DoubleEmbeddedViewController.h */,
+				D4ED0C3F1BEA4B840014C85B /* DoubleEmbeddedViewController.m */,
+				D4ED0C411BEA4C4E0014C85B /* EmbeddedDropTargetViewController.h */,
+				D4ED0C421BEA4C4E0014C85B /* EmbeddedDropTargetViewController.m */,
+				D4ED0C441BEA4DFE0014C85B /* NormalTableViewController.h */,
+				D4ED0C451BEA4DFE0014C85B /* NormalTableViewController.m */,
+				D4ED0C471BEA4F2C0014C85B /* NormalCollectionViewController.h */,
+				D4ED0C481BEA4F2C0014C85B /* NormalCollectionViewController.m */,
+			);
+			name = ExampleViewControllers;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -300,10 +343,17 @@
 			files = (
 				D4ED0BEF1BE62BE80014C85B /* ViewController.m in Sources */,
 				D4ED0C2B1BE7BB2B0014C85B /* DragInteractionView.m in Sources */,
+				D4ED0C401BEA4B840014C85B /* DoubleEmbeddedViewController.m in Sources */,
 				D4ED0BEC1BE62BE80014C85B /* AppDelegate.m in Sources */,
+				D4ED0C391BEA484A0014C85B /* 4x4ViewController.m in Sources */,
+				D4ED0C3D1BEA488A0014C85B /* EmbeddedViewController.m in Sources */,
+				D4ED0C491BEA4F2C0014C85B /* NormalCollectionViewController.m in Sources */,
+				D4ED0C461BEA4DFE0014C85B /* NormalTableViewController.m in Sources */,
 				D4ED0C1F1BE62C440014C85B /* DragDropController.m in Sources */,
 				D4ED0BE91BE62BE70014C85B /* main.m in Sources */,
 				D4ED0C331BE8BF4D0014C85B /* DragDropGesture.m in Sources */,
+				D4ED0C361BEA44470014C85B /* ExamplesTableViewController.m in Sources */,
+				D4ED0C431BEA4C4E0014C85B /* EmbeddedDropTargetViewController.m in Sources */,
 				D4ED0C221BE62CD30014C85B /* DragAction.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
