@@ -148,7 +148,6 @@ static DragDropControllerManager *instance = nil;
 
 - (void)touchBegan:(DragDropGesture *)gesture {
     DragAction *d = [DragAction dragActionWithView:gesture.view];
-//    d.currentLocation = gesture.touchBeginOffset;
     
     // On the start of the drag, we should create a drag representation view..
     // this is done through our datasouce.
@@ -353,7 +352,7 @@ static DragDropControllerManager *instance = nil;
     }
     else {
         // Here we are just animating the view back to it's original spot. No other changes take place..
-        
+
         // the frame for the view is just it's original frame..
         firstStepFrame = [drag.view.superview convertRect:drag.view.frame toView:self.dragInteractionView];
         

@@ -25,6 +25,7 @@
 		D4ED0C711BEB66110014C85B /* DragDropController.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ED0C651BEB66110014C85B /* DragDropController.m */; };
 		D4ED0C721BEB66110014C85B /* DragDropGesture.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ED0C671BEB66110014C85B /* DragDropGesture.m */; };
 		D4ED0C731BEB66110014C85B /* DragInteractionView.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ED0C691BEB66110014C85B /* DragInteractionView.m */; };
+		D4ED0C761BEBCBF60014C85B /* UICollectionView+DragDropSupport.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ED0C751BEBCBF60014C85B /* UICollectionView+DragDropSupport.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -81,6 +82,8 @@
 		D4ED0C671BEB66110014C85B /* DragDropGesture.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DragDropGesture.m; sourceTree = "<group>"; };
 		D4ED0C681BEB66110014C85B /* DragInteractionView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DragInteractionView.h; sourceTree = "<group>"; };
 		D4ED0C691BEB66110014C85B /* DragInteractionView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DragInteractionView.m; sourceTree = "<group>"; };
+		D4ED0C741BEBCBF60014C85B /* UICollectionView+DragDropSupport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UICollectionView+DragDropSupport.h"; sourceTree = "<group>"; };
+		D4ED0C751BEBCBF60014C85B /* UICollectionView+DragDropSupport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UICollectionView+DragDropSupport.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -202,6 +205,8 @@
 				D4ED0C671BEB66110014C85B /* DragDropGesture.m */,
 				D4ED0C681BEB66110014C85B /* DragInteractionView.h */,
 				D4ED0C691BEB66110014C85B /* DragInteractionView.m */,
+				D4ED0C741BEBCBF60014C85B /* UICollectionView+DragDropSupport.h */,
+				D4ED0C751BEBCBF60014C85B /* UICollectionView+DragDropSupport.m */,
 			);
 			path = DragDropController;
 			sourceTree = "<group>";
@@ -341,6 +346,7 @@
 				D4ED0C6B1BEB66110014C85B /* DoubleEmbeddedViewController.m in Sources */,
 				D4ED0C6D1BEB66110014C85B /* EmbeddedViewController.m in Sources */,
 				D4ED0C6F1BEB66110014C85B /* NormalTableViewController.m in Sources */,
+				D4ED0C761BEBCBF60014C85B /* UICollectionView+DragDropSupport.m in Sources */,
 				D4ED0C6A1BEB66110014C85B /* 4x4ViewController.m in Sources */,
 				D4ED0BE91BE62BE70014C85B /* main.m in Sources */,
 				D4ED0C6C1BEB66110014C85B /* EmbeddedDropTargetViewController.m in Sources */,
