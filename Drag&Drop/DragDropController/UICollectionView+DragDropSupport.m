@@ -15,8 +15,9 @@
 @property (nonatomic, strong) DragDropController *dragDropController;
 
 @property (nonatomic, assign) BOOL isUpdatingCells;
-@property (nonatomic, assign) NSIndexPath *hoverIndexPath;
-@property (nonatomic, assign) NSIndexPath *startingIndexPath;
+
+@property (nonatomic, assign) NSIndexPath *originIndexPath;
+@property (nonatomic, assign) NSIndexPath *destinationIndexPath;
 
 @end
 
@@ -26,13 +27,13 @@
 
 - (void)enableDragAndDropForCell:(UICollectionViewCell *)cell atIndexPath:(NSIndexPath *)indexPath {
     
-    if (!self.dragDropController) {
-        self.dragDropController = [self controller];
-    }
+    if (!self.dragDropController) self.dragDropController = [self controller];
 
     [self.dragDropController enableDragActionForView:cell];
 
-    cell.hidden = (self.hoverIndexPath && [self.hoverIndexPath compare:indexPath] == NSOrderedSame) ? YES : NO;
+    cell.hidden = (self.destinationIndexPath && [self.destinationIndexPath compare:indexPath] == NSOrderedSame)
+    ? YES
+    : NO;
 }
 
 #pragma mark - DragDropController Delegate
@@ -57,7 +58,6 @@
                 didEndDrag:(DragAction *)drag {
     drag.dragRepresentation.transform = CGAffineTransformIdentity;
     drag.view.alpha = 1.0;
-    
     [self reloadItemsAtIndexPaths:[self indexPathsForVisibleItems]];
 }
 
@@ -69,9 +69,9 @@
            withDestination:(DragDropController *)destination {
     destination.dropTargetView.layer.borderColor = [UIColor redColor].CGColor;
     destination.dropTargetView.layer.borderWidth = 2.0;
-    
-    self.hoverIndexPath = [self indexPathForItemAtPoint:location];
-    self.startingIndexPath = [self indexPathForItemAtPoint:location];
+
+    self.originIndexPath = [self indexPathForItemAtPoint:location];
+    self.destinationIndexPath = [self indexPathForItemAtPoint:location];
 }
 
 - (void)dragDropController:(DragDropController *)controller
@@ -81,18 +81,19 @@
     
     NSIndexPath *indexPathAtDragLocation = [self indexPathForItemAtPoint:location];
     if (!indexPathAtDragLocation) return;
+
     
     NSIndexPath *toIndexPath = indexPathAtDragLocation;
+    NSIndexPath *fromIndexPath = self.destinationIndexPath
+    ? self.destinationIndexPath
+    : self.originIndexPath ;
     
-    NSIndexPath *fromIndexPath = self.hoverIndexPath ? self.hoverIndexPath : self.startingIndexPath ;
-    if (!fromIndexPath) return;
-    
-    if ([fromIndexPath compare:indexPathAtDragLocation] == NSOrderedSame) return;
+    if (!fromIndexPath || [fromIndexPath compare:indexPathAtDragLocation] == NSOrderedSame) return;
     
     if (self.isUpdatingCells) return;
     self.isUpdatingCells = YES;
     
-    self.hoverIndexPath = indexPathAtDragLocation;
+    self.destinationIndexPath = toIndexPath;
     [self performBatchUpdates:^{
         [self.dataSource collectionView:self
                                moveItemAtIndexPath:fromIndexPath
@@ -113,9 +114,9 @@
            withDestination:(DragDropController *)destination {
     destination.dropTargetView.layer.borderColor = [UIColor clearColor].CGColor;
     destination.dropTargetView.layer.borderWidth = 0.0;
-    
-    self.hoverIndexPath = nil;
-    self.startingIndexPath = nil;
+
+    self.originIndexPath = nil;
+    self.destinationIndexPath = nil;
 }
 
 #pragma mark -
@@ -141,20 +142,13 @@
 - (CGRect)dragDropController:(DragDropController *)controller
                 frameForView:(UIView *)view
                inDestination:(DragDropController *)destination {
-    
-    if (!self.hoverIndexPath)
-        return view.frame;
-    
-    return [self cellForItemAtIndexPath:self.hoverIndexPath].frame;
+    return [self cellForItemAtIndexPath:self.destinationIndexPath].frame;
 }
 
 - (UIView *)dragDropController:(DragDropController *)controller
      dragRepresentationForView:(UIView *)view {
     
-    UIView *dragView = [[UIView alloc] initWithFrame:view.bounds];
-    dragView.backgroundColor = [UIColor redColor];
-    
-    return dragView;
+    return [view snapshotViewAfterScreenUpdates:NO];
 }
 
 #pragma mark -
@@ -178,21 +172,21 @@
 }
 
 
-- (void)setHoverIndexPath:(NSIndexPath *)hoverIndexPath {
-    objc_setAssociatedObject(self, @selector(hoverIndexPath), hoverIndexPath, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+- (void)setDestinationIndexPath:(NSIndexPath *)destinationIndexPath {
+    objc_setAssociatedObject(self, @selector(destinationIndexPath), destinationIndexPath, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 
-- (NSIndexPath *)hoverIndexPath {
-    return objc_getAssociatedObject(self, @selector(hoverIndexPath));
+- (NSIndexPath *)destinationIndexPath {
+    return objc_getAssociatedObject(self, @selector(destinationIndexPath));
 }
 
 
-- (void)setStartingIndexPath:(NSIndexPath *)startingIndexPath {
-    objc_setAssociatedObject(self, @selector(startingIndexPath), startingIndexPath, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+- (void)setOriginIndexPath:(NSIndexPath *)originIndexPath {
+    objc_setAssociatedObject(self, @selector(originIndexPath), originIndexPath, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 
-- (NSIndexPath *)startingIndexPath {
-    return objc_getAssociatedObject(self, @selector(startingIndexPath));
+- (NSIndexPath *)originIndexPath {
+    return objc_getAssociatedObject(self, @selector(originIndexPath));
 }
 
 #pragma mark -
