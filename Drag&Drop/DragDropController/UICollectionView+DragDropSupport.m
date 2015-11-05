@@ -6,7 +6,7 @@
 //  Copyright © 2015 Joseph Patino. All rights reserved.
 //
 
-#import <objc/objc-runtime.h>
+#import <objc/runtime.h>
 
 #import "UICollectionView+DragDropSupport.h"
 #import "DragDropController.h"
@@ -26,11 +26,9 @@
 
 - (void)enableDragAndDropForCell:(UICollectionViewCell *)cell atIndexPath:(NSIndexPath *)indexPath {
     
-    NSLog(@"%@", self.dragDropController);
     if (!self.dragDropController) {
         self.dragDropController = [self controller];
     }
-    NSLog(@"%@", self.dragDropController);
 
     [self.dragDropController enableDragActionForView:cell];
 
