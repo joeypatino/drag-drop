@@ -14,6 +14,7 @@
 @property (nonatomic, strong) UICollectionView *collection;
 @property (nonatomic, strong) UICollectionViewFlowLayout *layout;
 @property (nonatomic, strong) NSMutableArray *collectionSource;
+@property (nonatomic, strong) NSMutableArray *collectionHeights;
 
 @end
 
@@ -27,14 +28,20 @@
 - (void)loadContent {
     
     self.collectionSource = [NSMutableArray array];
+    self.collectionHeights = [NSMutableArray array];
+    
     for (int i = 0; i < 300; i++) {
         [self.collectionSource addObject:@(i)];
+        int n = arc4random() % 120;
+        if (n < 40) n = 40;
+        [self.collectionHeights addObject:@(n)];
     }
     
+
     self.layout = [[UICollectionViewFlowLayout alloc] init];
-    self.layout.minimumInteritemSpacing = 10;
-    self.layout.minimumLineSpacing = 10;
-    
+    self.layout.minimumInteritemSpacing = 4;
+    self.layout.minimumLineSpacing = 4;
+    self.layout.sectionInset = UIEdgeInsetsMake(4, 4, 4, 4);
     self.collection = [[UICollectionView alloc] initWithFrame:CGRectMake(0, 20,
                                                                          self.view.bounds.size.width,
                                                                          self.view.bounds.size.height-20)
@@ -61,21 +68,22 @@
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
     
     UICollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"CollectionViewCell" forIndexPath:indexPath];
-    cell.backgroundColor = [UIColor blueColor];
-    cell.contentView.backgroundColor = [UIColor blueColor];
+    cell.backgroundColor = [UIColor whiteColor];
     
     [cell.contentView.subviews makeObjectsPerformSelector:@selector(removeFromSuperview)];
-
     NSNumber *n = self.collectionSource[indexPath.row];
     [self applyLabel:[NSString stringWithFormat:@"%li", (long)n.integerValue] toView:cell.contentView];
-
-    [collectionView enableDragAndDropForCell:cell atIndexPath:indexPath];
 
     return cell;
 }
 
+- (void)collectionView:(UICollectionView *)collectionView willDisplayCell:(nonnull UICollectionViewCell *)cell forItemAtIndexPath:(nonnull NSIndexPath *)indexPath {
+    [collectionView enableDragAndDropForCell:cell atIndexPath:indexPath];
+}
+
 - (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath {
-    return CGSizeMake(80, 80);
+    
+    return CGSizeMake((self.view.bounds.size.width/2)-6, [self.collectionHeights[indexPath.row] integerValue]);
 }
 
 - (void)collectionView:(UICollectionView *)collectionView moveItemAtIndexPath:(NSIndexPath *)sourceIndexPath toIndexPath:(NSIndexPath*)destinationIndexPath {
@@ -89,7 +97,7 @@
     UILabel *l = [[UILabel alloc] init];
     l.text = string;
     [l sizeToFit];
-    l.center = CGPointMake(view.frame.size.width/2, view.frame.size.height/2);
+    l.frame = CGRectMake(0, 0, CGRectGetWidth(l.frame), CGRectGetHeight(l.frame));
     [view addSubview:l];
 }
 

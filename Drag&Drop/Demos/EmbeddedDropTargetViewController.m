@@ -99,7 +99,6 @@
 - (void)dragDropController:(DragDropController *)controller
              willStartDrag:(DragAction *)drag
                   animated:(BOOL)animated {
-    drag.view.alpha = 0.0;
 }
 - (void)dragDropController:(DragDropController *)controller
               didStartDrag:(DragAction *)drag {
@@ -110,7 +109,6 @@
 }
 - (void)dragDropController:(DragDropController *)controller
                 didEndDrag:(DragAction *)drag {
-    drag.view.alpha = 1.0;
 }
 
 #pragma mark -
@@ -169,14 +167,6 @@
 
     NSInteger cnt = destination.dropTargetView.subviews.count -1;
     return CGRectMake(5 + (cnt * CGRectGetWidth(view.frame) + (cnt * 5)), 5, CGRectGetWidth(view.frame), CGRectGetHeight(view.frame));
-}
-- (UIView *)dragDropController:(DragDropController *)controller
-     dragRepresentationForView:(UIView *)view {
-    
-    UIView *dragView = [[UIView alloc] initWithFrame:view.bounds];
-    dragView.backgroundColor = [UIColor redColor];
-    
-    return dragView;
 }
 
 @end

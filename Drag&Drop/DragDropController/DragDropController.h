@@ -13,7 +13,7 @@
  * The duration of the animation when the icon is released
  * and moves to its next position.
  */
-#define kDropAnimationDuration              .4
+#define kDropAnimationDuration              .2
 
 /*
  * The duration of the drag pickup animation.
@@ -25,7 +25,7 @@
  * This is used when the view being dragged is contained
  * within a UIScrollView, UITableView, or UICollectionView.
  */
-#define kDragPickupBeginDelay               .16
+#define kDragPickupBeginDelay               .12
 
 @class DragAction;
 @class DragDropController;
@@ -84,8 +84,6 @@
              toDestination:(DragDropController *)destination;
 
 @required
-- (UIView *)dragDropController:(DragDropController *)controller
-     dragRepresentationForView:(UIView *)view;
 
 - (CGRect)dragDropController:(DragDropController *)controller
                 frameForView:(UIView *)view

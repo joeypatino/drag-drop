@@ -10,4 +10,5 @@
 
 @interface UICollectionView (DragDropSupport)
 - (void)enableDragAndDropForCell:(UICollectionViewCell *)cell atIndexPath:(NSIndexPath *)indexPath;
+- (void)disableDragAndDropForCell:(UICollectionViewCell *)cell;
 @end

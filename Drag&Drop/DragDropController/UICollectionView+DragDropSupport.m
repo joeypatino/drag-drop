@@ -18,7 +18,7 @@
 
 @property (nonatomic, assign) NSIndexPath *originIndexPath;
 @property (nonatomic, assign) NSIndexPath *destinationIndexPath;
-
+@property (nonatomic, strong) NSMutableArray *dragEnabledCells;
 @end
 
 @implementation UICollectionView (DragDropSupport)
@@ -26,14 +26,31 @@
 #pragma mark -
 
 - (void)enableDragAndDropForCell:(UICollectionViewCell *)cell atIndexPath:(NSIndexPath *)indexPath {
-    
     if (!self.dragDropController) self.dragDropController = [self controller];
+    if (!self.dragEnabledCells) self.dragEnabledCells = [NSMutableArray array];
 
-    [self.dragDropController enableDragActionForView:cell];
+    if (![self.dragEnabledCells containsObject:cell]) {
+        [self.dragDropController enableDragActionForView:cell];
+        [self.dragEnabledCells addObject:cell];
+    }
+}
 
-    cell.hidden = (self.destinationIndexPath && [self.destinationIndexPath compare:indexPath] == NSOrderedSame)
-    ? YES
-    : NO;
+- (void)disableDragAndDropForCell:(UICollectionViewCell *)cell {
+    if ([self.dragEnabledCells containsObject:cell]){
+        [self.dragDropController disableDragActionForView:cell];
+        [self.dragEnabledCells removeObject:cell];
+    }
+}
+
+#pragma mark -
+
+- (DragDropController *)controller {
+    DragDropController *d = [[DragDropController alloc] init];
+    d.dropTargetView = self;
+    d.dragDropDataSource = (NSObject <DragDropControllerDatasource>*)self;
+    d.dragDropDelegate = (NSObject <DragDropControllerDelegate>*)self;
+    
+    return d;
 }
 
 #pragma mark - DragDropController Delegate
@@ -41,24 +58,15 @@
 - (void)dragDropController:(DragDropController *)controller
              willStartDrag:(DragAction *)drag
                   animated:(BOOL)animated {
-    drag.dragRepresentation.transform = CGAffineTransformMakeScale(1.1, 1.1);
-    drag.view.alpha = 0.0;
-}
-
-- (void)dragDropController:(DragDropController *)controller
-              didStartDrag:(DragAction *)drag {
-}
-
-- (void)dragDropController:(DragDropController *)controller
-               willEndDrag:(DragAction *)drag
-                  animated:(BOOL)animated {
+    
 }
 
 - (void)dragDropController:(DragDropController *)controller
                 didEndDrag:(DragAction *)drag {
-    drag.dragRepresentation.transform = CGAffineTransformIdentity;
-    drag.view.alpha = 1.0;
+    
+    [UIView setAnimationsEnabled:NO];
     [self reloadItemsAtIndexPaths:[self indexPathsForVisibleItems]];
+    [UIView setAnimationsEnabled:YES];
 }
 
 #pragma mark -
@@ -67,6 +75,7 @@
       didStartDraggingView:(UIView *)view
                 atLocation:(CGPoint)location
            withDestination:(DragDropController *)destination {
+
     destination.dropTargetView.layer.borderColor = [UIColor redColor].CGColor;
     destination.dropTargetView.layer.borderWidth = 2.0;
 
@@ -92,26 +101,24 @@
     
     if (self.isUpdatingCells) return;
     self.isUpdatingCells = YES;
-    
     self.destinationIndexPath = toIndexPath;
-    [self performBatchUpdates:^{
-        [self.dataSource collectionView:self
-                               moveItemAtIndexPath:fromIndexPath
-                                       toIndexPath:toIndexPath];
-        
-        [self deleteItemsAtIndexPaths:@[fromIndexPath]];
-        [self insertItemsAtIndexPaths:@[toIndexPath]];
-    }
-                              completion:^(BOOL finished){
-                                  self.isUpdatingCells = NO;
-                              }];
     
+    [self.dataSource collectionView:self
+                moveItemAtIndexPath:fromIndexPath
+                        toIndexPath:toIndexPath];
+
+    [UIView animateWithDuration:.3 animations:^{
+        [self cascadeUpdateCellsFrom:self.originIndexPath to:toIndexPath];
+    } completion:^(BOOL finsihed){
+        self.isUpdatingCells = NO;
+    }];
 }
 
 - (void)dragDropController:(DragDropController *)controller
         didEndDraggingView:(UIView *)view
                 atLocation:(CGPoint)location
            withDestination:(DragDropController *)destination {
+
     destination.dropTargetView.layer.borderColor = [UIColor clearColor].CGColor;
     destination.dropTargetView.layer.borderWidth = 0.0;
 
@@ -119,36 +126,62 @@
     self.destinationIndexPath = nil;
 }
 
-#pragma mark -
-
-- (void)dragDropController:(DragDropController *)controller
-               didMoveView:(UIView *)view
-             toDestination:(DragDropController *)destination {
-}
-
 #pragma mark - DragDropController Datasource
-
-- (BOOL)dragDropController:(DragDropController *)controller
-            shouldDragView:(UIView *)view {
-    return YES;
-}
-
-- (BOOL)dragDropController:(DragDropController *)controller
-               canDropView:(UIView *)target
-             toDestination:(DragDropController *)destination {
-    return YES;
-}
 
 - (CGRect)dragDropController:(DragDropController *)controller
                 frameForView:(UIView *)view
                inDestination:(DragDropController *)destination {
-    return [self cellForItemAtIndexPath:self.destinationIndexPath].frame;
+    return [self layoutAttributesForItemAtIndexPath:self.destinationIndexPath].frame;
 }
 
-- (UIView *)dragDropController:(DragDropController *)controller
-     dragRepresentationForView:(UIView *)view {
+#pragma mark -
+
+- (void)cascadeUpdateCellsFrom:(NSIndexPath *)fromIndexPath to:(NSIndexPath *)toIndexPath {
     
-    return [view snapshotViewAfterScreenUpdates:NO];
+    NSArray *visibleCellIndexPaths = [self indexPathsForVisibleItems];
+    
+    for (NSIndexPath *indexPath in visibleCellIndexPaths) {
+        NSComparisonResult toResult = [indexPath compare:toIndexPath];
+        NSComparisonResult fromResult = [indexPath compare:fromIndexPath];
+        
+        UICollectionViewCell *visibleCell = [self cellForItemAtIndexPath:indexPath];
+        NSIndexPath *nextIndexPath = indexPath;
+        
+        if ([indexPath compare:fromIndexPath] == NSOrderedSame) {
+            
+            UICollectionViewLayoutAttributes *attributes = [self layoutAttributesForItemAtIndexPath:toIndexPath];
+            CGRect r = visibleCell.frame;
+            r.size = attributes.size;
+            visibleCell.frame = r;
+            continue;
+        }
+        
+        if (toResult == NSOrderedAscending) {
+            if (fromResult == NSOrderedDescending) {
+                // - 1
+                nextIndexPath = [NSIndexPath indexPathForRow:nextIndexPath.row-1 inSection:0];
+            }
+        }
+        else if (toResult == NSOrderedDescending) {
+            if (fromResult == NSOrderedAscending) {
+                // + 1
+                nextIndexPath = [NSIndexPath indexPathForRow:nextIndexPath.row+1 inSection:0];
+            }
+        }
+        else if (toResult == NSOrderedSame) {
+            NSComparisonResult toFromResult = [toIndexPath compare:fromIndexPath];
+            if (toFromResult == NSOrderedAscending) {
+                // + 1
+                nextIndexPath = [NSIndexPath indexPathForRow:nextIndexPath.row+1 inSection:0];
+            }
+            else if (toFromResult == NSOrderedDescending) {
+                // - 1
+                nextIndexPath = [NSIndexPath indexPathForRow:nextIndexPath.row-1 inSection:0];
+            }
+        }
+        
+        visibleCell.frame = [self layoutAttributesForItemAtIndexPath:nextIndexPath].frame;
+    }
 }
 
 #pragma mark -
@@ -189,14 +222,13 @@
     return objc_getAssociatedObject(self, @selector(originIndexPath));
 }
 
-#pragma mark -
-
-- (DragDropController *)controller {
-    DragDropController *d = [[DragDropController alloc] init];
-    d.dropTargetView = self;
-    d.dragDropDataSource = (NSObject <DragDropControllerDatasource>*)self;
-    d.dragDropDelegate = (NSObject <DragDropControllerDelegate>*)self;
-    return d;
+- (void)setDragEnabledCells:(NSMutableArray *)dragEnabledCells {
+    objc_setAssociatedObject(self, @selector(dragEnabledCells), dragEnabledCells, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
+
+- (NSMutableArray *)dragEnabledCells {
+    return objc_getAssociatedObject(self, @selector(dragEnabledCells));
+}
+
 
 @end

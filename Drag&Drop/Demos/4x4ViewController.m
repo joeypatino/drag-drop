@@ -135,8 +135,6 @@
 - (void)dragDropController:(DragDropController *)controller
              willStartDrag:(DragAction *)drag
                   animated:(BOOL)animated {
-    drag.dragRepresentation.transform = CGAffineTransformMakeScale(1.5, 1.5);
-    drag.view.alpha = 0.0;
 }
 - (void)dragDropController:(DragDropController *)controller
               didStartDrag:(DragAction *)drag {
@@ -147,8 +145,6 @@
 }
 - (void)dragDropController:(DragDropController *)controller
                 didEndDrag:(DragAction *)drag {
-    drag.dragRepresentation.transform = CGAffineTransformIdentity;
-    drag.view.alpha = 1.0;
 }
 
 #pragma mark -
@@ -197,14 +193,6 @@
                inDestination:(DragDropController *)destination {
     NSInteger cnt = destination.dropTargetView.subviews.count -1;
     return [self frameForCount:cnt inView:destination.dropTargetView];
-}
-- (UIView *)dragDropController:(DragDropController *)controller
-     dragRepresentationForView:(UIView *)view {
-    
-    UIView *dragView = [[UIView alloc] initWithFrame:view.bounds];
-    dragView.backgroundColor = [UIColor redColor];
-    
-    return dragView;
 }
 
 @end

@@ -76,7 +76,10 @@ static DragDropControllerManager *instance = nil;
 @property (nonatomic, assign) BOOL isDragging;
 @property (nonatomic, assign) BOOL isDropping;
 
-- (BOOL)startDrag:(DragAction *)drag;   // Returns YES if the drag was successfuly started.. Otherwise returns NO.
+@property (nonatomic, weak) UIView *sourceView;         // the source view that the drag came from.
+@property (nonatomic, assign) CGRect sourceFrame;       // the source frame of the view being dragged.
+
+- (void)startDrag:(DragAction *)drag;
 - (void)dragMoved:(DragAction *)drag;
 - (void)endDrag:(DragAction *)drag;
 
@@ -128,6 +131,7 @@ static DragDropControllerManager *instance = nil;
 
 - (void)handleDragDropGesture:(DragDropGesture *)gesture {
     
+    
     switch (gesture.state) {
         case UIGestureRecognizerStateBegan:
             [self touchBegan:gesture];
@@ -147,27 +151,21 @@ static DragDropControllerManager *instance = nil;
 }
 
 - (void)touchBegan:(DragDropGesture *)gesture {
+    
     DragAction *d = [DragAction dragActionWithView:gesture.view];
-    
-    // On the start of the drag, we should create a drag representation view..
-    // this is done through our datasouce.
-    d.dragRepresentation = [self dragRepresentationViewForDrag:d];
+    self.sourceView = gesture.view.superview;
+    self.sourceFrame = gesture.view.frame;
 
-    // we store the drag representation on the gesture, then
-    // on gesture moved, we can grab the drag representation view
-    // and translate it across the screen..
-    gesture.dragRepresentation = d.dragRepresentation;
-    
-
-    BOOL startedDrag = [self startDrag:d];
-    d.dragRepresentation.hidden = !startedDrag;
+    [self startDrag:d];
 }
 
 - (void)touchMoved:(DragDropGesture *)gesture {
+    
     [self dragMoved:[self dragWithGesture:gesture]];
 }
 
 - (void)touchEnded:(DragDropGesture *)gesture {
+    
     [self endDrag:[self dragWithGesture:gesture]];
 }
 
@@ -179,10 +177,6 @@ static DragDropControllerManager *instance = nil;
     // Set the drags current location to the location of the drag in the window's coordinates..
     d.currentLocation = [gesture locationInView:nil];
     
-    // Copy over the existing drag representation from the drag.
-    // This was originally created when the drag began.
-    d.dragRepresentation = gesture.dragRepresentation;
-    
     // Copy over the existing drag touch begin offset
     // This was originally set when the drag began.
     d.firstTouchOffset = gesture.touchBeginOffset;
@@ -192,23 +186,8 @@ static DragDropControllerManager *instance = nil;
 
 #pragma mark -
 
-// Loads the Drag representation from the datasource.
-- (UIView *)dragRepresentationViewForDrag:(DragAction *)drag {
-    
-    UIView *dragView = [self.dragDropDataSource dragDropController:self dragRepresentationForView:drag.view];
-    
-    // start with the drag representation hidden, it will
-    // unhide when/if the drag starts
-    dragView.hidden = YES;
-    [drag.view addSubview:dragView];
-    
-    return dragView;
-}
-
-#pragma mark -
-
-- (BOOL)startDrag:(DragAction *)drag {
-    if (self.isDragging || self.isDropping) return NO;
+- (void)startDrag:(DragAction *)drag {
+    if (self.isDragging || self.isDropping) return;
     
     // make sure the datasource allows dragging this view..
     // This check allows the datasource to have more granular control
@@ -225,8 +204,8 @@ static DragDropControllerManager *instance = nil;
         // then add it as a subview.
         
         // All drag movement actually occurs on the interaction view..
-        drag.dragRepresentation.frame = [self.dragInteractionView convertRect:drag.view.frame fromView:drag.view.superview];
-        [self.dragInteractionView addSubview:drag.dragRepresentation];
+        drag.view.frame = [self.dragInteractionView convertRect:drag.view.frame fromView:drag.view.superview];
+        [self.dragInteractionView addSubview:drag.view];
         
         // Allow the delegate to respond to the start of the drag sequence.
         [UIView animateWithDuration:kDragDropPickupAnimationDuration
@@ -245,14 +224,7 @@ static DragDropControllerManager *instance = nil;
                                      [self.dragDropDelegate dragDropController:self didStartDrag:drag];
                              }
                          }];
-        
-        // return yes for a successful drag start..
-        return YES;
     }
-    
-    
-    // return no if the drag start did not succeed.
-    return NO;
 }
 
 - (void)dragMoved:(DragAction *)drag {
@@ -268,26 +240,25 @@ static DragDropControllerManager *instance = nil;
         [self notifyDropTarget:[self controllerForDropAtPoint:drag.currentLocation] ofDragAction:drag];
         
         CGPoint adjustmentForTransform = CGPointZero;
-        
-        
+
         // Apply an additional adjustment if the frame of our drag representation has been transformed.
         // This is non standard. It is added since the typical style when dragging and dropping is to scale
         // the view when it's picked up. I thinkk this only works for scale and transform
-        if (CGAffineTransformEqualToTransform(drag.dragRepresentation.transform, CGAffineTransformIdentity) == NO) {
-            
-            CGRect r = CGRectApplyAffineTransform(drag.view.frame, drag.dragRepresentation.transform);
-            
-            adjustmentForTransform = CGPointMake((r.size.width - CGRectGetWidth(drag.view.frame)) / 2,
-                                                 (r.size.height - CGRectGetHeight(drag.view.frame)) / 2);
+        if (CGAffineTransformEqualToTransform(drag.view.transform, CGAffineTransformIdentity) == NO) {
+//
+//            CGRect r = CGRectApplyAffineTransform(drag.view.frame, drag.view.transform);
+//            
+//            adjustmentForTransform = CGPointMake((r.size.width - CGRectGetWidth(drag.view.frame)) / 2,
+//                                                 (r.size.height - CGRectGetHeight(drag.view.frame)) / 2);
         }
-        
-        
+
+
         // udpate the frame of the drag representation view based on the new location,
         // the adjustment above, and the offset of where we first touched the view.
-        subview.frame = CGRectMake(location.x - drag.firstTouchOffset.x - adjustmentForTransform.x,
-                                   location.y - drag.firstTouchOffset.y - adjustmentForTransform.y,
-                                   subview.frame.size.width,
-                                   subview.frame.size.height);
+        subview.center = CGPointMake(location.x - drag.firstTouchOffset.x
+                                     - adjustmentForTransform.x + CGRectGetWidth(subview.frame)/2,
+                                     location.y - drag.firstTouchOffset.y
+                                     - adjustmentForTransform.y + CGRectGetHeight(subview.frame)/2);
     }
     
 }
@@ -354,12 +325,19 @@ static DragDropControllerManager *instance = nil;
         // Here we are just animating the view back to it's original spot. No other changes take place..
 
         // the frame for the view is just it's original frame..
-        firstStepFrame = [drag.view.superview convertRect:drag.view.frame toView:self.dragInteractionView];
-        
+        firstStepFrame = [self.sourceView convertRect:self.sourceFrame toView:self.dragInteractionView];
+
         // After animating the drag representation view back to it's spot..
         animationCompletionBlock = ^ (BOOL finished){
             this.isDragging = NO;
             this.isDropping = NO;
+            
+            drag.view.frame = self.sourceFrame;
+            [self.sourceView addSubview:drag.view];
+
+            self.sourceView = nil;
+            self.sourceFrame = CGRectZero;
+
         };
     }
     
@@ -370,7 +348,7 @@ static DragDropControllerManager *instance = nil;
                      animations:^{
                          
                          // set the frame..
-                         drag.dragRepresentation.frame = firstStepFrame;
+                         drag.view.frame = firstStepFrame;
                          
                          // notify the delegate if they are listening..
                          if ([self.dragDropDelegate respondsToSelector:@selector(dragDropController:willEndDrag:animated:)])
@@ -386,13 +364,8 @@ static DragDropControllerManager *instance = nil;
                          if ([self.dragDropDelegate respondsToSelector:@selector(dragDropController:didEndDrag:)])
                              [self.dragDropDelegate dragDropController:self didEndDrag:drag];
                          
-                         // On completion of a drag action we should clean up our mess.. this means..
-                         
-                         // remove the drag representation view..
-                         [drag.dragRepresentation removeFromSuperview];
-                         drag.dragRepresentation = nil;
-                         
-                         // and remove our drag interaction view since it's purpose is now fulfilled..
+                         // On completion of a drag action we should clean up our mess by
+                         // removing our drag interaction view since it's purpose is now fulfilled..
                          [_dragInteractionView removeFromSuperview];
                          _dragInteractionView = nil;
                      }];
