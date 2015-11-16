@@ -153,9 +153,11 @@ static DragDropControllerManager *instance = nil;
 - (void)touchBegan:(DragDropGesture *)gesture {
     
     DragAction *d = [DragAction dragActionWithView:gesture.view];
+    d.currentLocation = [gesture locationInView:nil];
+    
     self.sourceView = gesture.view.superview;
     self.sourceFrame = gesture.view.frame;
-
+    
     [self startDrag:d];
 }
 
@@ -214,6 +216,10 @@ static DragDropControllerManager *instance = nil;
                          animations:^{
                              if ([self.dragDropDataSource respondsToSelector:@selector(dragDropController:willStartDrag:animated:)])
                                  [self.dragDropDelegate dragDropController:self willStartDrag:drag animated:YES];
+                             
+                             CGPoint p = [self.dragInteractionView convertPoint:drag.currentLocation fromView:drag.view];
+                             [self notifyDropTarget:[self controllerForDropAtPoint:p] ofDragAction:drag];
+
                          }
                          completion:^ (BOOL finished){
                              
@@ -340,8 +346,7 @@ static DragDropControllerManager *instance = nil;
 
         };
     }
-    
-    [self notifyDropTarget:nil ofDragAction:drag];
+
     [UIView animateWithDuration: kDropAnimationDuration
                           delay:0
                         options:UIViewAnimationOptionCurveEaseIn
@@ -353,6 +358,8 @@ static DragDropControllerManager *instance = nil;
                          // notify the delegate if they are listening..
                          if ([self.dragDropDelegate respondsToSelector:@selector(dragDropController:willEndDrag:animated:)])
                              [self.dragDropDelegate dragDropController:self willEndDrag:drag animated:YES];
+                         
+                         [self notifyDropTarget:nil ofDragAction:drag];
                      }
                      completion:^(BOOL finished){
                          
@@ -376,7 +383,7 @@ static DragDropControllerManager *instance = nil;
 
 - (void)notifyDropTarget:(DragDropController *)dropTarget ofDragAction:(DragAction *)drag {
     // Notifys the datasource when we start, continue, or end dragging above a valid dropTargetView.
-    
+
     if (self.currentDragDestination && [self.currentDragDestination isEqual:dropTarget]) {
         
         CGPoint p = [dropTarget.dropTargetView convertPoint:drag.currentLocation fromView:nil];
@@ -405,9 +412,8 @@ static DragDropControllerManager *instance = nil;
         
         if (dropTarget) {
             self.currentDragDestination = dropTarget;
-            
-            CGPoint p = [dropTarget.dropTargetView convertPoint:drag.currentLocation fromView:nil];
-            
+            CGPoint p = [self.currentDragDestination.dropTargetView convertPoint:drag.currentLocation fromView:nil];
+
             if ([self.dragDropDelegate respondsToSelector:@selector(dragDropController:didStartDraggingView:atLocation:withDestination:)]) {
                 [self.dragDropDelegate dragDropController:self
                                      didStartDraggingView:drag.view

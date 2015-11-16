@@ -24,7 +24,8 @@
                                         @"Container-2xEmbedded",
                                         @"Drop Target Embedded",
                                         @"Table View",
-                                        @"Collection View"
+                                        @"Collection View",
+                                        @"Double Collection View"
                                         ],
                                 @"segues":@[
                                         @"_x4ViewController",
@@ -32,7 +33,8 @@
                                         @"DoubleEmbeddedViewController",
                                         @"EmbeddedDropTargetViewController",
                                         @"NormalTableViewController",
-                                        @"NormalCollectionViewController"
+                                        @"NormalCollectionViewController",
+                                        @"DoubleCollectionViewController",
                                         ]};
 }
 

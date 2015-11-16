@@ -7,7 +7,7 @@
 //
 
 #import "NormalCollectionViewController.h"
-#import "UICollectionView+DragDropSupport.h"
+#import "UICollectionView+InteractiveMovementSupport.h"
 
 @interface NormalCollectionViewController () <UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout>
 

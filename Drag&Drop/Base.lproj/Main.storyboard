@@ -110,6 +110,28 @@
             </objects>
             <point key="canvasLocation" x="-56" y="3203"/>
         </scene>
+        <!--Double Collection View Controller-->
+        <scene sceneID="fLa-Hq-bQQ">
+            <objects>
+                <viewController id="syq-dD-ah1" customClass="DoubleCollectionViewController" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="NxH-yp-xvG"/>
+                        <viewControllerLayoutGuide type="bottom" id="iVf-Jj-CMF"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="sOa-Ky-BgQ">
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <animations/>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    </view>
+                    <extendedEdge key="edgesForExtendedLayout" bottom="YES"/>
+                    <navigationItem key="navigationItem" id="ulR-qL-uKO"/>
+                    <nil key="simulatedTopBarMetrics"/>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="uHo-5A-W0s" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-56" y="3995"/>
+        </scene>
         <!--Normal Table View Controller-->
         <scene sceneID="NyN-SX-cZG">
             <objects>
@@ -188,6 +210,7 @@
                         <segue destination="grL-bh-cx5" kind="show" identifier="NormalTableViewController" id="41f-ct-19n"/>
                         <segue destination="3ae-fy-XmT" kind="show" identifier="NormalCollectionViewController" id="VME-Jf-X33"/>
                         <segue destination="C4T-k4-zLf" kind="show" identifier="EmbeddedDropTargetViewController" id="kZt-BE-fWW"/>
+                        <segue destination="syq-dD-ah1" kind="show" identifier="DoubleCollectionViewController" id="Gei-km-2Wa"/>
                     </connections>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Icr-3F-HNJ" userLabel="First Responder" sceneMemberID="firstResponder"/>
