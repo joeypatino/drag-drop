@@ -8,7 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		D475B52A1BF7F0790069C763 /* DoubleCollectionViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D475B5291BF7F0790069C763 /* DoubleCollectionViewController.m */; };
-		D475B52D1BF89E180069C763 /* UICollectionView+DropSupport.m in Sources */ = {isa = PBXBuildFile; fileRef = D475B52C1BF89E180069C763 /* UICollectionView+DropSupport.m */; };
+		D479083E1BFB79520074032C /* UICollectionView+DragSupport.m in Sources */ = {isa = PBXBuildFile; fileRef = D479083D1BFB79520074032C /* UICollectionView+DragSupport.m */; };
+		D47908411BFB795B0074032C /* UICollectionView+DropSupport.m in Sources */ = {isa = PBXBuildFile; fileRef = D47908401BFB795B0074032C /* UICollectionView+DropSupport.m */; };
 		D4ED0BE91BE62BE70014C85B /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ED0BE81BE62BE70014C85B /* main.m */; };
 		D4ED0BEC1BE62BE80014C85B /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ED0BEB1BE62BE80014C85B /* AppDelegate.m */; };
 		D4ED0BF21BE62BE80014C85B /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D4ED0BF01BE62BE80014C85B /* Main.storyboard */; };
@@ -27,7 +28,7 @@
 		D4ED0C711BEB66110014C85B /* DragDropController.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ED0C651BEB66110014C85B /* DragDropController.m */; };
 		D4ED0C721BEB66110014C85B /* DragDropGesture.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ED0C671BEB66110014C85B /* DragDropGesture.m */; };
 		D4ED0C731BEB66110014C85B /* DragInteractionView.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ED0C691BEB66110014C85B /* DragInteractionView.m */; };
-		D4ED0C761BEBCBF60014C85B /* UICollectionView+InteractiveMovementSupport.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ED0C751BEBCBF60014C85B /* UICollectionView+InteractiveMovementSupport.m */; };
+		D4ED0C761BEBCBF60014C85B /* UICollectionView+DragDropControllerSupport.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ED0C751BEBCBF60014C85B /* UICollectionView+DragDropControllerSupport.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -50,8 +51,10 @@
 /* Begin PBXFileReference section */
 		D475B5281BF7F0790069C763 /* DoubleCollectionViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DoubleCollectionViewController.h; sourceTree = "<group>"; };
 		D475B5291BF7F0790069C763 /* DoubleCollectionViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DoubleCollectionViewController.m; sourceTree = "<group>"; };
-		D475B52B1BF89E180069C763 /* UICollectionView+DropSupport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UICollectionView+DropSupport.h"; sourceTree = "<group>"; };
-		D475B52C1BF89E180069C763 /* UICollectionView+DropSupport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UICollectionView+DropSupport.m"; sourceTree = "<group>"; };
+		D479083C1BFB79520074032C /* UICollectionView+DragSupport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UICollectionView+DragSupport.h"; sourceTree = "<group>"; };
+		D479083D1BFB79520074032C /* UICollectionView+DragSupport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UICollectionView+DragSupport.m"; sourceTree = "<group>"; };
+		D479083F1BFB795B0074032C /* UICollectionView+DropSupport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UICollectionView+DropSupport.h"; sourceTree = "<group>"; };
+		D47908401BFB795B0074032C /* UICollectionView+DropSupport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UICollectionView+DropSupport.m"; sourceTree = "<group>"; };
 		D4ED0BE41BE62BE70014C85B /* Drag&Drop.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Drag&Drop.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		D4ED0BE81BE62BE70014C85B /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		D4ED0BEA1BE62BE70014C85B /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -88,8 +91,8 @@
 		D4ED0C671BEB66110014C85B /* DragDropGesture.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DragDropGesture.m; sourceTree = "<group>"; };
 		D4ED0C681BEB66110014C85B /* DragInteractionView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DragInteractionView.h; sourceTree = "<group>"; };
 		D4ED0C691BEB66110014C85B /* DragInteractionView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DragInteractionView.m; sourceTree = "<group>"; };
-		D4ED0C741BEBCBF60014C85B /* UICollectionView+InteractiveMovementSupport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UICollectionView+InteractiveMovementSupport.h"; sourceTree = "<group>"; };
-		D4ED0C751BEBCBF60014C85B /* UICollectionView+InteractiveMovementSupport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UICollectionView+InteractiveMovementSupport.m"; sourceTree = "<group>"; };
+		D4ED0C741BEBCBF60014C85B /* UICollectionView+DragDropControllerSupport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UICollectionView+DragDropControllerSupport.h"; sourceTree = "<group>"; };
+		D4ED0C751BEBCBF60014C85B /* UICollectionView+DragDropControllerSupport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UICollectionView+DragDropControllerSupport.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -213,10 +216,12 @@
 				D4ED0C671BEB66110014C85B /* DragDropGesture.m */,
 				D4ED0C681BEB66110014C85B /* DragInteractionView.h */,
 				D4ED0C691BEB66110014C85B /* DragInteractionView.m */,
-				D4ED0C741BEBCBF60014C85B /* UICollectionView+InteractiveMovementSupport.h */,
-				D4ED0C751BEBCBF60014C85B /* UICollectionView+InteractiveMovementSupport.m */,
-				D475B52B1BF89E180069C763 /* UICollectionView+DropSupport.h */,
-				D475B52C1BF89E180069C763 /* UICollectionView+DropSupport.m */,
+				D4ED0C741BEBCBF60014C85B /* UICollectionView+DragDropControllerSupport.h */,
+				D4ED0C751BEBCBF60014C85B /* UICollectionView+DragDropControllerSupport.m */,
+				D479083C1BFB79520074032C /* UICollectionView+DragSupport.h */,
+				D479083D1BFB79520074032C /* UICollectionView+DragSupport.m */,
+				D479083F1BFB795B0074032C /* UICollectionView+DropSupport.h */,
+				D47908401BFB795B0074032C /* UICollectionView+DropSupport.m */,
 			);
 			path = DragDropController;
 			sourceTree = "<group>";
@@ -355,14 +360,15 @@
 				D4ED0BEC1BE62BE80014C85B /* AppDelegate.m in Sources */,
 				D4ED0C6B1BEB66110014C85B /* DoubleEmbeddedViewController.m in Sources */,
 				D4ED0C6D1BEB66110014C85B /* EmbeddedViewController.m in Sources */,
+				D479083E1BFB79520074032C /* UICollectionView+DragSupport.m in Sources */,
 				D4ED0C6F1BEB66110014C85B /* NormalTableViewController.m in Sources */,
-				D4ED0C761BEBCBF60014C85B /* UICollectionView+InteractiveMovementSupport.m in Sources */,
+				D4ED0C761BEBCBF60014C85B /* UICollectionView+DragDropControllerSupport.m in Sources */,
 				D4ED0C6A1BEB66110014C85B /* 4x4ViewController.m in Sources */,
 				D4ED0BE91BE62BE70014C85B /* main.m in Sources */,
 				D4ED0C6C1BEB66110014C85B /* EmbeddedDropTargetViewController.m in Sources */,
 				D4ED0C6E1BEB66110014C85B /* NormalCollectionViewController.m in Sources */,
+				D47908411BFB795B0074032C /* UICollectionView+DropSupport.m in Sources */,
 				D4ED0C711BEB66110014C85B /* DragDropController.m in Sources */,
-				D475B52D1BF89E180069C763 /* UICollectionView+DropSupport.m in Sources */,
 				D4ED0C361BEA44470014C85B /* ExamplesTableViewController.m in Sources */,
 				D475B52A1BF7F0790069C763 /* DoubleCollectionViewController.m in Sources */,
 				D4ED0C721BEB66110014C85B /* DragDropGesture.m in Sources */,

@@ -204,7 +204,7 @@ static DragDropControllerManager *instance = nil;
         
         // convert the drag representation's frame to our interaction view,
         // then add it as a subview.
-        
+
         // All drag movement actually occurs on the interaction view..
         drag.view.frame = [self.dragInteractionView convertRect:drag.view.frame fromView:drag.view.superview];
         [self.dragInteractionView addSubview:drag.view];
@@ -216,13 +216,11 @@ static DragDropControllerManager *instance = nil;
                          animations:^{
                              if ([self.dragDropDataSource respondsToSelector:@selector(dragDropController:willStartDrag:animated:)])
                                  [self.dragDropDelegate dragDropController:self willStartDrag:drag animated:YES];
-                             
-                             CGPoint p = [self.dragInteractionView convertPoint:drag.currentLocation fromView:drag.view];
-                             [self notifyDropTarget:[self controllerForDropAtPoint:p] ofDragAction:drag];
-
                          }
                          completion:^ (BOOL finished){
                              
+                             [self notifyDropTarget:[self controllerForDropAtPoint:drag.currentLocation] ofDragAction:drag];
+
                              // In case we have already dropped the view....
                              if (self.isDragging && !self.isDropping) {
                                  // if not, notify the delgate that the start of the drag has begun..

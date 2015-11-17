@@ -1,5 +1,5 @@
 //
-//  UICollectionView+DropSupport.h
+//  UICollectionView+DragSupport.h
 //  Drag&Drop
 //
 //  Created by Joey Patino on 11/17/15.
@@ -8,6 +8,6 @@
 
 #import <UIKit/UIKit.h>
 
-@interface UICollectionView (DropSupport)
+@interface UICollectionView (DragSupport)
 
 @end

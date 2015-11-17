@@ -7,8 +7,7 @@
 //
 
 #import "DoubleCollectionViewController.h"
-#import "UICollectionView+InteractiveMovementSupport.h"
-#import "UICollectionView+DropSupport.h"
+#import "UICollectionView+DragDropControllerSupport.h"
 
 @interface DoubleCollectionViewController () <UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout>
 
@@ -54,6 +53,7 @@
     self.leftCollectionView.delegate = self;
     self.leftCollectionView.dataSource = self;
     [self.view addSubview:self.leftCollectionView];
+    self.leftCollectionView.name = @"-LEFT-";
     [self.leftCollectionView registerClass:[UICollectionViewCell class] forCellWithReuseIdentifier:@"CollectionViewCell"];
     
     [self.leftCollectionView reloadData];
@@ -77,9 +77,9 @@
     self.rightCollectionView.delegate = self;
     self.rightCollectionView.dataSource = self;
     [self.view addSubview:self.rightCollectionView];
+    self.rightCollectionView.name = @"-RIGHT-";
     [self.rightCollectionView registerClass:[UICollectionViewCell class] forCellWithReuseIdentifier:@"CollectionViewCell"];
-    [self.rightCollectionView enableDropSupport];
-
+    
     [self.rightCollectionView reloadData];
 }
 
@@ -96,6 +96,8 @@
 - (NSInteger)numberOfSectionsInCollectionView:(UICollectionView *)collectionView {
     return 1;
 }
+
+#pragma mark -
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
     
@@ -116,8 +118,41 @@
 }
 
 - (void)collectionView:(UICollectionView *)collectionView willDisplayCell:(nonnull UICollectionViewCell *)cell forItemAtIndexPath:(nonnull NSIndexPath *)indexPath {
-    [collectionView enableDragAndDropForCell:cell atIndexPath:indexPath];
+    [collectionView enableDragAndDropForCell:cell];
 }
+
+- (BOOL)collectionView:(UICollectionView *)sourceCollectionView canMoveItemAtIndexPath:(NSIndexPath *)sourceIndexPath
+      toCollectionView:(UICollectionView *)destinationCollectionView toIndexPath:(NSIndexPath *)destinationIndexPath {
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+    
+    return YES;
+}
+
+- (void)collectionView:(UICollectionView *)collectionView moveItemAtIndexPath:(NSIndexPath *)sourceIndexPath
+      toCollectionView:(UICollectionView *)destinationCollectionView toIndexPath:(NSIndexPath *)destinationIndexPath {
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+
+    NSLog(@"FROM %@ %@", collectionView.name, sourceIndexPath);
+    NSLog(@"TO %@ %@", destinationCollectionView.name, destinationIndexPath);
+
+    id item = nil;
+    if ([collectionView isEqual:self.leftCollectionView]) {
+        item = [self.leftDataSource objectAtIndex:sourceIndexPath.row];
+        [self.leftDataSource removeObject:item];
+
+        [self.rightDataSource insertObject:item atIndex:destinationIndexPath.row];
+        NSLog(@"R: %@", self.rightDataSource);
+    }
+    else if ([collectionView isEqual:self.rightCollectionView]) {
+        item = [self.rightDataSource objectAtIndex:sourceIndexPath.row];
+        [self.rightDataSource removeObject:item];
+
+        [self.leftDataSource insertObject:item atIndex:destinationIndexPath.row];
+        NSLog(@"L: %@", self.leftDataSource);
+    }
+}
+
+#pragma mark -
 
 - (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath {
     
@@ -125,6 +160,7 @@
 }
 
 - (void)collectionView:(UICollectionView *)collectionView moveItemAtIndexPath:(NSIndexPath *)sourceIndexPath toIndexPath:(NSIndexPath*)destinationIndexPath {
+    NSLog(@"%s", __PRETTY_FUNCTION__);
 
     if (collectionView == self.leftCollectionView) {
         NSObject *item = [self.leftDataSource objectAtIndex:sourceIndexPath.row];
@@ -137,6 +173,8 @@
         [self.rightDataSource insertObject:item atIndex:destinationIndexPath.row];
     }
 }
+
+#pragma mark -
 
 - (void)applyLabel:(NSString *)string toView:(UIView *)view {
     UILabel *l = [[UILabel alloc] init];

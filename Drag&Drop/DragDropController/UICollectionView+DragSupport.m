@@ -1,13 +1,13 @@
 //
-//  UICollectionView+DropSupport.h
+//  UICollectionView+DragSupport.m
 //  Drag&Drop
 //
 //  Created by Joey Patino on 11/17/15.
 //  Copyright © 2015 Joseph Patino. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
+#import "UICollectionView+DragSupport.h"
 
-@interface UICollectionView (DropSupport)
+@implementation UICollectionView (DragSupport)
 
 @end

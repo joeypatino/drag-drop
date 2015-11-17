@@ -92,6 +92,16 @@
 @end
 
 
+@protocol UICollectionViewDataSource_DropSupport <UICollectionViewDataSource>
+
+- (BOOL)collectionView:(UICollectionView *)sourceCollectionView canMoveItemAtIndexPath:(NSIndexPath *)sourceIndexPath
+      toCollectionView:(UICollectionView *)destinationCollectionView toIndexPath:(NSIndexPath *)destinationIndexPath;
+
+- (void)collectionView:(UICollectionView *)collectionView moveItemAtIndexPath:(NSIndexPath *)sourceIndexPath
+      toCollectionView:(UICollectionView *)destinationCollectionView toIndexPath:(NSIndexPath *)destinationIndexPath;
+@end
+
+
 /*
  * DragDropController manages the drag actions of registered views and the drop
  * actions within it's own dropTargetView. It uses a datasource and delegate

@@ -7,7 +7,7 @@
 //
 
 #import "NormalCollectionViewController.h"
-#import "UICollectionView+InteractiveMovementSupport.h"
+#import "UICollectionView+DragDropControllerSupport.h"
 
 @interface NormalCollectionViewController () <UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout>
 
@@ -78,7 +78,7 @@
 }
 
 - (void)collectionView:(UICollectionView *)collectionView willDisplayCell:(nonnull UICollectionViewCell *)cell forItemAtIndexPath:(nonnull NSIndexPath *)indexPath {
-    [collectionView enableDragAndDropForCell:cell atIndexPath:indexPath];
+    [collectionView enableDragAndDropForCell:cell];
 }
 
 - (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath {
