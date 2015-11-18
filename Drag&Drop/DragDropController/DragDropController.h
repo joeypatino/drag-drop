@@ -13,7 +13,7 @@
  * The duration of the animation when the icon is released
  * and moves to its next position.
  */
-#define kDropAnimationDuration              .2
+#define kDropAnimationDuration              .25
 
 /*
  * The duration of the drag pickup animation.

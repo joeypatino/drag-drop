@@ -16,7 +16,7 @@
 @implementation UICollectionView (DragSupport)
 
 - (void)startCellRearrangement:(CGPoint)location {
-    NSLog(@"%s", __PRETTY_FUNCTION__);
+    DLog(@"%s", __PRETTY_FUNCTION__);
     
     if (self.cellRearrangeOrigin == nil)
         self.cellRearrangeOrigin = [self indexPathForItemAtPoint:location];
@@ -48,10 +48,12 @@
     
     [self makeSpaceForCellFromIndexPath:self.cellRearrangeOrigin
                             toIndexPath:toIndexPath
-                               animated:YES];}
+                               animated:YES
+                             completion:nil];
+}
 
 - (void)endCellRearrangement {
-    NSLog(@"%s", __PRETTY_FUNCTION__);
+    DLog(@"%s", __PRETTY_FUNCTION__);
 
     if (self.isDroppingCell) {
         [self resetAfterRearrange];
@@ -61,10 +63,28 @@
     }
 }
 
+- (void)cancelCellRearrangement {
+    DLog(@"%s", __PRETTY_FUNCTION__);
+
+    [self makeSpaceForCellFromIndexPath:self.cellRearrangeOrigin
+                            toIndexPath:self.cellRearrangeOrigin
+                               animated:YES
+                             completion:^{
+                                 [self.dataSource collectionView:self
+                                             moveItemAtIndexPath:self.cellRearrangeDestination
+                                                     toIndexPath:self.cellRearrangeOrigin];
+                                 
+                                 [self resetAfterRearrange];
+                             }];
+}
+
+#pragma mark -
+
 - (void)makeSpaceForCellFromIndexPath:(NSIndexPath *)fromIndexPath
                           toIndexPath:(NSIndexPath *)toIndexPath
-                             animated:(BOOL)animated {
-
+                             animated:(BOOL)animated
+                           completion:(dispatch_block_t)completion {
+    DLog(@"%s", __PRETTY_FUNCTION__);
     [UIView animateWithDuration:animated ? .3 : 0.0 animations:^{
 
         [[self indexPathsForVisibleItems] enumerateObjectsUsingBlock:^(NSIndexPath *indexPath, NSUInteger idx, BOOL *stop){
@@ -107,13 +127,16 @@
         }];
         
     } completion:^(BOOL finsihed){
+        if (completion)
+            completion();
         self.isUpdatingCells = NO;
     }];
 }
 
 - (void)removeSpaceForCellAtIndexPath:(NSIndexPath *)fromIndexPath
                              animated:(BOOL)animated {
-
+    DLog(@"%s", __PRETTY_FUNCTION__);
+    
     [UIView animateWithDuration:animated ? .3 : 0.0 animations:^{
         
         [[self indexPathsForVisibleItems] enumerateObjectsUsingBlock:^(NSIndexPath *indexPath, NSUInteger idx, BOOL *stop){
@@ -142,7 +165,7 @@
 #pragma mark -
 
 - (void)resetAfterRearrange {
-    NSLog(@"%s", __PRETTY_FUNCTION__);
+    DLog(@"%s", __PRETTY_FUNCTION__);
 
     self.cellRearrangeOrigin = nil;
     self.cellRearrangeDestination = nil;

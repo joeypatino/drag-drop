@@ -45,9 +45,9 @@
     self.leftLayout.minimumInteritemSpacing = 4;
     self.leftLayout.minimumLineSpacing = 4;
     self.leftLayout.sectionInset = UIEdgeInsetsMake(4, 4, 4, 4);
-    self.leftCollectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(0, 20,
-                                                                                 self.view.bounds.size.width/2,
-                                                                                 self.view.bounds.size.height-20)
+    self.leftCollectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(0, 00,
+                                                                                 CGRectGetWidth(self.view.frame)/2,
+                                                                                 CGRectGetHeight(self.view.frame)-60)
                                
                                                  collectionViewLayout:self.leftLayout];
     self.leftCollectionView.delegate = self;
@@ -60,7 +60,7 @@
 
 - (void)loadRightContent {
     self.rightDataSource = [NSMutableArray array];
-    for (int i = 1; i < 7; i++) {
+    for (int i = 1; i < 70; i++) {
         [self.rightDataSource addObject:@(i*10)];
     }
 
@@ -68,9 +68,9 @@
     self.rightLayout.minimumInteritemSpacing = 4;
     self.rightLayout.minimumLineSpacing = 4;
     self.rightLayout.sectionInset = UIEdgeInsetsMake(4, 4, 4, 4);
-    self.rightCollectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(self.view.bounds.size.width/2, 20,
-                                                                                 self.view.bounds.size.width/2,
-                                                                                 self.view.bounds.size.height-20)
+    self.rightCollectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(CGRectGetWidth(self.view.frame)/2, 00,
+                                                                                 CGRectGetWidth(self.view.frame)/2,
+                                                                                 CGRectGetHeight(self.view.frame)-60)
                                
                                                  collectionViewLayout:self.rightLayout];
     self.rightCollectionView.delegate = self;
@@ -121,70 +121,73 @@
 
 - (BOOL)collectionView:(UICollectionView *)sourceCollectionView canMoveItemAtIndexPath:(NSIndexPath *)sourceIndexPath
       toCollectionView:(UICollectionView *)destinationCollectionView toIndexPath:(NSIndexPath *)destinationIndexPath {
-//    NSLog(@"%s", __PRETTY_FUNCTION__);
+    DLog(@"%s", __PRETTY_FUNCTION__);
     
     return YES;
 }
 
 - (void)collectionView:(UICollectionView *)collectionView moveItemAtIndexPath:(NSIndexPath *)sourceIndexPath
       toCollectionView:(UICollectionView *)destinationCollectionView toIndexPath:(NSIndexPath *)destinationIndexPath {
-    NSLog(@"%s", __PRETTY_FUNCTION__);
+    DLog(@"%s", __PRETTY_FUNCTION__);
 
     id item = nil;
     if ([collectionView isEqual:self.leftCollectionView]) {
-        NSLog(@"REMOVE:leftCollectionView");
+        DLog(@"REMOVE:leftCollectionView");
         item = [self.leftDataSource objectAtIndex:sourceIndexPath.row];
         [self.leftDataSource removeObject:item];
     }
     else if ([collectionView isEqual:self.rightCollectionView]) {
-        NSLog(@"REMOVE:rightCollectionView");
+        DLog(@"REMOVE:rightCollectionView");
         item = [self.rightDataSource objectAtIndex:sourceIndexPath.row];
         [self.rightDataSource removeObject:item];
     }
     
     if ([destinationCollectionView isEqual:self.rightCollectionView]) {
-        NSLog(@"INSERT:rightCollectionView");
+        DLog(@"INSERT:rightCollectionView");
         [self.rightDataSource insertObject:item atIndex:destinationIndexPath.row];
     }
     else if ([destinationCollectionView isEqual:self.leftCollectionView]) {
-        NSLog(@"INSERT:leftCollectionView");
+        DLog(@"INSERT:leftCollectionView");
         [self.leftDataSource insertObject:item atIndex:destinationIndexPath.row];
     }
 
-//    NSLog(@"%li -> %li", sourceIndexPath.row, destinationIndexPath.row);
+    DLog(@"%li -> %li", sourceIndexPath.row, destinationIndexPath.row);
 
-    NSLog(@"L: %li - %@", (long) self.leftDataSource.count, self.leftDataSource);
-    NSLog(@"R: %li -  %@", (long)self.rightDataSource.count, self.rightDataSource);
+//    DLog(@"L: %li - %@", (long) self.leftDataSource.count, self.leftDataSource);
+//    DLog(@"R: %li -  %@", (long)self.rightDataSource.count, self.rightDataSource);
 
-    NSLog(@"######################################");
+//    DLog(@"######################################");
 }
 
 #pragma mark -
 
 - (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath {
+    if ([collectionView isEqual:self.rightCollectionView])
+        return CGSizeMake((collectionView.bounds.size.width/4)-6, 160);
+    
     return CGSizeMake((collectionView.bounds.size.width/2)-6, 120);
 }
 
 - (void)collectionView:(UICollectionView *)collectionView moveItemAtIndexPath:(NSIndexPath *)sourceIndexPath toIndexPath:(NSIndexPath*)destinationIndexPath {
-    NSLog(@"%s", __PRETTY_FUNCTION__);
+    DLog(@"%s", __PRETTY_FUNCTION__);
 
     if (collectionView == self.leftCollectionView) {
-        NSLog(@"leftCollectionView");
+        DLog(@"leftCollectionView");
         NSObject *item = [self.leftDataSource objectAtIndex:sourceIndexPath.row];
         [self.leftDataSource removeObject:item];
         [self.leftDataSource insertObject:item atIndex:destinationIndexPath.row];
     }
     else if (collectionView == self.rightCollectionView) {
-        NSLog(@"rightCollectionView");
+        DLog(@"rightCollectionView");
         NSObject *item = [self.rightDataSource objectAtIndex:sourceIndexPath.row];
         [self.rightDataSource removeObject:item];
         [self.rightDataSource insertObject:item atIndex:destinationIndexPath.row];
     }
     
-    NSLog(@"L: %li - %@", (long)self.leftDataSource.count, self.leftDataSource);
-    NSLog(@"R: %li -  %@", (long)self.rightDataSource.count, self.rightDataSource);
+//    DLog(@"L: %li - %@", (long)self.leftDataSource.count, self.leftDataSource);
+//    DLog(@"R: %li -  %@", (long)self.rightDataSource.count, self.rightDataSource);
 
-    NSLog(@"######################################");
+//    DLog(@"######################################");
 }
 
 #pragma mark -

@@ -12,14 +12,14 @@
 #import "UICollectionView+DropSupport.h"
 #import "UICollectionView+DragSupport.h"
 
+@class DragAction;
 @interface UICollectionView ()
 @end
 
 @implementation UICollectionView (DropSupport)
 
-
 - (void)startCellSwapFrom:(UICollectionView *)collectionView atLocation:(CGPoint)location {
-    NSLog(@"%s", __PRETTY_FUNCTION__);
+    DLog(@"%s", __PRETTY_FUNCTION__);
 
     self.cellSwapDestination = [self indexPathForItemAtPoint:location];
     
@@ -56,7 +56,7 @@
 }
 
 - (void)endCellSwap:(UICollectionView *)collectionView {
-    NSLog(@"%s", __PRETTY_FUNCTION__);
+    DLog(@"%s", __PRETTY_FUNCTION__);
     
     if (!collectionView.isDroppingCell) {
         [self layoutCollectionViewAnimated:YES];
@@ -70,7 +70,7 @@
 #pragma mark -
 
 - (void)receivedCellSwapFromSource:(UICollectionView *)destination {
-    NSLog(@"%s", __PRETTY_FUNCTION__);
+    DLog(@"%s", __PRETTY_FUNCTION__);
 
     [UIView setAnimationsEnabled:NO];
     [self insertSwappedCellAtIndexPath:self.cellSwapDestination];
@@ -97,7 +97,7 @@
 #pragma mark -
 
 - (void)resetAfterSwap {
-    NSLog(@"%s", __PRETTY_FUNCTION__);
+    DLog(@"%s", __PRETTY_FUNCTION__);
 
     self.cellSwapOrigin = nil;
     self.cellSwapDestination = nil;
@@ -106,9 +106,9 @@
 #pragma mark - Cell Rearrangement
 
 - (void)moveCellFromSource:(UICollectionView *)source {
+    DLog(@"%s", __PRETTY_FUNCTION__);
 
     BOOL canMove = YES;
-
     NSIndexPath *indexPath = source.cellRearrangeDestination ?
                             source.cellRearrangeDestination : source.cellSwapOrigin;
     
