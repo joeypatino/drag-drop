@@ -8,6 +8,14 @@
 
 #import <UIKit/UIKit.h>
 
+@class DragDropController;
 @interface UICollectionView (DragSupport)
+
+@property (nonatomic, strong) NSIndexPath *cellRearrangeOrigin;
+@property (nonatomic, strong) NSIndexPath *cellRearrangeDestination;
+
+- (void)startCellRearrangement:(CGPoint)location;
+- (void)continueCellRearrangement:(CGPoint)location;
+- (void)endCellRearrangement;
 
 @end

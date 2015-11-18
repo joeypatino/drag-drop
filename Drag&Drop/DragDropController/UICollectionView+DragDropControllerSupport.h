@@ -7,14 +7,12 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "UICollectionView+DragSupport.h"
-#import "UICollectionView+DropSupport.h"
 
+@class DragDropController;
 @interface UICollectionView (DragDropControllerSupport)
-@property (nonatomic, strong) NSIndexPath *originIndexPath;
-@property (nonatomic, strong) NSIndexPath *destinationIndexPath;
-@property (nonatomic, strong) NSIndexPath *dropDestinationIndexPath;
-@property (nonatomic, strong) NSString *name;
+@property (nonatomic, strong) DragDropController *dragDropController;
+@property (nonatomic, assign) BOOL isDroppingCell;
+@property (nonatomic, assign) BOOL isUpdatingCells;
 
 - (void)enableDragAndDropForCell:(UICollectionViewCell *)cell;
 - (void)disableDragAndDropForCell:(UICollectionViewCell *)cell;

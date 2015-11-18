@@ -102,7 +102,6 @@ static DragDropControllerManager *instance = nil;
 #pragma mark -
 
 - (void)enableDragActionForView:(UIView *)view {
-    
     // The DragDropGesture is responsible for translating the view across the screen in response to the users touch
     DragDropGesture *gest = [[DragDropGesture alloc] initWithTarget:self action:@selector(handleDragDropGesture:)];
     [view addGestureRecognizer:gest];
@@ -115,7 +114,6 @@ static DragDropControllerManager *instance = nil;
 }
 
 - (void)disableDragActionForView:(UIView *)view {
-    
     // Remove any existing drag gestures.
     NSMutableArray *dragAndDrop = [NSMutableArray array];
     for (UIGestureRecognizer *r in [view gestureRecognizers]){
@@ -305,8 +303,6 @@ static DragDropControllerManager *instance = nil;
         
         // After animating the drag representation view..
         animationCompletionBlock = ^ (BOOL finished){
-            this.isDragging = NO;
-            this.isDropping = NO;
             
             // when the animation of the drag representation view is complete,
             // set the real view's frame to that specified by our datasource,
@@ -322,6 +318,9 @@ static DragDropControllerManager *instance = nil;
             // and notify the delegate if they are listening..
             if ([this.dragDropDelegate respondsToSelector:@selector(dragDropController:didMoveView:toDestination:)])
                 [this.dragDropDelegate dragDropController:this didMoveView:drag.view toDestination:dropDestination];
+        
+            this.isDragging = NO;
+            this.isDropping = NO;
         };
         
     }
@@ -333,8 +332,6 @@ static DragDropControllerManager *instance = nil;
 
         // After animating the drag representation view back to it's spot..
         animationCompletionBlock = ^ (BOOL finished){
-            this.isDragging = NO;
-            this.isDropping = NO;
             
             drag.view.frame = self.sourceFrame;
             [self.sourceView addSubview:drag.view];
@@ -342,6 +339,8 @@ static DragDropControllerManager *instance = nil;
             self.sourceView = nil;
             self.sourceFrame = CGRectZero;
 
+            this.isDragging = NO;
+            this.isDropping = NO;
         };
     }
 
@@ -357,10 +356,11 @@ static DragDropControllerManager *instance = nil;
                          if ([self.dragDropDelegate respondsToSelector:@selector(dragDropController:willEndDrag:animated:)])
                              [self.dragDropDelegate dragDropController:self willEndDrag:drag animated:YES];
                          
-                         [self notifyDropTarget:nil ofDragAction:drag];
                      }
                      completion:^(BOOL finished){
-                         
+
+                         [self notifyDropTarget:nil ofDragAction:drag];
+
                          // call the animation complete block we set above..
                          if (animationCompletionBlock)
                              animationCompletionBlock(finished);
@@ -385,24 +385,20 @@ static DragDropControllerManager *instance = nil;
     if (self.currentDragDestination && [self.currentDragDestination isEqual:dropTarget]) {
         
         CGPoint p = [dropTarget.dropTargetView convertPoint:drag.currentLocation fromView:nil];
+        drag.currentLocation = p;
         
-        if ([self.dragDropDelegate respondsToSelector:@selector(dragDropController:isDraggingView:atLocation:withDestination:)]) {
-            [self.dragDropDelegate dragDropController:self
-                                       isDraggingView:drag.view
-                                           atLocation:p
-                                      withDestination:self.currentDragDestination];
+        if ([self.dragDropDelegate respondsToSelector:@selector(dragDropController:dragDidMove:destinationController:)]){
+            [self.dragDropDelegate dragDropController:self dragDidMove:drag destinationController:self.currentDragDestination];
         }
     }
     else {
         
         if (self.currentDragDestination) {
+
             CGPoint p = [self.currentDragDestination.dropTargetView convertPoint:drag.currentLocation fromView:nil];
-            
-            if ([self.dragDropDelegate respondsToSelector:@selector(dragDropController:didEndDraggingView:atLocation:withDestination:)]) {
-                [self.dragDropDelegate dragDropController:self
-                                       didEndDraggingView:drag.view
-                                               atLocation:p
-                                          withDestination:self.currentDragDestination];
+            drag.currentLocation = p;
+            if ([self.dragDropDelegate respondsToSelector:@selector(dragDropController:dragDidExit:destinationController:)]){
+                [self.dragDropDelegate dragDropController:self dragDidExit:drag destinationController:self.currentDragDestination];
             }
             
             self.currentDragDestination = nil;
@@ -410,13 +406,11 @@ static DragDropControllerManager *instance = nil;
         
         if (dropTarget) {
             self.currentDragDestination = dropTarget;
-            CGPoint p = [self.currentDragDestination.dropTargetView convertPoint:drag.currentLocation fromView:nil];
 
-            if ([self.dragDropDelegate respondsToSelector:@selector(dragDropController:didStartDraggingView:atLocation:withDestination:)]) {
-                [self.dragDropDelegate dragDropController:self
-                                     didStartDraggingView:drag.view
-                                               atLocation:p
-                                          withDestination:self.currentDragDestination];
+            CGPoint p = [self.currentDragDestination.dropTargetView convertPoint:drag.currentLocation fromView:nil];
+            drag.currentLocation = p;
+            if ([self.dragDropDelegate respondsToSelector:@selector(dragDropController:dragDidEnter:destinationController:)]){
+                [self.dragDropDelegate dragDropController:self dragDidEnter:drag destinationController:self.currentDragDestination];
             }
         }
     }

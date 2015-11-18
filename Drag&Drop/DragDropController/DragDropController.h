@@ -41,6 +41,7 @@
 - (void)dragDropController:(DragDropController *)controller
               didStartDrag:(DragAction *)drag;
 
+
 - (void)dragDropController:(DragDropController *)controller
                willEndDrag:(DragAction *)drag
                   animated:(BOOL)animated;
@@ -48,22 +49,18 @@
 - (void)dragDropController:(DragDropController *)controller
                 didEndDrag:(DragAction *)drag;
 
-#pragma mark - Drop callbacks
 
 - (void)dragDropController:(DragDropController *)controller
-      didStartDraggingView:(UIView *)view
-                atLocation:(CGPoint)location
-           withDestination:(DragDropController *)destination;
+              dragDidEnter:(DragAction *)drag
+     destinationController:(DragDropController *)destination;
 
 - (void)dragDropController:(DragDropController *)controller
-            isDraggingView:(UIView *)view
-                atLocation:(CGPoint)location
-           withDestination:(DragDropController *)destination;
+               dragDidMove:(DragAction *)drag
+     destinationController:(DragDropController *)destination;
 
 - (void)dragDropController:(DragDropController *)controller
-        didEndDraggingView:(UIView *)view
-                atLocation:(CGPoint)location
-           withDestination:(DragDropController *)destination;
+               dragDidExit:(DragAction *)drag
+     destinationController:(DragDropController *)destination;
 
 #pragma mark -
 
@@ -89,16 +86,6 @@
                 frameForView:(UIView *)view
                inDestination:(DragDropController *)destination;
 
-@end
-
-
-@protocol UICollectionViewDataSource_DropSupport <UICollectionViewDataSource>
-
-- (BOOL)collectionView:(UICollectionView *)sourceCollectionView canMoveItemAtIndexPath:(NSIndexPath *)sourceIndexPath
-      toCollectionView:(UICollectionView *)destinationCollectionView toIndexPath:(NSIndexPath *)destinationIndexPath;
-
-- (void)collectionView:(UICollectionView *)collectionView moveItemAtIndexPath:(NSIndexPath *)sourceIndexPath
-      toCollectionView:(UICollectionView *)destinationCollectionView toIndexPath:(NSIndexPath *)destinationIndexPath;
 @end
 
 

@@ -37,7 +37,7 @@
 
 - (void)loadLeftContent {
     self.leftDataSource = [NSMutableArray array];
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 4; i++) {
         [self.leftDataSource addObject:@(i)];
     }
 
@@ -53,7 +53,6 @@
     self.leftCollectionView.delegate = self;
     self.leftCollectionView.dataSource = self;
     [self.view addSubview:self.leftCollectionView];
-    self.leftCollectionView.name = @"-LEFT-";
     [self.leftCollectionView registerClass:[UICollectionViewCell class] forCellWithReuseIdentifier:@"CollectionViewCell"];
     
     [self.leftCollectionView reloadData];
@@ -61,8 +60,8 @@
 
 - (void)loadRightContent {
     self.rightDataSource = [NSMutableArray array];
-    for (int i = 0; i < 7; i++) {
-        [self.rightDataSource addObject:@(i)];
+    for (int i = 1; i < 7; i++) {
+        [self.rightDataSource addObject:@(i*10)];
     }
 
     self.rightLayout = [[UICollectionViewFlowLayout alloc] init];
@@ -77,7 +76,6 @@
     self.rightCollectionView.delegate = self;
     self.rightCollectionView.dataSource = self;
     [self.view addSubview:self.rightCollectionView];
-    self.rightCollectionView.name = @"-RIGHT-";
     [self.rightCollectionView registerClass:[UICollectionViewCell class] forCellWithReuseIdentifier:@"CollectionViewCell"];
     
     [self.rightCollectionView reloadData];
@@ -123,55 +121,70 @@
 
 - (BOOL)collectionView:(UICollectionView *)sourceCollectionView canMoveItemAtIndexPath:(NSIndexPath *)sourceIndexPath
       toCollectionView:(UICollectionView *)destinationCollectionView toIndexPath:(NSIndexPath *)destinationIndexPath {
-    NSLog(@"%s", __PRETTY_FUNCTION__);
+//    NSLog(@"%s", __PRETTY_FUNCTION__);
     
     return YES;
 }
 
 - (void)collectionView:(UICollectionView *)collectionView moveItemAtIndexPath:(NSIndexPath *)sourceIndexPath
       toCollectionView:(UICollectionView *)destinationCollectionView toIndexPath:(NSIndexPath *)destinationIndexPath {
-    NSLog(@"%s", __PRETTY_FUNCTION__);
-
-    NSLog(@"FROM %@ %@", collectionView.name, sourceIndexPath);
-    NSLog(@"TO %@ %@", destinationCollectionView.name, destinationIndexPath);
+//    NSLog(@"%s", __PRETTY_FUNCTION__);
 
     id item = nil;
     if ([collectionView isEqual:self.leftCollectionView]) {
+//        NSLog(@"REMOVE:leftCollectionView");
         item = [self.leftDataSource objectAtIndex:sourceIndexPath.row];
         [self.leftDataSource removeObject:item];
-
-        [self.rightDataSource insertObject:item atIndex:destinationIndexPath.row];
-        NSLog(@"R: %@", self.rightDataSource);
     }
     else if ([collectionView isEqual:self.rightCollectionView]) {
+//        NSLog(@"REMOVE:rightCollectionView");
         item = [self.rightDataSource objectAtIndex:sourceIndexPath.row];
         [self.rightDataSource removeObject:item];
-
-        [self.leftDataSource insertObject:item atIndex:destinationIndexPath.row];
-        NSLog(@"L: %@", self.leftDataSource);
     }
+    
+    if ([destinationCollectionView isEqual:self.rightCollectionView]) {
+//        NSLog(@"INSERT:rightCollectionView");
+        [self.rightDataSource insertObject:item atIndex:destinationIndexPath.row];
+    }
+    else if ([destinationCollectionView isEqual:self.leftCollectionView]) {
+//        NSLog(@"INSERT:leftCollectionView");
+        [self.leftDataSource insertObject:item atIndex:destinationIndexPath.row];
+    }
+
+//    NSLog(@"%li -> %li", sourceIndexPath.row, destinationIndexPath.row);
+//    
+//    NSLog(@"L: %li - %@", self.leftDataSource.count, self.leftDataSource);
+//    NSLog(@"R: %li -  %@", self.rightDataSource.count, self.rightDataSource);
+//
+//    NSLog(@"######################################");
 }
 
 #pragma mark -
 
 - (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath {
-    
     return CGSizeMake((collectionView.bounds.size.width/2)-6, 120);
 }
 
 - (void)collectionView:(UICollectionView *)collectionView moveItemAtIndexPath:(NSIndexPath *)sourceIndexPath toIndexPath:(NSIndexPath*)destinationIndexPath {
-    NSLog(@"%s", __PRETTY_FUNCTION__);
+//    NSLog(@"%s", __PRETTY_FUNCTION__);
 
     if (collectionView == self.leftCollectionView) {
+//        NSLog(@"leftCollectionView");
         NSObject *item = [self.leftDataSource objectAtIndex:sourceIndexPath.row];
         [self.leftDataSource removeObject:item];
         [self.leftDataSource insertObject:item atIndex:destinationIndexPath.row];
     }
     else if (collectionView == self.rightCollectionView) {
+//        NSLog(@"rightCollectionView");
         NSObject *item = [self.rightDataSource objectAtIndex:sourceIndexPath.row];
         [self.rightDataSource removeObject:item];
         [self.rightDataSource insertObject:item atIndex:destinationIndexPath.row];
     }
+    
+//    NSLog(@"L: %li - %@", self.leftDataSource.count, self.leftDataSource);
+//    NSLog(@"R: %li -  %@", self.rightDataSource.count, self.rightDataSource);
+//
+//    NSLog(@"######################################");
 }
 
 #pragma mark -
