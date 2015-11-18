@@ -18,4 +18,5 @@
 - (void)continueCellRearrangement:(CGPoint)location;
 - (void)endCellRearrangement;
 
+- (void)resetAfterRearrange;
 @end

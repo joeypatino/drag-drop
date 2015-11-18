@@ -102,6 +102,7 @@ static DragDropControllerManager *instance = nil;
 #pragma mark -
 
 - (void)enableDragActionForView:(UIView *)view {
+
     // The DragDropGesture is responsible for translating the view across the screen in response to the users touch
     DragDropGesture *gest = [[DragDropGesture alloc] initWithTarget:self action:@selector(handleDragDropGesture:)];
     [view addGestureRecognizer:gest];
@@ -114,10 +115,12 @@ static DragDropControllerManager *instance = nil;
 }
 
 - (void)disableDragActionForView:(UIView *)view {
+
     // Remove any existing drag gestures.
     NSMutableArray *dragAndDrop = [NSMutableArray array];
     for (UIGestureRecognizer *r in [view gestureRecognizers]){
-        [dragAndDrop addObject:r];
+        if ([r isKindOfClass:[DragDropGesture class]])
+            [dragAndDrop addObject:r];
     }
     
     for (UIGestureRecognizer *r in dragAndDrop) {

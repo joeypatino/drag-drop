@@ -27,6 +27,6 @@
 - (void)continueCellSwap:(CGPoint)location;
 - (void)endCellSwap:(UICollectionView *)collectionView;
 
-- (void)didFinishCellSwapWithDestination:(UICollectionView *)destination;
+- (void)receivedCellSwapFromSource:(UICollectionView *)destination;
 
 @end

@@ -14,8 +14,6 @@
 #import "DragDropController.h"
 
 @interface UICollectionView ()
-@property (nonatomic, strong) NSMutableArray *dragEnabledCells;
-
 @end
 
 @implementation UICollectionView (DragDropControllerSupport)
@@ -24,19 +22,13 @@
 
 - (void)enableDragAndDropForCell:(UICollectionViewCell *)cell {
     if (!self.dragDropController) self.dragDropController = [self controller];
-    if (!self.dragEnabledCells) self.dragEnabledCells = [NSMutableArray array];
     
-    if (![self.dragEnabledCells containsObject:cell]) {
-        [self.dragDropController enableDragActionForView:cell];
-        [self.dragEnabledCells addObject:cell];
-    }
+    [self.dragDropController disableDragActionForView:cell];
+    [self.dragDropController enableDragActionForView:cell];
 }
 
 - (void)disableDragAndDropForCell:(UICollectionViewCell *)cell {
-    if ([self.dragEnabledCells containsObject:cell]){
-        [self.dragDropController disableDragActionForView:cell];
-        [self.dragEnabledCells removeObject:cell];
-    }
+    [self.dragDropController disableDragActionForView:cell];
 }
 
 #pragma mark -
@@ -87,7 +79,7 @@
 - (void)dragDropController:(DragDropController *)controller
               dragDidEnter:(DragAction *)drag
      destinationController:(DragDropController *)destination {
-
+    
     if (![controller isEqual:destination]) {
         UICollectionView *sourceCollectionView = [self dragDropCollectionView:controller];
         UICollectionView *destinationCollectionView = [self dragDropCollectionView:destination];
@@ -134,10 +126,12 @@
                didMoveView:(UIView *)view
              toDestination:(DragDropController *)destination {
 
-    UICollectionView *sourceCollectionView = [self dragDropCollectionView:controller];
-    UICollectionView *destinationCollectionView = [self dragDropCollectionView:destination];
+    if (![controller isEqual: destination]) {
+        UICollectionView *sourceCollectionView = [self dragDropCollectionView:controller];
+        UICollectionView *destinationCollectionView = [self dragDropCollectionView:destination];
 
-    [sourceCollectionView didFinishCellSwapWithDestination:destinationCollectionView];
+        [destinationCollectionView receivedCellSwapFromSource:sourceCollectionView];
+    }
 }
 
 #pragma mark - DragDropController Datasource
@@ -171,14 +165,6 @@
 
 - (DragDropController *)dragDropController {
     return objc_getAssociatedObject(self, @selector(dragDropController));
-}
-
-- (void)setDragEnabledCells:(NSMutableArray *)dragEnabledCells {
-    objc_setAssociatedObject(self, @selector(dragEnabledCells), dragEnabledCells, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-}
-
-- (NSMutableArray *)dragEnabledCells {
-    return objc_getAssociatedObject(self, @selector(dragEnabledCells));
 }
 
 

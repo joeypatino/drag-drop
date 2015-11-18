@@ -16,7 +16,8 @@
 @implementation UICollectionView (DragSupport)
 
 - (void)startCellRearrangement:(CGPoint)location {
-
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+    
     if (self.cellRearrangeOrigin == nil)
         self.cellRearrangeOrigin = [self indexPathForItemAtPoint:location];
     
@@ -51,6 +52,7 @@
                                animated:YES];}
 
 - (void)endCellRearrangement {
+    NSLog(@"%s", __PRETTY_FUNCTION__);
 
     if (self.isDroppingCell) {
         [self resetAfterRearrange];
@@ -141,6 +143,8 @@
 #pragma mark -
 
 - (void)resetAfterRearrange {
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+
     self.cellRearrangeOrigin = nil;
     self.cellRearrangeDestination = nil;
 

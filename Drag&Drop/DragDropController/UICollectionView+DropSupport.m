@@ -62,27 +62,31 @@
     
     if (!collectionView.isDroppingCell) {
         [self layoutCollectionViewAnimated:YES];
+        [collectionView moveCellFromSource:self];
     }
     
     self.layer.borderColor = [UIColor clearColor].CGColor;
     self.layer.borderWidth = 0.0;
 }
 
-- (void)didFinishCellSwapWithDestination:(UICollectionView *)destination {
+#pragma mark -
+
+- (void)receivedCellSwapFromSource:(UICollectionView *)destination {
     NSLog(@"%s", __PRETTY_FUNCTION__);
 
-    if (![self isEqual: destination]) {
-        NSLog(@"DELETED: %li", [self cellSwapOrigin].row);
-        NSLog(@"INSERTED: %li", [destination cellSwapDestination].row);
-        
-        [UIView setAnimationsEnabled:NO];
-        [self deleteSwappedCellAtIndexPath:destination.cellSwapOrigin];
-        [destination insertSwappedCellAtIndexPath:destination.cellSwapDestination];
-        [UIView setAnimationsEnabled:YES];
-    }
+//    NSLog(@"DELETED: %li", [self cellSwapOrigin].row);
+//    NSLog(@"INSERTED: %li", [destination cellSwapDestination].row);
+
+    [UIView setAnimationsEnabled:NO];
+    [self insertSwappedCellAtIndexPath:self.cellSwapDestination];
+    [destination deleteSwappedCellAtIndexPath:destination.cellRearrangeDestination];
+    [UIView setAnimationsEnabled:YES];
     
     [self resetAfterSwap];
+    [self resetAfterRearrange];
+
     [destination resetAfterSwap];
+    [destination resetAfterRearrange];
 }
 
 #pragma mark -
@@ -107,17 +111,17 @@
 }
 
 - (void)moveCellFromSource:(UICollectionView *)source {
-    NSLog(@"%s", __PRETTY_FUNCTION__);
 
     BOOL canMove = YES;
 
     NSIndexPath *indexPath = (source.cellRearrangeDestination == nil) ? source.cellSwapOrigin : source.cellRearrangeDestination;
-
+    NSIndexPath *toIndexPath = (self.cellSwapDestination == nil) ? self.cellRearrangeDestination: self.cellSwapDestination;
+    
     if ([(NSObject <UICollectionViewDataSource_DropSupport> *)source.delegate respondsToSelector:@selector(collectionView:canMoveItemAtIndexPath:toCollectionView:toIndexPath:)]){
         canMove = [(NSObject <UICollectionViewDataSource_DropSupport> *)source.delegate collectionView:source
                                                                                               canMoveItemAtIndexPath:indexPath
                                                                                                     toCollectionView:self
-                                                                                                         toIndexPath:self.cellSwapDestination];
+                                                                                                         toIndexPath:toIndexPath];
     }
     
     if (canMove) {
@@ -125,13 +129,12 @@
             [(NSObject <UICollectionViewDataSource_DropSupport> *)source.delegate collectionView:source
                                                                                            moveItemAtIndexPath:indexPath
                                                                                               toCollectionView:self
-                                                                                                   toIndexPath:self.cellSwapDestination];
+                                                                                                   toIndexPath:toIndexPath];
         }
     }
 }
 
-- (void)insertSpaceForCellAtIndexPath:(NSIndexPath *)toIndexPath
-                             animated:(BOOL)animated {
+- (void)insertSpaceForCellAtIndexPath:(NSIndexPath *)toIndexPath animated:(BOOL)animated {
 
     [UIView animateWithDuration:animated ? .3 : 0.0 animations:^{
         
@@ -184,33 +187,47 @@
     BOOL locationIsBelowVisibleCells = YES;
     NSIndexPath *nearestIndexPath = nil;
     
+    BOOL (^PointIsBelowFrame)(CGPoint, CGRect) = ^BOOL(CGPoint point, CGRect rect) {
+        if (point.y <= CGRectGetMaxY(rect)) return YES;
+        return NO;
+    };
+    
+    BOOL (^PointIsToTheRightOfFrame)(CGPoint, CGRect) = ^BOOL(CGPoint point, CGRect rect) {
+        if (point.x >= CGRectGetMaxX(rect)) return YES;
+        return NO;
+    };
+    
     for (NSIndexPath *indexPath in collectionViewIndexPaths) {
         UICollectionViewLayoutAttributes *cellLayoutAttributes = [self.collectionViewLayout layoutAttributesForItemAtIndexPath:indexPath];
         CGFloat distanceToCell = [self distanceBetween:touchLocation p2:cellLayoutAttributes.center];
         
-        if (touchLocation.y <= CGRectGetMaxY(cellLayoutAttributes.frame)) {
+        if (PointIsBelowFrame(touchLocation, cellLayoutAttributes.frame)) {
             locationIsBelowVisibleCells = NO;
         }
-        
-        if ([collectionViewIndexPaths lastObject] == indexPath) {
-            if (touchLocation.x >= CGRectGetMaxX(cellLayoutAttributes.frame)) {
-                locationIsBelowVisibleCells = YES;
-            }
+
+        if ([collectionViewIndexPaths lastObject] == indexPath &&
+            (PointIsToTheRightOfFrame(touchLocation, cellLayoutAttributes.frame))) {
+            locationIsBelowVisibleCells = YES;
         }
-        
+
         if (distanceToCell < distanceToNearestIndexPath) {
             distanceToNearestIndexPath = distanceToCell;
             nearestIndexPath = indexPath;
         }
     }
     
-    if (nearestIndexPath && locationIsBelowVisibleCells) {
-        NSUInteger section = nearestIndexPath.section;
-        NSUInteger row = [self.dataSource collectionView:self numberOfItemsInSection:section];
-        nearestIndexPath = [NSIndexPath indexPathForRow:row-1 inSection:section];
+    if (locationIsBelowVisibleCells) {
+
+        NSUInteger section = 0;
+        NSUInteger row = 0;
+
+        if (nearestIndexPath) {
+            section = nearestIndexPath.section;
+            row = [self.dataSource collectionView:self numberOfItemsInSection:section] - 1;
+        }
+
+        nearestIndexPath = [NSIndexPath indexPathForRow:row inSection:section];
     }
-    
-    if (!nearestIndexPath) nearestIndexPath = [NSIndexPath indexPathForRow:0 inSection:0];
     
     return nearestIndexPath;
 }
@@ -230,6 +247,7 @@
     return dist;
 }
 
+#pragma mark -
 
 - (void)setCellSwapOrigin:(NSIndexPath *)cellSwapOrigin {
     objc_setAssociatedObject(self, @selector(cellSwapOrigin), cellSwapOrigin, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
