@@ -66,11 +66,13 @@
 - (void)dragDropController:(DragDropController *)controller
                willEndDrag:(DragAction *)drag
                   animated:(BOOL)animated {
+    NSLog(@"%s", __PRETTY_FUNCTION__);
     self.isDroppingCell = YES;
 }
 
 - (void)dragDropController:(DragDropController *)controller
                 didEndDrag:(DragAction *)drag {
+    NSLog(@"%s", __PRETTY_FUNCTION__);
     self.isDroppingCell = NO;
 }
 
@@ -79,14 +81,13 @@
 - (void)dragDropController:(DragDropController *)controller
               dragDidEnter:(DragAction *)drag
      destinationController:(DragDropController *)destination {
-    
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+
     if (![controller isEqual:destination]) {
-        UICollectionView *sourceCollectionView = [self dragDropCollectionView:controller];
-        UICollectionView *destinationCollectionView = [self dragDropCollectionView:destination];
-        
-        [destinationCollectionView startCellSwapFrom:sourceCollectionView atLocation:drag.currentLocation];
+        [[self dragDropCollectionView:destination] startCellSwapFrom:[self dragDropCollectionView:controller] atLocation:drag.currentLocation];
     }
     else {
+        
         [self startCellRearrangement:drag.currentLocation];
     }
 }
@@ -94,11 +95,9 @@
 - (void)dragDropController:(DragDropController *)controller
                dragDidMove:(DragAction *)drag
      destinationController:(DragDropController *)destination {
-
+    
     if (![controller isEqual:destination]) {
-        UICollectionView *destinationCollectionView = [self dragDropCollectionView:destination];
-        
-        [destinationCollectionView continueCellSwap:drag.currentLocation];
+        [[self dragDropCollectionView:destination] continueCellSwap:drag.currentLocation];
     }
     else {
         [self continueCellRearrangement:drag.currentLocation];
@@ -108,12 +107,10 @@
 - (void)dragDropController:(DragDropController *)controller
                dragDidExit:(DragAction *)drag
      destinationController:(DragDropController *)destination {
-
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+    
     if (![controller isEqual:destination]) {
-        UICollectionView *sourceCollectionView = [self dragDropCollectionView:controller];
-        UICollectionView *destinationCollectionView = [self dragDropCollectionView:destination];
-        
-        [destinationCollectionView endCellSwap:sourceCollectionView];
+        [[self dragDropCollectionView:destination] endCellSwap:[self dragDropCollectionView:controller]];
     }
     else {
         [self endCellRearrangement];
@@ -125,12 +122,10 @@
 - (void)dragDropController:(DragDropController *)controller
                didMoveView:(UIView *)view
              toDestination:(DragDropController *)destination {
-
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+    
     if (![controller isEqual: destination]) {
-        UICollectionView *sourceCollectionView = [self dragDropCollectionView:controller];
-        UICollectionView *destinationCollectionView = [self dragDropCollectionView:destination];
-
-        [destinationCollectionView receivedCellSwapFromSource:sourceCollectionView];
+        [[self dragDropCollectionView:destination] receivedCellSwapFromSource:[self dragDropCollectionView:controller]];
     }
 }
 
@@ -145,9 +140,8 @@
     NSIndexPath *indexPath = nil;
     
     if (![controller isEqual: destination]) {
-        UICollectionView *destinationCollectionView = [self dragDropCollectionView:destination];
-        collectionView = destinationCollectionView;
-        indexPath = destinationCollectionView.cellSwapDestination;
+        collectionView = [self dragDropCollectionView:destination];
+        indexPath = [self dragDropCollectionView:destination].cellSwapDestination;
     }
     else {
         collectionView = [self dragDropCollectionView:controller];

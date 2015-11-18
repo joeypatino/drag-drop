@@ -330,8 +330,10 @@ static DragDropControllerManager *instance = nil;
     else {
         // Here we are just animating the view back to it's original spot. No other changes take place..
 
+        CGRect nextFrame = self.sourceFrame;
+        
         // the frame for the view is just it's original frame..
-        firstStepFrame = [self.sourceView convertRect:self.sourceFrame toView:self.dragInteractionView];
+        firstStepFrame = [self.sourceView convertRect:nextFrame toView:self.dragInteractionView];
 
         // After animating the drag representation view back to it's spot..
         animationCompletionBlock = ^ (BOOL finished){

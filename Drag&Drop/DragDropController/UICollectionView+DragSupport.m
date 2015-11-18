@@ -8,8 +8,8 @@
 
 #import <objc/runtime.h>
 
-#import "UICollectionView+DragSupport.h"
 #import "UICollectionView+DragDropControllerSupport.h"
+#import "UICollectionView+DragSupport.h"
 
 #define CGRectReplaceSize(rect, size)   CGRectMake(CGRectGetMinX(rect), CGRectGetMinY(rect), size.width, size.height)
 
@@ -31,22 +31,21 @@
     if (!indexPathAtDragLocation) return;
     
     NSIndexPath *toIndexPath = indexPathAtDragLocation;
-    NSIndexPath *fromIndexPath = self.cellRearrangeDestination
-    ? self.cellRearrangeDestination
-    : self.cellRearrangeOrigin ;
     
-    if (!fromIndexPath ||
-        [fromIndexPath compare:indexPathAtDragLocation] == NSOrderedSame) return;
+    NSIndexPath *fromIndexPath = self.cellRearrangeDestination
+    ? self.cellRearrangeDestination : self.cellRearrangeOrigin;
     
     if (self.isUpdatingCells) return;
     self.isUpdatingCells = YES;
 
     self.cellRearrangeDestination = toIndexPath;
-
-    [self.dataSource collectionView:self
-                moveItemAtIndexPath:fromIndexPath
-                        toIndexPath:toIndexPath];
-
+    
+    if (![fromIndexPath compare:toIndexPath] == NSOrderedSame) {
+        [self.dataSource collectionView:self
+                    moveItemAtIndexPath:fromIndexPath
+                            toIndexPath:toIndexPath];
+    }
+    
     [self makeSpaceForCellFromIndexPath:self.cellRearrangeOrigin
                             toIndexPath:toIndexPath
                                animated:YES];}
@@ -75,14 +74,12 @@
             NSComparisonResult fromResult = [indexPath compare:fromIndexPath];
             NSIndexPath *nextIndexPath = indexPath;
             
-            if ([indexPath compare:fromIndexPath] == NSOrderedSame) {
-                
+            if (fromResult == NSOrderedSame) {
                 UICollectionViewLayoutAttributes *attributes = [self.collectionViewLayout layoutAttributesForItemAtIndexPath:toIndexPath];
                 visibleCell.frame = CGRectReplaceSize(visibleCell.frame, attributes.size);
                 return;
             }
-            
-            if (toResult == NSOrderedAscending) {
+            else if (toResult == NSOrderedAscending) {
                 if (fromResult == NSOrderedDescending) {
                     // - 1
                     nextIndexPath = [NSIndexPath indexPathForRow:indexPath.row-1 inSection:indexPath.section];
@@ -105,6 +102,7 @@
                     nextIndexPath = [NSIndexPath indexPathForRow:indexPath.row-1 inSection:indexPath.section];
                 }
             }
+            
             visibleCell.frame = [self.collectionViewLayout layoutAttributesForItemAtIndexPath:nextIndexPath].frame;
         }];
         
@@ -131,6 +129,7 @@
                 nextIndexPath = [NSIndexPath indexPathForRow:indexPath.row-1
                                                    inSection:indexPath.section];
             }
+
             visibleCell.frame = [self.collectionViewLayout layoutAttributesForItemAtIndexPath:nextIndexPath].frame;
         }];
         

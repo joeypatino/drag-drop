@@ -45,14 +45,12 @@
 
     self.cellSwapDestination = indexPathAtDragLocation;
     
-    if ([self.cellSwapOrigin compare:self.cellSwapDestination] != NSOrderedSame) {
-        [self.dataSource collectionView:self
-                    moveItemAtIndexPath:self.cellSwapOrigin
+    if (![self.cellSwapOrigin compare:self.cellSwapDestination] == NSOrderedSame) {
+        [self.dataSource collectionView:self moveItemAtIndexPath:self.cellSwapOrigin
                             toIndexPath:self.cellSwapDestination];
     }
-
-    [self insertSpaceForCellAtIndexPath:self.cellSwapDestination
-                               animated:YES];
+    
+    [self insertSpaceForCellAtIndexPath:self.cellSwapDestination animated:YES];
     
     self.cellSwapOrigin = self.cellSwapDestination;
 }
@@ -74,9 +72,6 @@
 - (void)receivedCellSwapFromSource:(UICollectionView *)destination {
     NSLog(@"%s", __PRETTY_FUNCTION__);
 
-//    NSLog(@"DELETED: %li", [self cellSwapOrigin].row);
-//    NSLog(@"INSERTED: %li", [destination cellSwapDestination].row);
-
     [UIView setAnimationsEnabled:NO];
     [self insertSwappedCellAtIndexPath:self.cellSwapDestination];
     [destination deleteSwappedCellAtIndexPath:destination.cellRearrangeDestination];
@@ -87,6 +82,16 @@
 
     [destination resetAfterSwap];
     [destination resetAfterRearrange];
+}
+
+- (void)insertSwappedCellAtIndexPath:(NSIndexPath *)indexPath {
+    [self insertItemsAtIndexPaths:@[indexPath]];
+    [self reloadItemsAtIndexPaths:[self indexPathsForVisibleItems]];
+}
+
+- (void)deleteSwappedCellAtIndexPath:(NSIndexPath *)indexPath {
+    [self deleteItemsAtIndexPaths:@[indexPath]];
+    [self reloadItemsAtIndexPaths:[self indexPathsForVisibleItems]];
 }
 
 #pragma mark -
@@ -100,36 +105,27 @@
 
 #pragma mark - Cell Rearrangement
 
-- (void)insertSwappedCellAtIndexPath:(NSIndexPath *)indexPath {
-    [self insertItemsAtIndexPaths:@[indexPath]];
-    [self reloadItemsAtIndexPaths:[self indexPathsForVisibleItems]];
-}
-
-- (void)deleteSwappedCellAtIndexPath:(NSIndexPath *)indexPath {
-    [self deleteItemsAtIndexPaths:@[indexPath]];
-    [self reloadItemsAtIndexPaths:[self indexPathsForVisibleItems]];
-}
-
 - (void)moveCellFromSource:(UICollectionView *)source {
 
     BOOL canMove = YES;
 
-    NSIndexPath *indexPath = (source.cellRearrangeDestination == nil) ? source.cellSwapOrigin : source.cellRearrangeDestination;
-    NSIndexPath *toIndexPath = (self.cellSwapDestination == nil) ? self.cellRearrangeDestination: self.cellSwapDestination;
+    NSIndexPath *indexPath = source.cellRearrangeDestination ?
+                            source.cellRearrangeDestination : source.cellSwapOrigin;
     
-    if ([(NSObject <UICollectionViewDataSource_DropSupport> *)source.delegate respondsToSelector:@selector(collectionView:canMoveItemAtIndexPath:toCollectionView:toIndexPath:)]){
-        canMove = [(NSObject <UICollectionViewDataSource_DropSupport> *)source.delegate collectionView:source
-                                                                                              canMoveItemAtIndexPath:indexPath
-                                                                                                    toCollectionView:self
-                                                                                                         toIndexPath:toIndexPath];
+    NSIndexPath *toIndexPath = self.cellSwapDestination ?
+                                self.cellSwapDestination : self.cellRearrangeDestination;
+    
+    NSObject <UICollectionViewDataSource_DropSupport> *dataSource = (NSObject <UICollectionViewDataSource_DropSupport> *)source.dataSource;
+
+    if ([source.delegate respondsToSelector:@selector(collectionView:canMoveItemAtIndexPath:toCollectionView:toIndexPath:)]){
+        canMove = [dataSource collectionView:source canMoveItemAtIndexPath:indexPath
+                            toCollectionView:self toIndexPath:toIndexPath];
     }
     
     if (canMove) {
-        if ([(NSObject <UICollectionViewDataSource_DropSupport> *)source.delegate respondsToSelector:@selector(collectionView:moveItemAtIndexPath:toCollectionView:toIndexPath:)]){
-            [(NSObject <UICollectionViewDataSource_DropSupport> *)source.delegate collectionView:source
-                                                                                           moveItemAtIndexPath:indexPath
-                                                                                              toCollectionView:self
-                                                                                                   toIndexPath:toIndexPath];
+        if ([dataSource respondsToSelector:@selector(collectionView:moveItemAtIndexPath:toCollectionView:toIndexPath:)]){
+            [dataSource collectionView:source moveItemAtIndexPath:indexPath
+                      toCollectionView:self toIndexPath:toIndexPath];
         }
     }
 }

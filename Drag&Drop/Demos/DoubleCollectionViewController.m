@@ -153,8 +153,8 @@
 
 //    NSLog(@"%li -> %li", sourceIndexPath.row, destinationIndexPath.row);
 
-    NSLog(@"L: %li - %@", self.leftDataSource.count, self.leftDataSource);
-    NSLog(@"R: %li -  %@", self.rightDataSource.count, self.rightDataSource);
+    NSLog(@"L: %li - %@", (long) self.leftDataSource.count, self.leftDataSource);
+    NSLog(@"R: %li -  %@", (long)self.rightDataSource.count, self.rightDataSource);
 
     NSLog(@"######################################");
 }
@@ -181,8 +181,8 @@
         [self.rightDataSource insertObject:item atIndex:destinationIndexPath.row];
     }
     
-    NSLog(@"L: %li - %@", self.leftDataSource.count, self.leftDataSource);
-    NSLog(@"R: %li -  %@", self.rightDataSource.count, self.rightDataSource);
+    NSLog(@"L: %li - %@", (long)self.leftDataSource.count, self.leftDataSource);
+    NSLog(@"R: %li -  %@", (long)self.rightDataSource.count, self.rightDataSource);
 
     NSLog(@"######################################");
 }
