@@ -60,7 +60,7 @@
 
 - (void)loadRightContent {
     self.rightDataSource = [NSMutableArray array];
-    for (int i = 1; i < 70; i++) {
+    for (int i = 1; i < 6; i++) {
         [self.rightDataSource addObject:@(i*10)];
     }
 

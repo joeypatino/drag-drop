@@ -91,7 +91,7 @@
     else {
         if (!self.isDroppingCell)
             [collectionView reverseCellSwapFrom:self];
-        
+
         collectionView.layer.borderColor = [UIColor clearColor].CGColor;
         collectionView.layer.borderWidth = 0.0;
     }
