@@ -66,7 +66,7 @@
 
     self.rightLayout = [[UICollectionViewFlowLayout alloc] init];
     self.rightLayout.minimumInteritemSpacing = 4;
-    self.rightLayout.minimumLineSpacing = 4;
+    self.rightLayout.minimumLineSpacing = 20;
     self.rightLayout.sectionInset = UIEdgeInsetsMake(4, 4, 4, 4);
     self.rightCollectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(CGRectGetWidth(self.view.frame)/2, 00,
                                                                                  CGRectGetWidth(self.view.frame)/2,

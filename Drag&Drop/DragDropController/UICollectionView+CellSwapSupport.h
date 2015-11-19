@@ -1,5 +1,5 @@
 //
-//  UICollectionView+DropSupport.h
+//  UICollectionView+CellSwapSupport.h
 //  Drag&Drop
 //
 //  Created by Joey Patino on 11/17/15.
@@ -8,24 +8,21 @@
 
 #import <UIKit/UIKit.h>
 
-@protocol UICollectionViewDataSource_DropSupport <UICollectionViewDataSource>
-
+@protocol UICollectionViewDataSource_CellSwapSupport <UICollectionViewDataSource>
 - (BOOL)collectionView:(UICollectionView *)sourceCollectionView canMoveItemAtIndexPath:(NSIndexPath *)sourceIndexPath
       toCollectionView:(UICollectionView *)destinationCollectionView toIndexPath:(NSIndexPath *)destinationIndexPath;
-
 - (void)collectionView:(UICollectionView *)collectionView moveItemAtIndexPath:(NSIndexPath *)sourceIndexPath
       toCollectionView:(UICollectionView *)destinationCollectionView toIndexPath:(NSIndexPath *)destinationIndexPath;
 @end
 
 
-@interface UICollectionView (DropSupport)
+@interface UICollectionView (CellSwapSupport)
 @property (nonatomic, strong) NSIndexPath *cellSwapOrigin;
 @property (nonatomic, strong) NSIndexPath *cellSwapDestination;
 
 - (void)startCellSwapFrom:(UICollectionView *)collectionView atLocation:(CGPoint)location;
 - (void)continueCellSwap:(CGPoint)location;
-- (void)endCellSwap:(UICollectionView *)collectionView;
-
+- (void)endCellSwapFrom:(UICollectionView *)collectionView;
 - (void)receivedCellSwapFromSource:(UICollectionView *)destination;
 
 @end

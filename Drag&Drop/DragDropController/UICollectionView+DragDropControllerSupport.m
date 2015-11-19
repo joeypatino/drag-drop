@@ -9,12 +9,13 @@
 #import <objc/runtime.h>
 
 #import "UICollectionView+DragDropControllerSupport.h"
-#import "UICollectionView+DragSupport.h"
-#import "UICollectionView+DropSupport.h"
+#import "UICollectionView+CellRearrangeSupport.h"
+#import "UICollectionView+CellSwapSupport.h"
 #import "DragDropController.h"
 
 @interface UICollectionView ()
-@property (nonatomic, assign) BOOL dragIsInAnyController;
+@property (nonatomic, assign) BOOL isDragInCollectionView;
+@property (nonatomic, assign) BOOL isDroppingCell;
 @end
 
 @implementation UICollectionView (DragDropControllerSupport)
@@ -45,12 +46,58 @@
 }
 
 - (DragDropController *)controller {
-    DragDropController *d = [[DragDropController alloc] init];
-    d.dropTargetView = self;
-    d.dragDropDataSource = (NSObject <DragDropControllerDatasource>*)self;
-    d.dragDropDelegate = (NSObject <DragDropControllerDelegate>*)self;
+    DragDropController *ddController = [[DragDropController alloc] init];
+    ddController.dropTargetView = self;
+    ddController.dragDropDataSource = (NSObject <DragDropControllerDatasource>*)self;
+    ddController.dragDropDelegate = (NSObject <DragDropControllerDelegate>*)self;
     
-    return d;
+    return ddController;
+}
+
+#pragma mark -
+
+- (void)startedDraggingInCollectionView:(UICollectionView *)collectionView atPoint:(CGPoint)point {
+    self.isDragInCollectionView = YES;
+
+    if ([self isEqual:collectionView])
+        return [self startCellRearrangement:point];
+
+    [collectionView startCellSwapFrom:self atLocation:point];
+
+    collectionView.layer.borderColor = [UIColor redColor].CGColor;
+    collectionView.layer.borderWidth = 2.0;
+}
+
+- (void)isDraggingInCollectionView:(UICollectionView *)collectionView atPoint:(CGPoint)point {
+    
+    if ([self isEqual:collectionView])
+        return [self continueCellRearrangement:point];
+    
+    [collectionView continueCellSwap:point];
+}
+
+- (void)endedDraggingInCollectionView:(UICollectionView *)collectionView atPoint:(CGPoint)point {
+    self.isDragInCollectionView = NO;
+
+    if ([self isEqual:collectionView]) {
+
+        if (self.isDroppingCell) [self finishCellRearrangement];
+        else [self stopCellRearrangement];
+        
+        return;
+    }
+    
+    if (!self.isDroppingCell)
+        [collectionView endCellSwapFrom:self];
+
+    collectionView.layer.borderColor = [UIColor clearColor].CGColor;
+    collectionView.layer.borderWidth = 0.0;
+}
+
+- (void)didMoveCellToCollectionView:(UICollectionView *)collectionView {
+    
+    if (![self isEqual:collectionView])
+        [collectionView receivedCellSwapFromSource:self];
 }
 
 #pragma mark - DragDropController Delegate
@@ -72,7 +119,7 @@
     DLog(@"%s", __PRETTY_FUNCTION__);
     self.isDroppingCell = YES;
 
-    if (!self.dragIsInAnyController)
+    if (!self.isDragInCollectionView)
         [self cancelCellRearrangement];
 }
 
@@ -89,27 +136,14 @@
      destinationController:(DragDropController *)destination {
     DLog(@"%s", __PRETTY_FUNCTION__);
     
-    self.dragIsInAnyController = YES;
-    
-    if (![controller isEqual:destination]) {
-        [[self dragDropCollectionView:destination] startCellSwapFrom:[self dragDropCollectionView:controller] atLocation:drag.currentLocation];
-    }
-    else {
-        
-        [self startCellRearrangement:drag.currentLocation];
-    }
+    [self startedDraggingInCollectionView:[self dragDropCollectionView:destination] atPoint:drag.currentLocation];
 }
 
 - (void)dragDropController:(DragDropController *)controller
                dragDidMove:(DragAction *)drag
      destinationController:(DragDropController *)destination {
     
-    if (![controller isEqual:destination]) {
-        [[self dragDropCollectionView:destination] continueCellSwap:drag.currentLocation];
-    }
-    else {
-        [self continueCellRearrangement:drag.currentLocation];
-    }
+    [self isDraggingInCollectionView:[self dragDropCollectionView:destination] atPoint:drag.currentLocation];
 }
 
 - (void)dragDropController:(DragDropController *)controller
@@ -117,14 +151,7 @@
      destinationController:(DragDropController *)destination {
     DLog(@"%s", __PRETTY_FUNCTION__);
 
-    self.dragIsInAnyController = NO;
-
-    if (![controller isEqual:destination]) {
-        [[self dragDropCollectionView:destination] endCellSwap:[self dragDropCollectionView:controller]];
-    }
-    else {
-        [self endCellRearrangement];
-    }
+    [self endedDraggingInCollectionView:[self dragDropCollectionView:destination] atPoint:drag.currentLocation];
 }
 
 #pragma mark -
@@ -134,9 +161,7 @@
              toDestination:(DragDropController *)destination {
     DLog(@"%s", __PRETTY_FUNCTION__);
     
-    if (![controller isEqual: destination]) {
-        [[self dragDropCollectionView:destination] receivedCellSwapFromSource:[self dragDropCollectionView:controller]];
-    }
+    [self didMoveCellToCollectionView:[self dragDropCollectionView:destination]];
 }
 
 #pragma mark - DragDropController Datasource
@@ -171,16 +196,6 @@
     return objc_getAssociatedObject(self, @selector(dragDropController));
 }
 
-
-- (void)setIsUpdatingCells:(BOOL)isUpdatingCells {
-    objc_setAssociatedObject(self, @selector(isUpdatingCells), [NSNumber numberWithBool:isUpdatingCells], OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-}
-
-- (BOOL)isUpdatingCells {
-    NSNumber *isUpdatingCells = objc_getAssociatedObject(self, @selector(isUpdatingCells));
-    return [isUpdatingCells boolValue];
-}
-
 - (void)setIsDroppingCell:(BOOL)isDroppingCell {
     objc_setAssociatedObject(self, @selector(isDroppingCell), [NSNumber numberWithBool:isDroppingCell], OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
@@ -189,16 +204,14 @@
     NSNumber *isDroppingCell = objc_getAssociatedObject(self, @selector(isDroppingCell));
     return [isDroppingCell boolValue];
 }
-
-- (void)setDragIsInAnyController:(BOOL)dragIsInAnyController {
-    objc_setAssociatedObject(self, @selector(dragIsInAnyController), [NSNumber numberWithBool:dragIsInAnyController], OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+- (void)setIsDragInCollectionView:(BOOL)isDragInCollectionView {
+    objc_setAssociatedObject(self, @selector(isDragInCollectionView), [NSNumber numberWithBool:isDragInCollectionView], OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 
-- (BOOL)dragIsInAnyController {
-    NSNumber *dragIsInAnyController = objc_getAssociatedObject(self, @selector(dragIsInAnyController));
-    return [dragIsInAnyController boolValue];
+- (BOOL)isDragInCollectionView {
+    NSNumber *isDragInCollectionView = objc_getAssociatedObject(self, @selector(isDragInCollectionView));
+    return [isDragInCollectionView boolValue];
 }
-
 
 
 @end

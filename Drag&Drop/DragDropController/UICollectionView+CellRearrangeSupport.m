@@ -1,5 +1,5 @@
 //
-//  UICollectionView+DragSupport.m
+//  UICollectionView+CellRearrangeSupport.m
 //  Drag&Drop
 //
 //  Created by Joey Patino on 11/17/15.
@@ -7,13 +7,15 @@
 //
 
 #import <objc/runtime.h>
-
-#import "UICollectionView+DragDropControllerSupport.h"
-#import "UICollectionView+DragSupport.h"
+#import "UICollectionView+CellRearrangeSupport.h"
 
 #define CGRectReplaceSize(rect, size)   CGRectMake(CGRectGetMinX(rect), CGRectGetMinY(rect), size.width, size.height)
 
-@implementation UICollectionView (DragSupport)
+@interface UICollectionView ()
+@property (nonatomic, assign) BOOL isRearrangingCells;
+@end
+
+@implementation UICollectionView (CellRearrangeSupport)
 
 - (void)startCellRearrangement:(CGPoint)location {
     DLog(@"%s", __PRETTY_FUNCTION__);
@@ -31,14 +33,9 @@
     if (!indexPathAtDragLocation) return;
     
     NSIndexPath *toIndexPath = indexPathAtDragLocation;
+    NSIndexPath *fromIndexPath = self.cellRearrangeDestination;
     
-    NSIndexPath *fromIndexPath = self.cellRearrangeDestination
-    ? self.cellRearrangeDestination : self.cellRearrangeOrigin;
-    
-    if (self.isUpdatingCells) return;
-    self.isUpdatingCells = YES;
-
-    self.cellRearrangeDestination = toIndexPath;
+    if ([toIndexPath compare:fromIndexPath] == NSOrderedSame) return;
     
     if (![fromIndexPath compare:toIndexPath] == NSOrderedSame) {
         [self.dataSource collectionView:self
@@ -50,17 +47,18 @@
                             toIndexPath:toIndexPath
                                animated:YES
                              completion:nil];
+    
+    self.cellRearrangeDestination = toIndexPath;
 }
 
-- (void)endCellRearrangement {
+- (void)finishCellRearrangement {
+    [self resetAfterRearrange];
+}
+
+- (void)stopCellRearrangement {
     DLog(@"%s", __PRETTY_FUNCTION__);
 
-    if (self.isDroppingCell) {
-        [self resetAfterRearrange];
-    }
-    else {
-        [self removeSpaceForCellAtIndexPath:self.cellRearrangeOrigin animated:YES];
-    }
+    [self removeSpaceForCellAtIndexPath:self.cellRearrangeOrigin animated:YES];
 }
 
 - (void)cancelCellRearrangement {
@@ -129,7 +127,7 @@
     } completion:^(BOOL finsihed){
         if (completion)
             completion();
-        self.isUpdatingCells = NO;
+        self.isRearrangingCells = NO;
     }];
 }
 
@@ -157,7 +155,7 @@
         }];
         
     } completion:^(BOOL finsihed){
-        self.isUpdatingCells = NO;
+        self.isRearrangingCells = NO;
     }];
 }
 
@@ -191,6 +189,15 @@
 
 - (NSIndexPath *)cellRearrangeOrigin {
     return objc_getAssociatedObject(self, @selector(cellRearrangeOrigin));
+}
+
+- (void)setIsRearrangingCells:(BOOL)isRearrangingCells {
+    objc_setAssociatedObject(self, @selector(isRearrangingCells), [NSNumber numberWithBool:isRearrangingCells], OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+- (BOOL)isRearrangingCells {
+    NSNumber *isRearrangingCells = objc_getAssociatedObject(self, @selector(isRearrangingCells));
+    return [isRearrangingCells boolValue];
 }
 
 @end

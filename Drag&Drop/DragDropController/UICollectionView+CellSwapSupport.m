@@ -1,5 +1,5 @@
 //
-//  UICollectionView+DropSupport.m
+//  UICollectionView+CellSwapSupport.m
 //  Drag&Drop
 //
 //  Created by Joey Patino on 11/17/15.
@@ -8,63 +8,50 @@
 
 #import <objc/runtime.h>
 
-#import "UICollectionView+DragDropControllerSupport.h"
-#import "UICollectionView+DropSupport.h"
-#import "UICollectionView+DragSupport.h"
+#import "UICollectionView+CellSwapSupport.h"
+#import "UICollectionView+CellRearrangeSupport.h"
 
-@class DragAction;
 @interface UICollectionView ()
+@property (nonatomic, assign) BOOL isSwappingCells;
 @end
 
-@implementation UICollectionView (DropSupport)
+@implementation UICollectionView (CellSwapSupport)
 
 - (void)startCellSwapFrom:(UICollectionView *)collectionView atLocation:(CGPoint)location {
     DLog(@"%s", __PRETTY_FUNCTION__);
 
-    self.cellSwapDestination = [self indexPathForItemAtPoint:location];
-    
-    if (!self.cellSwapDestination)
-        self.cellSwapDestination = [self findClosestIndexPathToPoint:location];
-    
+    self.cellSwapDestination = [self indexPathAtLocation:location];
     self.cellSwapOrigin = self.cellSwapDestination;
-    [self moveCellFromSource:collectionView];
 
-    self.layer.borderColor = [UIColor redColor].CGColor;
-    self.layer.borderWidth = 2.0;
+    [self moveCellFromSource:collectionView];
 }
 
 - (void)continueCellSwap:(CGPoint)location {
-    
-    NSIndexPath *indexPathAtDragLocation = [self indexPathForItemAtPoint:location];
+    if (self.isSwappingCells) return;
+    self.isSwappingCells = YES;
 
-    if (!indexPathAtDragLocation)
-        indexPathAtDragLocation = [self findClosestIndexPathToPoint:location];
+    self.cellSwapDestination = [self indexPathAtLocation:location];
 
-    if (self.isUpdatingCells) return;
-    self.isUpdatingCells = YES;
-
-    self.cellSwapDestination = indexPathAtDragLocation;
-    
     if (![self.cellSwapOrigin compare:self.cellSwapDestination] == NSOrderedSame) {
         [self.dataSource collectionView:self moveItemAtIndexPath:self.cellSwapOrigin
                             toIndexPath:self.cellSwapDestination];
     }
-    
+
     [self insertSpaceForCellAtIndexPath:self.cellSwapDestination animated:YES];
-    
     self.cellSwapOrigin = self.cellSwapDestination;
 }
 
-- (void)endCellSwap:(UICollectionView *)collectionView {
+- (void)endCellSwapFrom:(UICollectionView *)collectionView {
     DLog(@"%s", __PRETTY_FUNCTION__);
     
-    if (!collectionView.isDroppingCell) {
-        [self layoutCollectionViewAnimated:YES];
-        [collectionView moveCellFromSource:self];
-    }
-    
-    self.layer.borderColor = [UIColor clearColor].CGColor;
-    self.layer.borderWidth = 0.0;
+    [self layoutCollectionViewAnimated:YES];
+    [collectionView moveCellFromSource:self];
+}
+
+- (NSIndexPath *)indexPathAtLocation:(CGPoint)location {
+    NSIndexPath *indexPath = [self indexPathForItemAtPoint:location];
+    if (!indexPath) indexPath = [self findClosestIndexPathToPoint:location];
+    return indexPath;
 }
 
 #pragma mark -
@@ -78,18 +65,22 @@
     [UIView setAnimationsEnabled:YES];
     
     [self resetAfterSwap];
-    [self resetAfterRearrange];
+    [self finishCellRearrangement];
 
     [destination resetAfterSwap];
-    [destination resetAfterRearrange];
+    [destination finishCellRearrangement];
 }
 
 - (void)insertSwappedCellAtIndexPath:(NSIndexPath *)indexPath {
+    DLog(@"%s", __PRETTY_FUNCTION__);
+
     [self insertItemsAtIndexPaths:@[indexPath]];
     [self reloadItemsAtIndexPaths:[self indexPathsForVisibleItems]];
 }
 
 - (void)deleteSwappedCellAtIndexPath:(NSIndexPath *)indexPath {
+    DLog(@"%s", __PRETTY_FUNCTION__);
+    
     [self deleteItemsAtIndexPaths:@[indexPath]];
     [self reloadItemsAtIndexPaths:[self indexPathsForVisibleItems]];
 }
@@ -115,7 +106,7 @@
     NSIndexPath *toIndexPath = self.cellSwapDestination ?
                                 self.cellSwapDestination : self.cellRearrangeDestination;
     
-    NSObject <UICollectionViewDataSource_DropSupport> *dataSource = (NSObject <UICollectionViewDataSource_DropSupport> *)source.dataSource;
+    NSObject <UICollectionViewDataSource_CellSwapSupport> *dataSource = (NSObject <UICollectionViewDataSource_CellSwapSupport> *)source.dataSource;
 
     if ([source.delegate respondsToSelector:@selector(collectionView:canMoveItemAtIndexPath:toCollectionView:toIndexPath:)]){
         canMove = [dataSource collectionView:source canMoveItemAtIndexPath:indexPath
@@ -131,6 +122,7 @@
 }
 
 - (void)insertSpaceForCellAtIndexPath:(NSIndexPath *)toIndexPath animated:(BOOL)animated {
+    DLog(@"%s", __PRETTY_FUNCTION__);
 
     [UIView animateWithDuration:animated ? .3 : 0.0 animations:^{
         
@@ -153,11 +145,12 @@
         }];
         
     } completion:^(BOOL finsihed){
-        self.isUpdatingCells = NO;
+        self.isSwappingCells = NO;
     }];
 }
 
 - (void)layoutCollectionViewAnimated:(BOOL)animated {
+    DLog(@"%s", __PRETTY_FUNCTION__);
 
     [UIView animateWithDuration:animated ? .3 : 0.0 animations:^{
         
@@ -167,7 +160,7 @@
         }];
         
     } completion:^(BOOL finsihed){
-        self.isUpdatingCells = NO;
+        self.isSwappingCells = NO;
     }];
 }
 
@@ -261,5 +254,13 @@
     return objc_getAssociatedObject(self, @selector(cellSwapDestination));
 }
 
+- (void)setIsSwappingCells:(BOOL)isSwappingCells {
+    objc_setAssociatedObject(self, @selector(isSwappingCells), [NSNumber numberWithBool:isSwappingCells], OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+- (BOOL)isSwappingCells {
+    NSNumber *isSwappingCells = objc_getAssociatedObject(self, @selector(isSwappingCells));
+    return [isSwappingCells boolValue];
+}
 
 @end
