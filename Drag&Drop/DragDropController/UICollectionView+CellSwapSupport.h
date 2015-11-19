@@ -22,7 +22,9 @@
 
 - (void)startCellSwapFrom:(UICollectionView *)collectionView atLocation:(CGPoint)location;
 - (void)continueCellSwap:(CGPoint)location;
-- (void)endCellSwapFrom:(UICollectionView *)collectionView;
-- (void)receivedCellSwapFromSource:(UICollectionView *)destination;
+- (void)reverseCellSwapFrom:(UICollectionView *)collectionView;
+
+- (void)insertSwappedCell;
+- (void)deleteSwappedCell;
 
 @end

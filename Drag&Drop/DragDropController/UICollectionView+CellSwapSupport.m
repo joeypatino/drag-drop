@@ -10,9 +10,9 @@
 
 #import "UICollectionView+CellSwapSupport.h"
 #import "UICollectionView+CellRearrangeSupport.h"
+#import "NSIndexPath+Additions.h"
 
 @interface UICollectionView ()
-@property (nonatomic, assign) BOOL isSwappingCells;
 @end
 
 @implementation UICollectionView (CellSwapSupport)
@@ -27,48 +27,44 @@
 }
 
 - (void)continueCellSwap:(CGPoint)location {
-    if (self.isSwappingCells) return;
-    self.isSwappingCells = YES;
 
     self.cellSwapDestination = [self indexPathAtLocation:location];
 
-    if (![self.cellSwapOrigin compare:self.cellSwapDestination] == NSOrderedSame) {
-        [self.dataSource collectionView:self moveItemAtIndexPath:self.cellSwapOrigin
+    if (![self.cellSwapOrigin isIndexPath:self.cellSwapDestination]) {
+        [self.dataSource collectionView:self
+                    moveItemAtIndexPath:self.cellSwapOrigin
                             toIndexPath:self.cellSwapDestination];
     }
 
-    [self insertSpaceForCellAtIndexPath:self.cellSwapDestination animated:YES];
+    [self insertVacancyAtIndexPath:self.cellSwapDestination animated:YES];
     self.cellSwapOrigin = self.cellSwapDestination;
 }
 
-- (void)endCellSwapFrom:(UICollectionView *)collectionView {
+- (void)reverseCellSwapFrom:(UICollectionView *)collectionView {
     DLog(@"%s", __PRETTY_FUNCTION__);
     
     [self layoutCollectionViewAnimated:YES];
     [collectionView moveCellFromSource:self];
 }
 
-- (NSIndexPath *)indexPathAtLocation:(CGPoint)location {
-    NSIndexPath *indexPath = [self indexPathForItemAtPoint:location];
-    if (!indexPath) indexPath = [self findClosestIndexPathToPoint:location];
-    return indexPath;
-}
-
 #pragma mark -
 
-- (void)receivedCellSwapFromSource:(UICollectionView *)destination {
+- (void)insertSwappedCell {
     DLog(@"%s", __PRETTY_FUNCTION__);
 
     [UIView setAnimationsEnabled:NO];
     [self insertSwappedCellAtIndexPath:self.cellSwapDestination];
-    [destination deleteSwappedCellAtIndexPath:destination.cellRearrangeDestination];
     [UIView setAnimationsEnabled:YES];
     
     [self resetAfterSwap];
-    [self finishCellRearrangement];
+}
 
-    [destination resetAfterSwap];
-    [destination finishCellRearrangement];
+- (void)deleteSwappedCell {
+    [UIView setAnimationsEnabled:NO];
+    [self deleteSwappedCellAtIndexPath:self.cellRearrangeDestination];
+    [UIView setAnimationsEnabled:YES];
+    
+    [self resetAfterSwap];
 }
 
 - (void)insertSwappedCellAtIndexPath:(NSIndexPath *)indexPath {
@@ -121,32 +117,22 @@
     }
 }
 
-- (void)insertSpaceForCellAtIndexPath:(NSIndexPath *)toIndexPath animated:(BOOL)animated {
+- (void)insertVacancyAtIndexPath:(NSIndexPath *)toIndexPath animated:(BOOL)animated {
     DLog(@"%s", __PRETTY_FUNCTION__);
 
     [UIView animateWithDuration:animated ? .3 : 0.0 animations:^{
         
         [[self indexPathsForVisibleItems] enumerateObjectsUsingBlock:^(NSIndexPath *indexPath, NSUInteger idx, BOOL *stop){
-            UICollectionViewCell *visibleCell = [self cellForItemAtIndexPath:indexPath];
-            
-            NSComparisonResult toResult = [indexPath compare:toIndexPath];
-            NSIndexPath *nextIndexPath = indexPath;
-            
-            if (toResult == NSOrderedAscending) {
-                // nothing...
-                nextIndexPath = [NSIndexPath indexPathForRow:indexPath.row inSection:indexPath.section];
-            }
-            else if (toResult == NSOrderedDescending || toResult == NSOrderedSame) {
-                // + 1
-                nextIndexPath = [NSIndexPath indexPathForRow:indexPath.row+1 inSection:indexPath.section];
-            }
-            
-            visibleCell.frame = [self.collectionViewLayout layoutAttributesForItemAtIndexPath:nextIndexPath].frame;
+
+            CGRect frame = [self.collectionViewLayout layoutAttributesForItemAtIndexPath:indexPath].frame;
+
+            if ([indexPath isAfterIndexPath:toIndexPath] || [indexPath isIndexPath:toIndexPath])
+                frame = [self.collectionViewLayout layoutAttributesForItemAtIndexPath:[indexPath indexPathByIncrementingRow]].frame;
+
+            [self cellForItemAtIndexPath:indexPath].frame = frame;
         }];
         
-    } completion:^(BOOL finsihed){
-        self.isSwappingCells = NO;
-    }];
+    } completion:NULL];
 }
 
 - (void)layoutCollectionViewAnimated:(BOOL)animated {
@@ -155,16 +141,20 @@
     [UIView animateWithDuration:animated ? .3 : 0.0 animations:^{
         
         [[self indexPathsForVisibleItems] enumerateObjectsUsingBlock:^(NSIndexPath *indexPath, NSUInteger idx, BOOL *stop){
-            UICollectionViewCell *visibleCell = [self cellForItemAtIndexPath:indexPath];
-            visibleCell.frame = [self.collectionViewLayout layoutAttributesForItemAtIndexPath:indexPath].frame;
+            CGRect frame = [self.collectionViewLayout layoutAttributesForItemAtIndexPath:indexPath].frame;
+            [self cellForItemAtIndexPath:indexPath].frame = frame;
         }];
         
-    } completion:^(BOOL finsihed){
-        self.isSwappingCells = NO;
-    }];
+    } completion:NULL];
 }
 
 #pragma mark - Helpers
+
+- (NSIndexPath *)indexPathAtLocation:(CGPoint)location {
+    NSIndexPath *indexPath = [self indexPathForItemAtPoint:location];
+    if (!indexPath) indexPath = [self findClosestIndexPathToPoint:location];
+    return indexPath;
+}
 
 - (NSIndexPath *)findClosestIndexPathToPoint:(CGPoint)touchLocation {
     
@@ -252,15 +242,6 @@
 
 - (NSIndexPath *)cellSwapDestination {
     return objc_getAssociatedObject(self, @selector(cellSwapDestination));
-}
-
-- (void)setIsSwappingCells:(BOOL)isSwappingCells {
-    objc_setAssociatedObject(self, @selector(isSwappingCells), [NSNumber numberWithBool:isSwappingCells], OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-}
-
-- (BOOL)isSwappingCells {
-    NSNumber *isSwappingCells = objc_getAssociatedObject(self, @selector(isSwappingCells));
-    return [isSwappingCells boolValue];
 }
 
 @end

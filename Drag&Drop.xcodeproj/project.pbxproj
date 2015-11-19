@@ -10,6 +10,7 @@
 		D475B52A1BF7F0790069C763 /* DoubleCollectionViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D475B5291BF7F0790069C763 /* DoubleCollectionViewController.m */; };
 		D479083E1BFB79520074032C /* UICollectionView+CellRearrangeSupport.m in Sources */ = {isa = PBXBuildFile; fileRef = D479083D1BFB79520074032C /* UICollectionView+CellRearrangeSupport.m */; };
 		D47908411BFB795B0074032C /* UICollectionView+CellSwapSupport.m in Sources */ = {isa = PBXBuildFile; fileRef = D47908401BFB795B0074032C /* UICollectionView+CellSwapSupport.m */; };
+		D486D5F11BFE198A00EDD06B /* NSIndexPath+Additions.m in Sources */ = {isa = PBXBuildFile; fileRef = D486D5F01BFE198A00EDD06B /* NSIndexPath+Additions.m */; };
 		D4ED0BE91BE62BE70014C85B /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ED0BE81BE62BE70014C85B /* main.m */; };
 		D4ED0BEC1BE62BE80014C85B /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ED0BEB1BE62BE80014C85B /* AppDelegate.m */; };
 		D4ED0BF21BE62BE80014C85B /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D4ED0BF01BE62BE80014C85B /* Main.storyboard */; };
@@ -56,6 +57,8 @@
 		D479083F1BFB795B0074032C /* UICollectionView+CellSwapSupport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UICollectionView+CellSwapSupport.h"; sourceTree = "<group>"; };
 		D47908401BFB795B0074032C /* UICollectionView+CellSwapSupport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UICollectionView+CellSwapSupport.m"; sourceTree = "<group>"; };
 		D47908421BFCF5900074032C /* PrefixHeader.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PrefixHeader.pch; sourceTree = "<group>"; };
+		D486D5EF1BFE198A00EDD06B /* NSIndexPath+Additions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSIndexPath+Additions.h"; sourceTree = "<group>"; };
+		D486D5F01BFE198A00EDD06B /* NSIndexPath+Additions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSIndexPath+Additions.m"; sourceTree = "<group>"; };
 		D4ED0BE41BE62BE70014C85B /* Drag&Drop.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Drag&Drop.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		D4ED0BE81BE62BE70014C85B /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		D4ED0BEA1BE62BE70014C85B /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -224,6 +227,8 @@
 				D479083D1BFB79520074032C /* UICollectionView+CellRearrangeSupport.m */,
 				D479083F1BFB795B0074032C /* UICollectionView+CellSwapSupport.h */,
 				D47908401BFB795B0074032C /* UICollectionView+CellSwapSupport.m */,
+				D486D5EF1BFE198A00EDD06B /* NSIndexPath+Additions.h */,
+				D486D5F01BFE198A00EDD06B /* NSIndexPath+Additions.m */,
 			);
 			path = DragDropController;
 			sourceTree = "<group>";
@@ -358,6 +363,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D486D5F11BFE198A00EDD06B /* NSIndexPath+Additions.m in Sources */,
 				D4ED0C731BEB66110014C85B /* DragInteractionView.m in Sources */,
 				D4ED0BEC1BE62BE80014C85B /* AppDelegate.m in Sources */,
 				D4ED0C6B1BEB66110014C85B /* DoubleEmbeddedViewController.m in Sources */,

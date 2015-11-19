@@ -19,4 +19,5 @@
 - (void)stopCellRearrangement;
 - (void)finishCellRearrangement;
 - (void)cancelCellRearrangement;
+
 @end

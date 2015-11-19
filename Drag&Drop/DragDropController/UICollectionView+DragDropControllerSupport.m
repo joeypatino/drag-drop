@@ -11,7 +11,9 @@
 #import "UICollectionView+DragDropControllerSupport.h"
 #import "UICollectionView+CellRearrangeSupport.h"
 #import "UICollectionView+CellSwapSupport.h"
+#import "NSIndexPath+Additions.h"
 #import "DragDropController.h"
+
 
 @interface UICollectionView ()
 @property (nonatomic, assign) BOOL isDragInCollectionView;
@@ -86,18 +88,23 @@
         
         return;
     }
-    
-    if (!self.isDroppingCell)
-        [collectionView endCellSwapFrom:self];
-
-    collectionView.layer.borderColor = [UIColor clearColor].CGColor;
-    collectionView.layer.borderWidth = 0.0;
+    else {
+        if (!self.isDroppingCell)
+            [collectionView reverseCellSwapFrom:self];
+        
+        collectionView.layer.borderColor = [UIColor clearColor].CGColor;
+        collectionView.layer.borderWidth = 0.0;
+    }
 }
 
 - (void)didMoveCellToCollectionView:(UICollectionView *)collectionView {
+    if ([self isEqual:collectionView]) return;
+
+    [self deleteSwappedCell];
+    [collectionView insertSwappedCell];
     
-    if (![self isEqual:collectionView])
-        [collectionView receivedCellSwapFromSource:self];
+    [self finishCellRearrangement];
+    [collectionView finishCellRearrangement];
 }
 
 #pragma mark - DragDropController Delegate
