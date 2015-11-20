@@ -14,7 +14,6 @@
 #import "NSIndexPath+Additions.h"
 #import "DragDropController.h"
 
-
 @interface UICollectionView ()
 @property (nonatomic, assign) BOOL isDragInCollectionView;
 @property (nonatomic, assign) BOOL isDroppingCell;
@@ -95,6 +94,12 @@
         collectionView.layer.borderColor = [UIColor clearColor].CGColor;
         collectionView.layer.borderWidth = 0.0;
     }
+}
+
+- (BOOL)shouldDropCell:(UICollectionViewCell *)cell toCollectionView:(UICollectionView *)collectionView {
+    if ([self isEqual:collectionView]) return YES;
+
+    return [collectionView shouldAcceptCellSwapFrom:self];
 }
 
 - (void)didMoveCellToCollectionView:(UICollectionView *)collectionView {
@@ -191,6 +196,26 @@
     }
 
     return [collectionView.collectionViewLayout layoutAttributesForItemAtIndexPath:indexPath].frame;
+}
+
+- (BOOL)dragDropController:(DragDropController *)controller
+            shouldDragView:(UIView *)view {
+    return [self shouldRearrangeCell:(UICollectionViewCell *)view];
+}
+
+- (BOOL)shouldRearrangeCell:(UICollectionViewCell *)cell {
+
+    if ([self.dataSource respondsToSelector:@selector(collectionView:canMoveItemAtIndexPath:)])
+        return [self.dataSource collectionView:self canMoveItemAtIndexPath:[self indexPathForCell:cell]];
+
+    return YES;
+}
+
+- (BOOL)dragDropController:(DragDropController *)controller
+               canDropView:(UIView *)target
+             toDestination:(DragDropController *)destination {
+
+    return [self shouldDropCell:(UICollectionViewCell *)target toCollectionView:[self dragDropCollectionView:destination]];
 }
 
 #pragma mark -

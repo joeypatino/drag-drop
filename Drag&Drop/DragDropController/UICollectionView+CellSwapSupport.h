@@ -11,6 +11,7 @@
 @protocol UICollectionViewDataSource_CellSwapSupport <UICollectionViewDataSource>
 - (BOOL)collectionView:(UICollectionView *)sourceCollectionView canMoveItemAtIndexPath:(NSIndexPath *)sourceIndexPath
       toCollectionView:(UICollectionView *)destinationCollectionView toIndexPath:(NSIndexPath *)destinationIndexPath;
+@required
 - (void)collectionView:(UICollectionView *)collectionView moveItemAtIndexPath:(NSIndexPath *)sourceIndexPath
       toCollectionView:(UICollectionView *)destinationCollectionView toIndexPath:(NSIndexPath *)destinationIndexPath;
 @end
@@ -19,6 +20,8 @@
 @interface UICollectionView (CellSwapSupport)
 @property (nonatomic, strong) NSIndexPath *cellSwapOrigin;
 @property (nonatomic, strong) NSIndexPath *cellSwapDestination;
+
+- (BOOL)shouldAcceptCellSwapFrom:(UICollectionView *)collectionView;
 
 - (void)startCellSwapFrom:(UICollectionView *)collectionView atLocation:(CGPoint)location;
 - (void)continueCellSwap:(CGPoint)location;

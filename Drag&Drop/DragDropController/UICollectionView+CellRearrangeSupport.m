@@ -7,9 +7,9 @@
 //
 
 #import <objc/runtime.h>
+
 #import "UICollectionView+CellRearrangeSupport.h"
 #import "NSIndexPath+Additions.h"
-#import "DragDropController.h"
 
 #define CGRectReplaceSize(rect, size)   CGRectMake(CGRectGetMinX(rect), CGRectGetMinY(rect), size.width, size.height)
 
@@ -26,26 +26,26 @@
     
     if (self.cellRearrangeDestination == nil)
         self.cellRearrangeDestination = [self indexPathForItemAtPoint:location];
+    
+    [self createVacancyForMovementFromIndexPath:self.cellRearrangeOrigin
+                                    toIndexPath:self.cellRearrangeDestination
+                                       animated:YES completion:nil];
 }
 
 - (void)continueCellRearrangement:(CGPoint)location {
     
-    NSIndexPath *indexPathAtDragLocation = [self indexPathForItemAtPoint:location];
-    if (!indexPathAtDragLocation) return;
-    
-    NSIndexPath *toIndexPath = indexPathAtDragLocation;
-    NSIndexPath *fromIndexPath = self.cellRearrangeDestination;
+    NSIndexPath *toIndexPath = [self indexPathForItemAtPoint:location];
+    if (!toIndexPath) return;
 
-    if (![fromIndexPath isIndexPath:toIndexPath]) {
-        [self.dataSource collectionView:self
-                    moveItemAtIndexPath:fromIndexPath
-                            toIndexPath:toIndexPath];
+    if (![self.cellRearrangeDestination isIndexPath:toIndexPath]) {
+
+        if ([self.dataSource respondsToSelector:@selector(collectionView:moveItemAtIndexPath:toIndexPath:)])
+            [self.dataSource collectionView:self moveItemAtIndexPath:self.cellRearrangeDestination toIndexPath:toIndexPath];
+
+        [self createVacancyForMovementFromIndexPath:self.cellRearrangeOrigin
+                                        toIndexPath:toIndexPath
+                                           animated:YES completion:nil];
     }
-    
-    [self createVacancyForMovementFromIndexPath:self.cellRearrangeOrigin
-                                    toIndexPath:toIndexPath
-                                       animated:YES
-                                     completion:nil];
     
     self.cellRearrangeDestination = toIndexPath;
 }
@@ -59,7 +59,11 @@
 - (void)finishCellRearrangement {
     DLog(@"%s", __PRETTY_FUNCTION__);
     
-    [self resetAfterRearrange];
+    BOOL canMove = YES;
+     if ([self.dataSource respondsToSelector:@selector(collectionView:canMoveItemAtIndexPath:)])
+         canMove = [self.dataSource collectionView:self canMoveItemAtIndexPath:self.cellRearrangeDestination];
+
+    if (canMove) [self resetAfterRearrange];
 }
 
 - (void)cancelCellRearrangement {
@@ -69,10 +73,10 @@
                                     toIndexPath:self.cellRearrangeOrigin
                                        animated:YES
                                      completion:^{
-                                         [self.dataSource collectionView:self
-                                                     moveItemAtIndexPath:self.cellRearrangeDestination
-                                                             toIndexPath:self.cellRearrangeOrigin];
-                                         
+
+                                         if ([self.dataSource respondsToSelector:@selector(collectionView:moveItemAtIndexPath:toIndexPath:)])
+                                             [self.dataSource collectionView:self moveItemAtIndexPath:self.cellRearrangeDestination toIndexPath:self.cellRearrangeOrigin];
+
                                          [self resetAfterRearrange];
                                      }];
 }
@@ -83,7 +87,6 @@
                                   toIndexPath:(NSIndexPath *)toIndexPath
                                      animated:(BOOL)animated
                                    completion:(dispatch_block_t)completion {
-    DLog(@"%s", __PRETTY_FUNCTION__);
     
     [UIView animateWithDuration:animated ? .3 : 0.0 animations:^{
         

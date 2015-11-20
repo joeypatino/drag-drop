@@ -22,29 +22,46 @@
 
     self.cellSwapDestination = [self indexPathAtLocation:location];
     self.cellSwapOrigin = self.cellSwapDestination;
-    
-    [collectionView moveIndexPath:collectionView.cellRearrangeDestination to:self.cellSwapDestination withDestination:self];
+
+    if ([collectionView canMoveIndexPath:collectionView.cellRearrangeDestination to:self.cellSwapDestination withDestination:self]) {
+        [collectionView moveIndexPath:collectionView.cellRearrangeDestination to:self.cellSwapDestination withDestination:self];
+
+        [self insertVacancyAtIndexPath:self.cellSwapDestination animated:YES];
+    }
+    else {
+        [self resetAfterSwap];
+    }
 }
 
 - (void)continueCellSwap:(CGPoint)location {
-
+    if (!self.cellSwapDestination && !self.cellSwapOrigin) return;
+    
     self.cellSwapDestination = [self indexPathAtLocation:location];
 
     if (![self.cellSwapOrigin isIndexPath:self.cellSwapDestination]) {
-        [self.dataSource collectionView:self
-                    moveItemAtIndexPath:self.cellSwapOrigin
-                            toIndexPath:self.cellSwapDestination];
+
+        BOOL canMove = YES;
+        if ([self.dataSource respondsToSelector:@selector(collectionView:canMoveItemAtIndexPath:)])
+            canMove = [self.dataSource collectionView:self canMoveItemAtIndexPath:self.cellSwapOrigin];
+        
+        if (canMove && [self.dataSource respondsToSelector:@selector(collectionView:moveItemAtIndexPath:toIndexPath:)])
+            [self.dataSource collectionView:self moveItemAtIndexPath:self.cellSwapOrigin toIndexPath:self.cellSwapDestination];
+
+        [self insertVacancyAtIndexPath:self.cellSwapDestination animated:YES];
     }
 
-    [self insertVacancyAtIndexPath:self.cellSwapDestination animated:YES];
     self.cellSwapOrigin = self.cellSwapDestination;
 }
 
 - (void)reverseCellSwapFrom:(UICollectionView *)collectionView {
     DLog(@"%s", __PRETTY_FUNCTION__);
-    
-    [self layoutCollectionViewAnimated:YES];
-    [self moveIndexPath:self.cellSwapOrigin to:collectionView.cellRearrangeDestination withDestination:collectionView];
+    if (!self.cellSwapDestination && !self.cellSwapOrigin) return;
+
+    [self layoutCollectionViewAnimated:YES completion:nil];
+
+    if ([self canMoveIndexPath:self.cellSwapOrigin to:collectionView.cellRearrangeDestination withDestination:collectionView]) {
+        [self moveIndexPath:self.cellSwapOrigin to:collectionView.cellRearrangeDestination withDestination:collectionView];
+    }
 }
 
 #pragma mark -
@@ -90,22 +107,39 @@
 
 #pragma mark - Cell Rearrangement
 
-- (void)moveIndexPath:(NSIndexPath *)fromIndexPath to:(NSIndexPath *)toIndexPath withDestination:(UICollectionView *)destination {
+- (BOOL)shouldAcceptCellSwapFrom:(UICollectionView *)source {
+    DLog(@"%s", __PRETTY_FUNCTION__);
+
+    BOOL canDrop = (self.cellSwapOrigin && self.cellSwapDestination);
     
-    BOOL canMove = YES;
+    if (!canDrop) {
+        
+        [source layoutCollectionViewAnimated:YES completion:^{
+            [self cancelCellRearrangement];
+            [source cancelCellRearrangement];
+        }];
+    }
+    
+    return canDrop;
+}
+
+// Future support for selective cell swaps...
+- (BOOL)canMoveIndexPath:(NSIndexPath *)fromIndexPath to:(NSIndexPath *)toIndexPath withDestination:(UICollectionView *)destination {
+    
+    NSObject <UICollectionViewDataSource_CellSwapSupport> *dataSource = (NSObject <UICollectionViewDataSource_CellSwapSupport> *)destination.dataSource;
+    
+    if ([dataSource respondsToSelector:@selector(collectionView:canMoveItemAtIndexPath:toCollectionView:toIndexPath:)])
+        return [dataSource collectionView:self canMoveItemAtIndexPath:fromIndexPath toCollectionView:destination toIndexPath:toIndexPath];
+
+    return YES;
+}
+
+- (void)moveIndexPath:(NSIndexPath *)fromIndexPath to:(NSIndexPath *)toIndexPath withDestination:(UICollectionView *)destination {
+
     NSObject <UICollectionViewDataSource_CellSwapSupport> *dataSource = (NSObject <UICollectionViewDataSource_CellSwapSupport> *)self.dataSource;
     
-    if ([self.delegate respondsToSelector:@selector(collectionView:canMoveItemAtIndexPath:toCollectionView:toIndexPath:)]){
-        canMove = [dataSource collectionView:self canMoveItemAtIndexPath:fromIndexPath
-                            toCollectionView:destination toIndexPath:toIndexPath];
-    }
-    
-    if (canMove) {
-        if ([dataSource respondsToSelector:@selector(collectionView:moveItemAtIndexPath:toCollectionView:toIndexPath:)]){
-            [dataSource collectionView:self moveItemAtIndexPath:fromIndexPath
-                      toCollectionView:destination toIndexPath:toIndexPath];
-        }
-    }
+    if ([dataSource respondsToSelector:@selector(collectionView:moveItemAtIndexPath:toCollectionView:toIndexPath:)])
+        [dataSource collectionView:self moveItemAtIndexPath:fromIndexPath toCollectionView:destination toIndexPath:toIndexPath];
 }
 
 - (void)insertVacancyAtIndexPath:(NSIndexPath *)toIndexPath animated:(BOOL)animated {
@@ -126,7 +160,7 @@
     } completion:NULL];
 }
 
-- (void)layoutCollectionViewAnimated:(BOOL)animated {
+- (void)layoutCollectionViewAnimated:(BOOL)animated completion:(dispatch_block_t)completion {
     DLog(@"%s", __PRETTY_FUNCTION__);
 
     [UIView animateWithDuration:animated ? .3 : 0.0 animations:^{
@@ -136,7 +170,10 @@
             [self cellForItemAtIndexPath:indexPath].frame = frame;
         }];
         
-    } completion:NULL];
+    } completion:^(BOOL finished){
+        if (completion)
+            completion();
+    }];
 }
 
 #pragma mark - Helpers
