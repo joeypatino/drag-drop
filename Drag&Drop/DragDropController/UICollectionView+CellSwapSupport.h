@@ -23,11 +23,14 @@
 
 - (BOOL)shouldAcceptCellSwapFrom:(UICollectionView *)collectionView;
 
-- (void)startCellSwapFrom:(UICollectionView *)collectionView atLocation:(CGPoint)location;
+- (void)startCellSwapFromIndexPath:(NSIndexPath *)fromIndexPath
+                  inCollectionView:(UICollectionView *)collectionView
+                        toLocation:(CGPoint)location;
 - (void)continueCellSwap:(CGPoint)location;
-- (void)reverseCellSwapFrom:(UICollectionView *)collectionView;
+- (void)reverseCellSwapFromIndexPath:(NSIndexPath *)fromIndexPath
+                    inCollectionView:(UICollectionView *)collectionView;
 
-- (void)insertSwappedCell;
-- (void)deleteSwappedCell;
-
+- (void)insertCellAtIndexPath:(NSIndexPath *)indexPath;
+- (void)deleteCellAtIndexPath:(NSIndexPath *)indexPath;
+- (void)layoutCollectionViewAnimated:(BOOL)animated completion:(dispatch_block_t)completion;
 @end

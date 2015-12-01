@@ -60,10 +60,10 @@
     DLog(@"%s", __PRETTY_FUNCTION__);
     
     BOOL canMove = YES;
-     if ([self.dataSource respondsToSelector:@selector(collectionView:canMoveItemAtIndexPath:)])
-         canMove = [self.dataSource collectionView:self canMoveItemAtIndexPath:self.cellRearrangeDestination];
+//     if ([self.dataSource respondsToSelector:@selector(collectionView:canMoveItemAtIndexPath:)])
+//         canMove = [self.dataSource collectionView:self canMoveItemAtIndexPath:self.cellRearrangeDestination];
 
-    if (canMove) [self resetAfterRearrange];
+    if (canMove) return [self resetAfterRearrange];
 }
 
 - (void)cancelCellRearrangement {

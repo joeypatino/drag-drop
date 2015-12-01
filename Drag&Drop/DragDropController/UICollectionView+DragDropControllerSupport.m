@@ -63,7 +63,9 @@
     if ([self isEqual:collectionView])
         return [self startCellRearrangement:point];
 
-    [collectionView startCellSwapFrom:self atLocation:point];
+    [collectionView startCellSwapFromIndexPath:self.cellRearrangeDestination
+                              inCollectionView:self
+                                    toLocation:point];
 
     collectionView.layer.borderColor = [UIColor redColor].CGColor;
     collectionView.layer.borderWidth = 2.0;
@@ -84,31 +86,42 @@
 
         if (self.isDroppingCell) [self finishCellRearrangement];
         else [self stopCellRearrangement];
-        
-        return;
     }
     else {
+        
+        // when the drag exits the current destination, cancel the swap by
+        // reversing any previous swap
         if (!self.isDroppingCell)
-            [collectionView reverseCellSwapFrom:self];
+            [collectionView reverseCellSwapFromIndexPath:self.cellRearrangeDestination inCollectionView:self];
 
         collectionView.layer.borderColor = [UIColor clearColor].CGColor;
         collectionView.layer.borderWidth = 0.0;
     }
 }
 
-- (BOOL)shouldDropCell:(UICollectionViewCell *)cell toCollectionView:(UICollectionView *)collectionView {
-    if ([self isEqual:collectionView]) return YES;
+- (BOOL)shouldRearrangeCell:(UICollectionViewCell *)cell {
 
-    return [collectionView shouldAcceptCellSwapFrom:self];
+    // do not rearrange if our datasource disallows it
+    if ([self.dataSource respondsToSelector:@selector(collectionView:canMoveItemAtIndexPath:)])
+        return [self.dataSource collectionView:self canMoveItemAtIndexPath:[self indexPathForCell:cell]];
+    
+    return YES;
 }
 
 - (void)didMoveCellToCollectionView:(UICollectionView *)collectionView {
     if ([self isEqual:collectionView]) return;
 
-    [self deleteSwappedCell];
-    [collectionView insertSwappedCell];
-    
+    // on successful cell transfer, delete the cell from it's
+    // final destination in self (the last known location), and
+    // then reset after rearrangement..
+    [self deleteCellAtIndexPath:self.cellRearrangeDestination];
     [self finishCellRearrangement];
+    
+    
+    // after successful cell transfer in the destination, insert the cell at
+    // the final destination (the last known location), and then
+    // then reset after the rearrangement..
+    [collectionView insertCellAtIndexPath:collectionView.cellSwapDestination];
     [collectionView finishCellRearrangement];
 }
 
@@ -131,6 +144,9 @@
     DLog(@"%s", __PRETTY_FUNCTION__);
     self.isDroppingCell = YES;
 
+    // if we ended the drag outside of any valid dragDropController,
+    // then we should cancel any rearrangements that were
+    // previously made.
     if (!self.isDragInCollectionView)
         [self cancelCellRearrangement];
 }
@@ -203,19 +219,28 @@
     return [self shouldRearrangeCell:(UICollectionViewCell *)view];
 }
 
-- (BOOL)shouldRearrangeCell:(UICollectionViewCell *)cell {
-
-    if ([self.dataSource respondsToSelector:@selector(collectionView:canMoveItemAtIndexPath:)])
-        return [self.dataSource collectionView:self canMoveItemAtIndexPath:[self indexPathForCell:cell]];
-
-    return YES;
-}
-
 - (BOOL)dragDropController:(DragDropController *)controller
                canDropView:(UIView *)target
              toDestination:(DragDropController *)destination {
+    if ([controller isEqual:destination]) return YES;
 
-    return [self shouldDropCell:(UICollectionViewCell *)target toCollectionView:[self dragDropCollectionView:destination]];
+    BOOL canDrop = [[self dragDropCollectionView:destination] shouldAcceptCellSwapFrom:self];
+
+    if (!canDrop)
+        [[self dragDropCollectionView:destination] didNotAcceptCellSwapFrom:self];
+
+    return canDrop;
+}
+
+- (void)didNotAcceptCellSwapFrom:(UICollectionView *)source {
+
+    // on failure to transfer a cell to a different destination,
+    // relayout the collectionview, and then cancel any cell
+    // rearrangements that may have been made..
+    [self layoutCollectionViewAnimated:YES completion:^{
+        [self cancelCellRearrangement];
+        [source cancelCellRearrangement];
+    }];
 }
 
 #pragma mark -
@@ -236,6 +261,7 @@
     NSNumber *isDroppingCell = objc_getAssociatedObject(self, @selector(isDroppingCell));
     return [isDroppingCell boolValue];
 }
+
 - (void)setIsDragInCollectionView:(BOOL)isDragInCollectionView {
     objc_setAssociatedObject(self, @selector(isDragInCollectionView), [NSNumber numberWithBool:isDragInCollectionView], OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }

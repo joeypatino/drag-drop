@@ -9,7 +9,6 @@
 #import <objc/runtime.h>
 
 #import "UICollectionView+CellSwapSupport.h"
-#import "UICollectionView+CellRearrangeSupport.h"
 #import "NSIndexPath+Additions.h"
 
 @interface UICollectionView ()
@@ -17,14 +16,16 @@
 
 @implementation UICollectionView (CellSwapSupport)
 
-- (void)startCellSwapFrom:(UICollectionView *)collectionView atLocation:(CGPoint)location {
+- (void)startCellSwapFromIndexPath:(NSIndexPath *)fromIndexPath
+                  inCollectionView:(UICollectionView *)collectionView
+                        toLocation:(CGPoint)location {
     DLog(@"%s", __PRETTY_FUNCTION__);
 
     self.cellSwapDestination = [self indexPathAtLocation:location];
     self.cellSwapOrigin = self.cellSwapDestination;
 
-    if ([collectionView canMoveIndexPath:collectionView.cellRearrangeDestination to:self.cellSwapDestination withDestination:self]) {
-        [collectionView moveIndexPath:collectionView.cellRearrangeDestination to:self.cellSwapDestination withDestination:self];
+    if ([collectionView canMoveIndexPath:fromIndexPath to:self.cellSwapDestination withDestination:self]) {
+        [collectionView moveIndexPath:fromIndexPath to:self.cellSwapDestination withDestination:self];
 
         [self insertVacancyAtIndexPath:self.cellSwapDestination animated:YES];
     }
@@ -53,47 +54,36 @@
     self.cellSwapOrigin = self.cellSwapDestination;
 }
 
-- (void)reverseCellSwapFrom:(UICollectionView *)collectionView {
+
+- (void)reverseCellSwapFromIndexPath:(NSIndexPath *)fromIndexPath inCollectionView:(UICollectionView *)collectionView {
     DLog(@"%s", __PRETTY_FUNCTION__);
     if (!self.cellSwapDestination && !self.cellSwapOrigin) return;
 
     [self layoutCollectionViewAnimated:YES completion:nil];
 
-    if ([self canMoveIndexPath:self.cellSwapOrigin to:collectionView.cellRearrangeDestination withDestination:collectionView]) {
-        [self moveIndexPath:self.cellSwapOrigin to:collectionView.cellRearrangeDestination withDestination:collectionView];
+    if ([self canMoveIndexPath:self.cellSwapOrigin to:fromIndexPath withDestination:collectionView]) {
+        [self moveIndexPath:self.cellSwapOrigin to:fromIndexPath withDestination:collectionView];
     }
 }
 
 #pragma mark -
 
-- (void)insertSwappedCell {
+- (void)insertCellAtIndexPath:(NSIndexPath *)indexPath {
     DLog(@"%s", __PRETTY_FUNCTION__);
 
     [UIView setAnimationsEnabled:NO];
-    [self insertSwappedCellAtIndexPath:self.cellSwapDestination];
+    [self insertItemsAtIndexPaths:@[indexPath]];
+    [self reloadItemsAtIndexPaths:[self indexPathsForVisibleItems]];
     [UIView setAnimationsEnabled:YES];
     
     [self resetAfterSwap];
 }
 
-- (void)deleteSwappedCell {
+- (void)deleteCellAtIndexPath:(NSIndexPath *)indexPath {
     [UIView setAnimationsEnabled:NO];
-    [self deleteSwappedCellAtIndexPath:self.cellRearrangeDestination];
-    [UIView setAnimationsEnabled:YES];
-}
-
-- (void)insertSwappedCellAtIndexPath:(NSIndexPath *)indexPath {
-    DLog(@"%s", __PRETTY_FUNCTION__);
-
-    [self insertItemsAtIndexPaths:@[indexPath]];
-    [self reloadItemsAtIndexPaths:[self indexPathsForVisibleItems]];
-}
-
-- (void)deleteSwappedCellAtIndexPath:(NSIndexPath *)indexPath {
-    DLog(@"%s", __PRETTY_FUNCTION__);
-    
     [self deleteItemsAtIndexPaths:@[indexPath]];
     [self reloadItemsAtIndexPaths:[self indexPathsForVisibleItems]];
+    [UIView setAnimationsEnabled:YES];
 }
 
 #pragma mark -
@@ -109,18 +99,7 @@
 
 - (BOOL)shouldAcceptCellSwapFrom:(UICollectionView *)source {
     DLog(@"%s", __PRETTY_FUNCTION__);
-
-    BOOL canDrop = (self.cellSwapOrigin && self.cellSwapDestination);
-    
-    if (!canDrop) {
-        
-        [source layoutCollectionViewAnimated:YES completion:^{
-            [self cancelCellRearrangement];
-            [source cancelCellRearrangement];
-        }];
-    }
-    
-    return canDrop;
+    return (self.cellSwapOrigin && self.cellSwapDestination);
 }
 
 // Future support for selective cell swaps...
