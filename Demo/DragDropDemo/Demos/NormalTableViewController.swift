@@ -94,10 +94,17 @@ extension NormalTableViewController: UITableViewDataSource, UITableViewDelegate 
         let dragView = UIView()
         dragView.frame = CGRect(x: 10, y: 10, width: tableView.frame.width - 20, height: 70)
         dragView.backgroundColor = .blue
-        cell.addSubview(dragView)
+
+        // The Objective-C added this straight to the cell, which worked in 2015
+        // because a directly-added subview sat above contentView. Modern UIKit
+        // keeps UITableViewCellContentView on top, so the view still rendered
+        // (contentView is transparent) but contentView swallowed every touch and
+        // the drag never started. contentView is the correct parent, and it is
+        // also the correct drop target for a view returning home.
+        cell.contentView.addSubview(dragView)
 
         let cellController = controller()
-        cellController.dropTargetView = cell
+        cellController.dropTargetView = cell.contentView
         cellController.enableDragAction(for: dragView)
         tableControllers.append(cellController)
 
