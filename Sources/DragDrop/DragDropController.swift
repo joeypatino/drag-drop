@@ -21,5 +21,7 @@ public final class DragDropController {
     /// receive dropped views.
     public weak var dropTargetView: UIView?
 
-    public init() {}
+    public init() {
+        DragDropControllerRegistry.shared.add(self)
+    }
 }
