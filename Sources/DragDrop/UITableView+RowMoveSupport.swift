@@ -117,6 +117,13 @@ internal extension UITableView {
     }
 
     /// Adds a row for a view dropped onto the table.
+    ///
+    /// `.none`, because this row is a hand-over rather than an arrival. The
+    /// dragged view has just been taken away from the very spot the row is
+    /// filling, and it left at full opacity -- so a `.fade` starts the row at
+    /// nothing and the slot is visibly empty for a few frames before the row
+    /// appears in it. Inserting without an animation puts the row up in the
+    /// same frame the dragged view goes, which is the swap the eye expects.
     func insertRow(at indexPath: IndexPath, for view: UIView) {
         guard let dataSource = rowMoveDataSource else { return }
 
@@ -126,7 +133,7 @@ internal extension UITableView {
         target.row = min(target.row, dataSource.tableView(self, numberOfRowsInSection: target.section))
 
         dataSource.tableView(self, didInsertRowAt: target, for: view)
-        insertRows(at: [target], with: .fade)
+        insertRows(at: [target], with: .none)
     }
 
     /// A view dragged out of one of this table's rows and released over another
