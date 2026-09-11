@@ -47,6 +47,34 @@ public extension UITableView {
     }
 }
 
+// MARK: - Resolving a row
+
+internal extension UIView {
+    /// The table view cell this view sits inside, however deeply.
+    var enclosingTableViewCell: UITableViewCell? {
+        var candidate: UIView? = self
+
+        while let view = candidate {
+            if let cell = view as? UITableViewCell { return cell }
+            candidate = view.superview
+        }
+
+        return nil
+    }
+}
+
+internal extension TableViewDragDropState {
+    /// The row a drag began in, worked back from the container the dragged view
+    /// left. Nil when that container was not one of this table's cells, which
+    /// is the signal that the drag is none of our business.
+    func indexPath(forDragStartingIn sourceView: UIView?) -> IndexPath? {
+        guard let tableView,
+              let cell = sourceView?.enclosingTableViewCell else { return nil }
+
+        return tableView.indexPath(for: cell)
+    }
+}
+
 // MARK: - DragDropController conformances
 //
 // Filled in by later work. `frameFor:in:` is the datasource protocol's only
