@@ -107,45 +107,7 @@ final class FourByFourViewController: UIViewController {
     }
 
     private func populate(_ view: UIView, withCount viewCount: Int, andDragDropController dragDropController: DragDropController?) {
-        let width: CGFloat = 40
-        let height: CGFloat = 40
-        var xMargin: CGFloat = 5
-        var yMargin: CGFloat = 5
-
-        for _ in 0..<viewCount {
-            if xMargin + width > view.frame.size.width {
-                xMargin = 5
-                yMargin += height + 5
-            }
-
-            let dragView = UIView()
-            dragDropController?.enableDragAction(for: dragView)
-            dragView.frame = CGRect(x: xMargin, y: yMargin, width: width, height: height)
-            dragView.backgroundColor = .black
-            view.addSubview(dragView)
-
-            xMargin += width + 5
-        }
-    }
-
-    private func frame(forCount count: Int, in view: UIView) -> CGRect {
-        let width: CGFloat = 40
-        let height: CGFloat = 40
-        var xMargin: CGFloat = 5
-        var yMargin: CGFloat = 5
-        var frame = CGRect.zero
-
-        for _ in 0...count {
-            if xMargin + width > view.frame.size.width {
-                xMargin = 5
-                yMargin += height + 5
-            }
-
-            frame = CGRect(x: xMargin, y: yMargin, width: width, height: height)
-
-            xMargin += width + 5
-        }
-        return frame
+        SlotLayout.populate(view, withCount: viewCount, controller: dragDropController)
     }
 }
 
@@ -213,7 +175,18 @@ extension FourByFourViewController: DragDropControllerDataSource {
                             frameFor view: UIView,
                             in destination: DragDropController) -> CGRect {
         guard let dropTargetView = destination.dropTargetView else { return .zero }
-        let count = dropTargetView.subviews.count - 1
-        return frame(forCount: count, in: dropTargetView)
+
+        // The arriving view takes the first free slot. `draggableViews` counts
+        // only the squares, so the quadrant's own title label does not shift it.
+        return SlotLayout.frame(at: destination.draggableViews.count,
+                                size: view.frame.size,
+                                in: dropTargetView)
+    }
+
+    func dragDropController(_ controller: DragDropController,
+                            frameFor view: UIView,
+                            at index: Int) -> CGRect? {
+        guard let dropTargetView = controller.dropTargetView else { return nil }
+        return SlotLayout.frame(at: index, size: view.frame.size, in: dropTargetView)
     }
 }

@@ -77,25 +77,7 @@ final class EmbeddedViewController: UIViewController {
     }
 
     private func populate(_ view: UIView, withCount viewCount: Int, andDragDropController dragDropController: DragDropController?) {
-        let width: CGFloat = 40
-        let height: CGFloat = 40
-        var xMargin: CGFloat = 5
-        var yMargin: CGFloat = 5
-
-        for _ in 0..<viewCount {
-            if xMargin + width > view.frame.size.width {
-                xMargin = 5
-                yMargin += height + 5
-            }
-
-            let dragView = UIView()
-            dragDropController?.enableDragAction(for: dragView)
-            dragView.frame = CGRect(x: xMargin, y: yMargin, width: width, height: height)
-            dragView.backgroundColor = .black
-            view.addSubview(dragView)
-
-            xMargin += width + 5
-        }
+        SlotLayout.populate(view, withCount: viewCount, controller: dragDropController)
     }
 }
 
@@ -162,12 +144,18 @@ extension EmbeddedViewController: DragDropControllerDataSource {
                             in destination: DragDropController) -> CGRect {
         guard let dropTargetView = destination.dropTargetView else { return .zero }
 
-        var count = dropTargetView.subviews.count - 1
-        if destination === containerController { count -= 1 }
+        // The arriving view takes the first free slot. `draggableViews` counts
+        // only the squares, so neither the title label nor the embedded drop
+        // target shifts it.
+        return SlotLayout.frame(at: destination.draggableViews.count,
+                                size: view.frame.size,
+                                in: dropTargetView)
+    }
 
-        return CGRect(x: 5 + (CGFloat(count) * view.frame.width + (CGFloat(count) * 5)),
-                      y: 5,
-                      width: view.frame.width,
-                      height: view.frame.height)
+    func dragDropController(_ controller: DragDropController,
+                            frameFor view: UIView,
+                            at index: Int) -> CGRect? {
+        guard let dropTargetView = controller.dropTargetView else { return nil }
+        return SlotLayout.frame(at: index, size: view.frame.size, in: dropTargetView)
     }
 }

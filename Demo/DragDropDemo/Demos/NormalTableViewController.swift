@@ -14,7 +14,11 @@ final class NormalTableViewController: UIViewController {
     private var targetController: DragDropController?
     private var table: UITableView?
     private var targetView: UIView?
-    private var tableControllers: [DragDropController] = []
+
+    /// The table is exactly as long as this. Dragging a row's view away removes
+    /// an item; dropping one on the table adds one.
+    private var rows: [Int] = Array(0..<10)
+    private var nextItem = 10
 
     private var hasLoadedContent = false
 
@@ -27,7 +31,6 @@ final class NormalTableViewController: UIViewController {
 
     private func loadContent() {
         targetController = controller()
-        tableControllers = []
 
         let frame = CGRect(x: 0, y: 0,
                            width: view.frame.width / 2,
@@ -37,6 +40,7 @@ final class NormalTableViewController: UIViewController {
 
         table.separatorColor = .black
         table.separatorStyle = .singleLine
+        table.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
 
         table.delegate = self
         table.dataSource = self
@@ -55,16 +59,17 @@ final class NormalTableViewController: UIViewController {
         self.targetView = targetView
     }
 
+    /// Only the panel needs one of these now. The table builds and owns its own.
     private func controller() -> DragDropController {
         let controller = DragDropController()
         controller.dragDropDataSource = self
-        controller.dragDropDelegate = self
         return controller
     }
 
-    private func applyLabel(_ string: String, to view: UIView) {
+    fileprivate func applyLabel(_ string: String, to view: UIView) {
         let label = UILabel()
         label.text = string
+        label.textColor = .white
         label.sizeToFit()
         label.center = CGPoint(x: view.frame.size.width / 2, y: view.frame.size.height / 2)
         view.addSubview(label)
@@ -73,42 +78,10 @@ final class NormalTableViewController: UIViewController {
 
 // MARK: - UITableView
 
-extension NormalTableViewController: UITableViewDataSource, UITableViewDelegate {
-
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        10
-    }
-
-    func numberOfSections(in tableView: UITableView) -> Int {
-        1
-    }
+extension NormalTableViewController: UITableViewDelegate {
 
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         90
-    }
-
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = UITableViewCell()
-        cell.selectionStyle = .none
-
-        let dragView = UIView()
-        dragView.frame = CGRect(x: 10, y: 10, width: tableView.frame.width - 20, height: 70)
-        dragView.backgroundColor = .blue
-
-        // The Objective-C added this straight to the cell, which worked in 2015
-        // because a directly-added subview sat above contentView. Modern UIKit
-        // keeps UITableViewCellContentView on top, so the view still rendered
-        // (contentView is transparent) but contentView swallowed every touch and
-        // the drag never started. contentView is the correct parent, and it is
-        // also the correct drop target for a view returning home.
-        cell.contentView.addSubview(dragView)
-
-        let cellController = controller()
-        cellController.dropTargetView = cell.contentView
-        cellController.enableDragAction(for: dragView)
-        tableControllers.append(cellController)
-
-        return cell
     }
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -116,83 +89,82 @@ extension NormalTableViewController: UITableViewDataSource, UITableViewDelegate 
     }
 }
 
-// MARK: - DragDropController Delegate
+extension NormalTableViewController: UITableViewDataSourceRowMoveSupport {
 
-extension NormalTableViewController: DragDropControllerDelegate {
-
-    func dragDropController(_ controller: DragDropController, willStartDrag drag: DragAction, animated: Bool) {
+    func numberOfSections(in tableView: UITableView) -> Int {
+        1
     }
 
-    func dragDropController(_ controller: DragDropController, didStartDrag drag: DragAction) {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        rows.count
     }
 
-    func dragDropController(_ controller: DragDropController, willEndDrag drag: DragAction, animated: Bool) {
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
+        cell.selectionStyle = .none
+        cell.contentView.subviews.forEach { $0.removeFromSuperview() }
+
+        let dragView = UIView()
+        dragView.frame = CGRect(x: 10, y: 10, width: tableView.frame.width - 20, height: 70)
+        dragView.backgroundColor = .blue
+
+        // Numbered like the collection view demos, so it is visible which row
+        // went where rather than just that something moved.
+        applyLabel("\(rows[indexPath.row])", to: dragView)
+
+        // The Objective-C added this straight to the cell, which worked in 2015
+        // because a directly-added subview sat above contentView. Modern UIKit
+        // keeps UITableViewCellContentView on top, so the view still rendered
+        // (contentView is transparent) but contentView swallowed every touch and
+        // the drag never started.
+        cell.contentView.addSubview(dragView)
+
+        // That is the whole wiring. The table works out which row this view is
+        // in when a drag begins, and calls the two methods below.
+        tableView.enableDragAndDrop(for: dragView)
+
+        return cell
     }
 
-    func dragDropController(_ controller: DragDropController, didEndDrag drag: DragAction) {
+    func tableView(_ tableView: UITableView, didRemoveRowAt indexPath: IndexPath) {
+        rows.remove(at: indexPath.row)
     }
 
-    // MARK: -
-
-    func dragDropController(_ controller: DragDropController,
-                            dragDidEnter drag: DragAction,
-                            destinationController destination: DragDropController) {
-        destination.dropTargetView?.layer.borderColor = UIColor.red.cgColor
-        destination.dropTargetView?.layer.borderWidth = 2.0
-    }
-
-    func dragDropController(_ controller: DragDropController,
-                            dragDidMove drag: DragAction,
-                            destinationController destination: DragDropController) {
-    }
-
-    func dragDropController(_ controller: DragDropController,
-                            dragDidExit drag: DragAction,
-                            destinationController destination: DragDropController) {
-
-        if destination.dropTargetView === targetView {
-            destination.dropTargetView?.layer.borderColor = UIColor.black.cgColor
-        } else {
-            destination.dropTargetView?.layer.borderWidth = 0.0
-        }
-    }
-
-    // MARK: -
-
-    func dragDropController(_ controller: DragDropController,
-                            didMove view: UIView,
-                            to destination: DragDropController) {
+    func tableView(_ tableView: UITableView, didInsertRowAt indexPath: IndexPath, for view: UIView) {
+        rows.insert(nextItem, at: indexPath.row)
+        nextItem += 1
     }
 }
 
 // MARK: - DragDropController Datasource
+//
+// Only for the Drop Target panel, which is a plain view: it has no layout of
+// its own, so the demo places arriving views and closes the gap when one leaves.
 
 extension NormalTableViewController: DragDropControllerDataSource {
-
-    func dragDropController(_ controller: DragDropController, shouldDrag view: UIView) -> Bool {
-        true
-    }
-
-    func dragDropController(_ controller: DragDropController,
-                            canDrop view: UIView,
-                            to destination: DragDropController?) -> Bool {
-        if controller === destination { return false }
-        return true
-    }
 
     func dragDropController(_ controller: DragDropController,
                             frameFor view: UIView,
                             in destination: DragDropController) -> CGRect {
         guard let dropTargetView = destination.dropTargetView else { return .zero }
 
-        if destination === targetController {
-            let count = dropTargetView.subviews.count - 1
-            return CGRect(x: 5,
-                          y: CGFloat(count) * view.frame.height + (CGFloat(count + 1) * 5),
-                          width: dropTargetView.frame.width - 10,
-                          height: view.frame.height)
-        }
+        return panelSlot(at: destination.draggableViews.count,
+                         height: view.frame.height,
+                         in: dropTargetView)
+    }
 
-        return dropTargetView.bounds.insetBy(dx: 10, dy: 10)
+    func dragDropController(_ controller: DragDropController,
+                            frameFor view: UIView,
+                            at index: Int) -> CGRect? {
+        guard let dropTargetView = controller.dropTargetView else { return nil }
+
+        return panelSlot(at: index, height: view.frame.height, in: dropTargetView)
+    }
+
+    /// The panel is one slot wide, so each view gets its own row.
+    private func panelSlot(at index: Int, height: CGFloat, in panel: UIView) -> CGRect {
+        SlotLayout.frame(at: index,
+                         size: CGSize(width: panel.frame.width - 10, height: height),
+                         in: panel)
     }
 }

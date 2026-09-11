@@ -73,13 +73,55 @@ extension MyViewController: DragDropControllerDataSource {
     func dragDropController(_ controller: DragDropController,
                             canDrop view: UIView,
                             to destination: DragDropController?) -> Bool { true }
+
+    // Optional. Defaults to nil. See "Closing the gap" below.
+    func dragDropController(_ controller: DragDropController,
+                            frameFor view: UIView,
+                            at index: Int) -> CGRect? { nil }
 }
 ```
 
-`DragDropControllerDelegate` reports the drag lifecycle — `willStartDrag`,
-`didStartDrag`, `dragDidEnter`, `dragDidMove`, `dragDidExit`, `willEndDrag`,
-`didEndDrag` and `didMove(_:to:)`. Every one has a default no-op, so implement
-only the ones you need.
+### Closing the gap
+
+Drag a view out of a container and it leaves a hole where it used to be. To have
+the views left behind shuffle up and fill it, implement `frameFor:at:` — the
+frame a view should occupy as the `index`-th view in the controller's own drop
+target:
+
+```swift
+func dragDropController(_ controller: DragDropController,
+                        frameFor view: UIView,
+                        at index: Int) -> CGRect? {
+    guard let dropTargetView = controller.dropTargetView else { return nil }
+    return myLayout.frame(at: index, in: dropTargetView)
+}
+```
+
+Once a view has been handed to another controller, the one it left walks the
+views still in its drop target and moves each to the frame you return for its
+new index, animated over `dropAnimationDuration`. The views it walks are
+`controller.draggableViews` — the drop target's subviews that the controller
+enabled dragging for, in subview order — so furniture like a title label is left
+where it is.
+
+The default returns nil, which leaves the remaining views alone. A nil for any
+one view abandons the whole pass, so a partial answer cannot pile views on top
+of each other.
+
+Collection views need none of this: their cells belong to UIKit, and the
+`UICollectionView` extension already closes the gap through the layout.
+
+`DragDropControllerDelegate` reports the drag lifecycle to the controller a drag
+started *from* — `willStartDrag`, `didStartDrag`, `dragDidEnter`, `dragDidMove`,
+`dragDidExit`, `willEndDrag`, `didEndDrag` and `didMove(_:to:)`.
+
+Three more report to the controller a drag is happening *to*: `dragDidHover` and
+`dragDidLeave` as it moves over a drop target, and `didReceive(_:from:)` when a
+view is dropped into one. They are what lets a drop target react to a drag it
+did not itself start — which is how the table view extension below inserts a row
+for a view dragged in from anywhere.
+
+Every one has a default no-op, so implement only the ones you need.
 
 ### Dragging from inside a scroll view
 
@@ -143,6 +185,67 @@ extension MyViewController: UICollectionViewDataSourceCellSwapSupport {
                         to toIndexPath: IndexPath) -> Bool { true }
 }
 ```
+
+## Table views
+
+Table views get drag and drop through an extension. Enable it per draggable
+view — the whole `contentView`, or one subview of it:
+
+```swift
+func tableView(_ tableView: UITableView,
+               cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+    let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
+
+    let dragView = UIView(frame: ...)
+    cell.contentView.addSubview(dragView)
+    tableView.enableDragAndDrop(for: dragView)
+
+    return cell
+}
+```
+
+Then adopt `UITableViewDataSourceRowMoveSupport` on the datasource. Dragging a
+view out of a row removes that row and the table collapses; dropping a view onto
+the table inserts a row where the finger is. You update your model, and the
+library calls `deleteRows`/`insertRows` around it:
+
+```swift
+extension MyViewController: UITableViewDataSourceRowMoveSupport {
+
+    func tableView(_ tableView: UITableView, didRemoveRowAt indexPath: IndexPath) {
+        rows.remove(at: indexPath.row)
+    }
+
+    func tableView(_ tableView: UITableView,
+                   didInsertRowAt indexPath: IndexPath,
+                   for view: UIView) {
+        rows.insert(Item(), at: indexPath.row)
+    }
+
+    // Optional. Defaults to true.
+    func tableView(_ tableView: UITableView, canDragRowAt indexPath: IndexPath) -> Bool { true }
+}
+```
+
+Both methods are called **before** the row is deleted or inserted, so your model
+and the table agree by the time UIKit asks for counts again.
+
+It is `canDragRowAt` rather than `canMoveRowAt` because `UITableViewDataSource`
+already declares the latter for its reorder controls.
+
+Moving a row between two table views is these two firing in turn — the source's
+`didRemoveRowAt`, then the destination's `didInsertRowAt` — and you connect the
+halves through the view you are handed. Releasing a view back over the table it
+came from reorders instead, and needs no extra code.
+
+While a drag hovers over a table, the rows at and below the drop point slide
+down to show where it will land. Setting cell frames by hand is something UIKit
+undoes on its next layout pass, so scrolling mid-drag closes that gap early; the
+collection view extension has the same limitation, and the pickup delay
+described above exists to keep scroll and drag apart in the first place.
+
+`UITableViewDiffableDataSource` is not supported: the library calls
+`deleteRows`/`insertRows`, which a diffable datasource does not expect.
 
 ## Demo
 
