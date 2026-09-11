@@ -67,6 +67,12 @@ final class NormalTableViewController: DemoViewController {
         savedPanel = saved
 
         refreshCount()
+
+        if AnimationTrace.isEnabled, let window = view.window {
+            AnimationTrace.reset()
+            AnimationTrace.installMarker(in: window)
+            AnimationTrace.startSampling(table)
+        }
     }
 
     private func refreshCount() {
@@ -78,7 +84,25 @@ final class NormalTableViewController: DemoViewController {
                                      didMove view: UIView,
                                      to destination: DragDropController) {
         super.dragDropController(controller, didMove: view, to: destination)
+        AnimationTrace.event("didMove")
         refreshCount()
+    }
+
+    // MARK: - Trace hooks
+    //
+    // Only reached under `-animation-trace`; `event` is a no-op otherwise.
+
+    override func dragDropController(_ controller: DragDropController,
+                                     willEndDrag drag: DragAction,
+                                     animated: Bool) {
+        super.dragDropController(controller, willEndDrag: drag, animated: animated)
+        AnimationTrace.event("willEndDrag")
+    }
+
+    override func dragDropController(_ controller: DragDropController,
+                                     didEndDrag drag: DragAction) {
+        super.dragDropController(controller, didEndDrag: drag)
+        AnimationTrace.event("didEndDrag")
     }
 }
 
@@ -119,6 +143,7 @@ extension NormalTableViewController: UITableViewDataSourceRowMoveSupport {
         // (contentView is transparent) but contentView swallowed every touch and
         // the drag never started.
         cell.contentView.addSubview(row)
+        AnimationTrace.mark(row, for: track)
 
         // That is the whole wiring. The table works out which row this view is
         // in when a drag begins, and calls the two methods below.
@@ -128,12 +153,14 @@ extension NormalTableViewController: UITableViewDataSourceRowMoveSupport {
     }
 
     func tableView(_ tableView: UITableView, didRemoveRowAt indexPath: IndexPath) {
+        AnimationTrace.event("didRemoveRow-\(indexPath.row)")
         rows.remove(at: indexPath.row)
     }
 
     func tableView(_ tableView: UITableView, didInsertRowAt indexPath: IndexPath, for view: UIView) {
         // A row that came from this table keeps its own track; anything else
         // takes the next unused one.
+        AnimationTrace.event("didInsertRow-\(indexPath.row)")
         let track = (view as? TrackRowView)?.track ?? nextTrack()
         rows.insert(track, at: indexPath.row)
     }
