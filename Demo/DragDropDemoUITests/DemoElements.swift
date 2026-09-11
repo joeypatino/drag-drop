@@ -67,6 +67,33 @@ extension XCTestCase {
                    thenHoldForDuration: 0.8)
     }
 
+    /// Waits until `container` holds exactly `expected` matching views.
+    ///
+    /// A drop is followed by two animations -- the drop itself and the source's
+    /// gap close -- and a second drag started before they settle reads a stale
+    /// frame and lands somewhere else. Waiting on the count rather than on a
+    /// fixed sleep keeps that honest.
+    @MainActor
+    @discardableResult
+    func waitFor(_ prefix: String,
+                 inside container: XCUIElement,
+                 of app: XCUIApplication,
+                 toCount expected: Int,
+                 timeout: TimeInterval = 5,
+                 file: StaticString = #filePath,
+                 line: UInt = #line) -> [String] {
+
+        let deadline = Date().addingTimeInterval(timeout)
+        var found = identifiers(withPrefix: prefix, inside: container, of: app)
+        while found.count != expected, Date() < deadline {
+            found = identifiers(withPrefix: prefix, inside: container, of: app)
+        }
+        XCTAssertEqual(found.count, expected,
+                       "timed out waiting for \(expected) \"\(prefix)\" views, saw \(found)",
+                       file: file, line: line)
+        return found
+    }
+
     @MainActor
     func attachScreenshot(_ app: XCUIApplication, _ name: String) {
         let attachment = XCTAttachment(screenshot: app.screenshot())

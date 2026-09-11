@@ -3,13 +3,13 @@ import XCTest
 final class DragDropDemoUITests: XCTestCase {
 
     private let exampleTitles = [
-        "4x4",
-        "Container-Embedded",
-        "Container-2xEmbedded",
-        "Drop Target Embedded",
-        "Table View",
-        "Collection View",
-        "Double Collection View"
+        "Shift Rota",
+        "Shared Album",
+        "Widget Composer",
+        "Files",
+        "Up Next",
+        "Moodboard",
+        "Lineup"
     ]
 
     override func setUp() {
@@ -40,40 +40,25 @@ final class DragDropDemoUITests: XCTestCase {
     }
 
     /// Rendering is not proof the engine works. This drives a real drag in the
-    /// collection view demo and asserts the ordering actually changed.
+    /// moodboard and asserts the ordering actually changed.
+    @MainActor
     func testDraggingACellReordersTheCollectionView() {
-        let app = XCUIApplication()
-        app.launch()
+        let app = launchDemo("NormalCollectionViewController")
 
-        let row = app.tables.staticTexts["Collection View"]
-        XCTAssertTrue(row.waitForExistence(timeout: 5))
-        row.tap()
+        let grid = container("moodboard", in: app)
+        XCTAssertTrue(grid.waitForExistence(timeout: 5))
 
-        let cells = app.collectionViews.cells
-        XCTAssertTrue(cells.element(boundBy: 0).waitForExistence(timeout: 5))
+        // By identifier and visual position, not by `boundBy`: that orders by
+        // the accessibility hierarchy, so "cell 1" need not be the cell on
+        // screen at position 1.
+        let before = identifiers(withPrefix: "swatch-", inside: grid, of: app)
+        XCTAssertGreaterThan(before.count, 3, "the grid should be showing cards")
 
-        let firstLabelBefore = cells.element(boundBy: 0).staticTexts.element(boundBy: 0).label
-        let fourthCell = cells.element(boundBy: 3)
-        XCTAssertTrue(fourthCell.exists)
+        drag(app.otherElements[before[0]], onto: app.otherElements[before[3]])
 
-        // kDragPickupBeginDelay is 0.12s for anything inside a scroll view, so
-        // the press must be held before moving or DragDropGesture fails. The
-        // velocity/hold form also generates the intermediate touchesMoved events
-        // the drag depends on; the short form can register as a scroll instead.
-        cells.element(boundBy: 0)
-            .coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-            .press(forDuration: 0.6,
-                   thenDragTo: fourthCell.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)),
-                   withVelocity: .slow,
-                   thenHoldForDuration: 1.2)
-
-        // Let the drop animation settle.
-        let settled = expectation(description: "drop settles")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { settled.fulfill() }
-        wait(for: [settled], timeout: 5)
-
-        let firstLabelAfter = cells.element(boundBy: 0).staticTexts.element(boundBy: 0).label
-        XCTAssertNotEqual(firstLabelBefore, firstLabelAfter,
-                          "Dragging the first cell away should change which item is first")
+        let after = identifiers(withPrefix: "swatch-", inside: grid, of: app)
+        XCTAssertNotEqual(before.first, after.first,
+                          "dragging the first card away should change which card is first")
+        XCTAssertEqual(Set(after).count, after.count, "a card is drawn twice: \(after)")
     }
 }

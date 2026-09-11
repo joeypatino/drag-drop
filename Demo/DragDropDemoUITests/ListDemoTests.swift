@@ -43,9 +43,11 @@ final class ListDemoTests: XCTestCase {
 
         let queue = identifiers(withPrefix: "track-", inside: table, of: app)
         drag(app.otherElements[queue[0]], onto: panel)
+        waitFor("track-", inside: panel, of: app, toCount: 1)
         let firstSlot = app.otherElements[queue[0]].frame
 
         drag(app.otherElements[queue[1]], onto: panel)
+        waitFor("track-", inside: panel, of: app, toCount: 2)
         XCTAssertEqual(identifiers(withPrefix: "track-", inside: panel, of: app),
                        [queue[0], queue[1]],
                        "Both tracks should be stacked in Saved, in the order they arrived")
@@ -116,5 +118,30 @@ final class ListDemoTests: XCTestCase {
         XCTAssertEqual(Set(startersAfter).count, startersAfter.count,
                        "A player is on the list twice: \(startersAfter)")
         attachScreenshot(app, "lineup-after-move")
+    }
+
+    /// The collection views close their own gap. This pins that down so the
+    /// library's re-flow -- which a collection view's drop target opts out of --
+    /// cannot start fighting UIKit for the layout.
+    @MainActor
+    func testDraggingACardOutOfAGridClosesTheGap() {
+        let app = launchDemo("DoubleCollectionViewController")
+
+        let starters = container("starters", in: app)
+        let bench = container("bench", in: app)
+        XCTAssertTrue(starters.waitForExistence(timeout: 5))
+
+        let before = identifiers(withPrefix: "player-", inside: starters, of: app)
+        let slots = before.map { app.otherElements[$0].frame }
+
+        drag(app.otherElements[before[0]], onto: bench)
+        attachScreenshot(app, "starters-after-gap-close")
+
+        let after = identifiers(withPrefix: "player-", inside: starters, of: app)
+        XCTAssertEqual(after, Array(before.dropFirst()),
+                       "the first player should have left and the rest closed up")
+        XCTAssertEqual(after.map { app.otherElements[$0].frame },
+                       Array(slots.prefix(after.count)),
+                       "the survivors should occupy the first slots, leaving no hole")
     }
 }

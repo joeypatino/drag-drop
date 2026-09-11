@@ -7,6 +7,15 @@ import XCTest
 /// than the cells either side of it.
 final class CollectionCellVisibilityTests: XCTestCase {
 
+    override func setUp() {
+        super.setUp()
+        // These two assert on rendered pixels, so they have to pin the
+        // appearance rather than inherit whatever the simulator was last
+        // left in -- a dark-mode simulator makes the nav bar legitimately
+        // black and the test legitimately wrong.
+        XCUIDevice.shared.appearance = .light
+    }
+
     private func meanColor(_ screenshot: XCUIScreenshot, _ region: CGRect) -> (r: Double, g: Double, b: Double) {
         guard let cg = screenshot.image.cgImage else { return (255, 255, 255) }
         let crop = CGRect(x: region.minX * CGFloat(cg.width),
@@ -39,23 +48,33 @@ final class CollectionCellVisibilityTests: XCTestCase {
 
         let gutterColor = meanColor(shot, gutter)
         let cellColor = meanColor(shot, cell)
-        let contrast = cellColor.r - gutterColor.r
+        // Magnitude, not direction: the cards are no longer guaranteed to be
+        // lighter than the background, and in dark mode they are not. What
+        // must hold is that the two are told apart at all.
+        let contrast = max(abs(cellColor.r - gutterColor.r),
+                           abs(cellColor.g - gutterColor.g),
+                           abs(cellColor.b - gutterColor.b))
 
-        XCTAssertGreaterThan(contrast, 60,
+        // 60 was calibrated to white cells on a black collection view. The
+        // cards now separate the way an iOS grouped list does -- a hairline
+        // plus a small fill step -- so the threshold reflects that. It still
+        // catches the bug this test was written for: a cell whose fill is
+        // identical to the background scores 0.
+        XCTAssertGreaterThan(contrast, 8,
                              "Cells are not distinguishable from the collection view background in \(title): cell \(cellColor) vs gutter \(gutterColor)",
                              file: file, line: line)
     }
 
     func testCollectionViewCellsAreVisible() {
         // Single collection view: the gutter between the two columns sits at x = 0.5.
-        assertCellsAreDistinguishable("Collection View",
+        assertCellsAreDistinguishable("Moodboard",
                                       gutter: CGRect(x: 0.494, y: 0.30, width: 0.012, height: 0.30),
                                       cell: CGRect(x: 0.20, y: 0.30, width: 0.10, height: 0.30))
     }
 
     func testDoubleCollectionViewCellsAreVisible() {
         // Left collection view occupies the left half; its gutter is at x = 0.25.
-        assertCellsAreDistinguishable("Double Collection View",
+        assertCellsAreDistinguishable("Lineup",
                                       gutter: CGRect(x: 0.244, y: 0.30, width: 0.012, height: 0.20),
                                       cell: CGRect(x: 0.10, y: 0.30, width: 0.08, height: 0.20))
     }

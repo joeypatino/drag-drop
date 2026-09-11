@@ -5,6 +5,15 @@ import XCTest
 /// out below the bar, so the nil-backgrounded window showed through.
 final class NavBarAppearanceTests: XCTestCase {
 
+    override func setUp() {
+        super.setUp()
+        // These two assert on rendered pixels, so they have to pin the
+        // appearance rather than inherit whatever the simulator was last
+        // left in -- a dark-mode simulator makes the nav bar legitimately
+        // black and the test legitimately wrong.
+        XCUIDevice.shared.appearance = .light
+    }
+
     /// Mean colour of a normalised region of a screenshot.
     private func meanColor(_ screenshot: XCUIScreenshot, _ region: CGRect) -> (r: Double, g: Double, b: Double) {
         guard let cg = screenshot.image.cgImage else { return (0, 0, 0) }
@@ -27,8 +36,8 @@ final class NavBarAppearanceTests: XCTestCase {
     private let barRegion = CGRect(x: 0.35, y: 0.055, width: 0.55, height: 0.03)
 
     private let demos = [
-        "4x4", "Container-Embedded", "Container-2xEmbedded",
-        "Drop Target Embedded", "Table View", "Collection View", "Double Collection View"
+        "Shift Rota", "Shared Album", "Widget Composer",
+        "Files", "Up Next", "Moodboard", "Lineup"
     ]
 
     func testNavigationBarIsNotBlackOnAnyDemoScreen() {
