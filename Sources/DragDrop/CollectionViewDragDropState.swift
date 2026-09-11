@@ -26,6 +26,10 @@ final class CollectionViewDragDropState {
     var isDragInCollectionView = false
     var isDroppingCell = false
 
+    /// What the app wants to happen while a drag from elsewhere is over this
+    /// collection view. See `UICollectionView.dropHighlight`.
+    var dropHighlight: ((Bool) -> Void)?
+
     var cellRearrangeOrigin: IndexPath?
     var cellRearrangeDestination: IndexPath?
     var cellSwapOrigin: IndexPath?

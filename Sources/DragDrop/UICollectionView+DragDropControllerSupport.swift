@@ -25,6 +25,19 @@ public extension UICollectionView {
         set { dragDropState.isDroppingCell = newValue }
     }
 
+    /// Called when a drag from another collection view arrives over this one,
+    /// and again when it leaves.
+    ///
+    /// This used to be a 2pt red border the library drew on the destination
+    /// itself. A library has no business painting a view it does not own, and
+    /// no way to know what "this will accept" looks like in the app it has been
+    /// dropped into -- so it says when, and the app says how. Leaving it nil
+    /// means no highlight.
+    var dropHighlight: ((Bool) -> Void)? {
+        get { dragDropState.dropHighlight }
+        set { dragDropState.dropHighlight = newValue }
+    }
+
     // MARK: -
 
     func enableDragAndDrop(for cell: UICollectionViewCell) {
@@ -68,8 +81,7 @@ public extension UICollectionView {
                                      in: self,
                                      to: point)
 
-        collectionView.layer.borderColor = UIColor.red.cgColor
-        collectionView.layer.borderWidth = 2.0
+        collectionView.dropHighlight?(true)
     }
 
     internal func isDragging(in collectionView: UICollectionView?, at point: CGPoint) {
@@ -98,8 +110,7 @@ public extension UICollectionView {
                 collectionView.reverseCellSwap(from: cellRearrangeDestination, in: self)
             }
 
-            collectionView.layer.borderColor = UIColor.clear.cgColor
-            collectionView.layer.borderWidth = 0.0
+            collectionView.dropHighlight?(false)
         }
     }
 

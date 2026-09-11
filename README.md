@@ -193,6 +193,17 @@ extension MyViewController: UICollectionViewDataSourceCellSwapSupport {
 }
 ```
 
+To show that a collection view is about to receive a cell from another one, set
+`dropHighlight`. It is called with `true` when a drag from elsewhere arrives
+over the view and `false` when it leaves; what that looks like is yours to
+decide, and leaving it nil means no highlight.
+
+```swift
+collectionView.dropHighlight = { [weak card] accepting in
+    card?.isHighlighted = accepting
+}
+```
+
 ## Table views
 
 Table views get drag and drop through an extension. Enable it per draggable

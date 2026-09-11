@@ -82,6 +82,13 @@ final class DoubleCollectionViewController: DemoViewController {
         grid.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
         content.addSubview(grid)
 
+        // The grid fills the card, so the card is what should light up -- the
+        // same accepting state the panel screens use, rather than a border
+        // drawn around a scroll view inside it.
+        grid.dropHighlight = { [weak panel] accepting in
+            panel?.setDropState(accepting ? .accepting : .idle)
+        }
+
         return (panel, grid)
     }
 
