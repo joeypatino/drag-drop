@@ -27,8 +27,15 @@ final class NormalCollectionViewController: DemoViewController {
         // a screenshot taken today matches one taken tomorrow, and a reorder
         // leaves the masonry rhythm alone rather than dragging a card's height
         // around with it.
+        //
+        // `stableMix` rather than `stableHash("card-\(index)")`: the string
+        // hash's low bits track their input, so consecutive cards came out one
+        // pixel apart -- a fixed-height grid wearing a masonry's clothes. The
+        // spread is the whole point of the screen, because the slots keep
+        // their heights and a card visibly resizes into the one it is dragged
+        // over.
         heights = cards.map { index in
-            90 + CGFloat(DemoTheme.stableHash("card-\(index)") % 90)
+            80 + CGFloat(DemoTheme.stableMix(index) % 121)
         }
 
         let layout = UICollectionViewFlowLayout()

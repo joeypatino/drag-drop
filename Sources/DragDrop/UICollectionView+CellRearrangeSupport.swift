@@ -137,6 +137,15 @@ public extension UICollectionView {
                 }
 
                 cell?.frame = frame
+
+                // A cell lays its contentView out in layoutSubviews, which
+                // would otherwise run after this block and snap the contents to
+                // their new size while the cell itself tweened. Anything the
+                // cell actually draws with is in there, so without this the
+                // resize is invisible: the only thing animating is an empty
+                // container. Forcing the pass inside the block puts the
+                // contents on the same curve.
+                cell?.layoutIfNeeded()
             }
 
         } completion: { _ in
@@ -162,7 +171,12 @@ public extension UICollectionView {
                     frame = frameForItem(at: indexPath.decrementingRow)
                 }
 
-                cellForItem(at: indexPath)?.frame = frame
+                // Closing the gap moves a cell into a slot that may be a
+                // different size, so the contents have to be laid out inside
+                // the block here too.
+                let cell = cellForItem(at: indexPath)
+                cell?.frame = frame
+                cell?.layoutIfNeeded()
             }
         }
     }

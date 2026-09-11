@@ -19,6 +19,32 @@ final class DemoThemeTests: XCTestCase {
         XCTAssertEqual(DemoTheme.stableHash("a"), 0xaf63dc4c8601ec8c)
     }
 
+    func testStableMixIsDeterministic() {
+        XCTAssertEqual(DemoTheme.stableMix(42), DemoTheme.stableMix(42))
+        XCTAssertNotEqual(DemoTheme.stableMix(42), DemoTheme.stableMix(43))
+    }
+
+    /// The bug this exists to prevent: a hash whose low bits track its input
+    /// turns consecutive indices into an arithmetic run, and a masonry seeded
+    /// from it lays out as a plain grid.
+    func testStableMixDoesNotStepEvenlyAcrossConsecutiveIndices() {
+        let values = (0..<300).map { Int(DemoTheme.stableMix($0) % 121) }
+        let steps = zip(values, values.dropFirst()).map { $1 - $0 }
+
+        var longestRun = 1
+        var run = 1
+        for (previous, step) in zip(steps, steps.dropFirst()) {
+            run = step == previous ? run + 1 : 1
+            longestRun = max(longestRun, run)
+        }
+        XCTAssertLessThan(longestRun, 4,
+                          "\(longestRun) consecutive indices stepped by the same amount")
+
+        let mean = steps.map { abs($0) }.reduce(0, +) / steps.count
+        XCTAssertGreaterThan(mean, 25,
+                             "Neighbouring indices should land far apart, mean step was \(mean)")
+    }
+
     func testHueForSeedIsDeterministicAndInRange() {
         let names = ["Nadia Okafor", "Marco Bellini", "Priya Raman", "Tom Hale"]
         for name in names {

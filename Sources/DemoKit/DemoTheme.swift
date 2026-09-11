@@ -76,6 +76,24 @@ public enum DemoTheme {
         return hash
     }
 
+    /// The same idea for content indexed by a number rather than named, and
+    /// the reason it is not just `stableHash("\(index)")`.
+    ///
+    /// FNV-1a ends on a multiply, so two seeds differing only in their last
+    /// byte come out a fixed distance apart -- and taking that modulo a small
+    /// number turns a run of consecutive indices into a run of evenly spaced
+    /// results. The moodboard's card heights were seeded that way and came out
+    /// one pixel apart, which is a fixed-height grid with extra steps.
+    ///
+    /// This is splitmix64's finaliser, which avalanches: neighbouring indices
+    /// share nothing.
+    public static func stableMix(_ index: Int) -> UInt64 {
+        var z = UInt64(bitPattern: Int64(index)) &+ 0x9E3779B97F4A7C15
+        z = (z ^ (z >> 30)) &* 0xBF58476D1CE4E5B9
+        z = (z ^ (z >> 27)) &* 0x94D049BB133111EB
+        return z ^ (z >> 31)
+    }
+
     // MARK: - Surfaces
 
     public enum Surface {

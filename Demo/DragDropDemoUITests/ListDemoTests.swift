@@ -93,6 +93,53 @@ final class ListDemoTests: XCTestCase {
         attachScreenshot(app, "moodboard-after-reorder")
     }
 
+    @MainActor
+    func testTheMoodboardCardsAreVisiblyDifferentHeights() {
+        let app = launchDemo("NormalCollectionViewController")
+
+        let grid = container("moodboard", in: app)
+        XCTAssertTrue(grid.waitForExistence(timeout: 5))
+
+        let cards = identifiers(withPrefix: "swatch-", inside: grid, of: app)
+        XCTAssertGreaterThan(cards.count, 3, "The grid should be showing cards")
+
+        let heights = cards.map { app.otherElements[$0].frame.height }
+        XCTAssertGreaterThan(heights.max()! - heights.min()!, 40,
+                             "A grid of one height has no slot for a card to resize into, got \(heights)")
+
+        // Side by side as well as down the screen: a run of rows that are each
+        // internally level reads as a plain grid however much they differ from
+        // the row above.
+        let pairs = stride(from: 0, to: heights.count - 1, by: 2).map { abs(heights[$0] - heights[$0 + 1]) }
+        XCTAssertGreaterThan(pairs.max() ?? 0, 10,
+                             "The two cards in a row should differ, got \(pairs)")
+    }
+
+    @MainActor
+    func testACardTakesTheHeightOfTheSlotItIsDraggedInto() {
+        let app = launchDemo("NormalCollectionViewController")
+
+        let grid = container("moodboard", in: app)
+        XCTAssertTrue(grid.waitForExistence(timeout: 5))
+
+        let cards = identifiers(withPrefix: "swatch-", inside: grid, of: app)
+        let heights = cards.map { app.otherElements[$0].frame.height }
+        let topSlot = heights[0]
+
+        // The point of the screen: the slots keep their heights and a card
+        // adopts the one it lands in. Needs a card that is not already that
+        // height, or the drop proves nothing.
+        guard let moved = zip(cards, heights).dropFirst().first(where: { abs($0.1 - topSlot) > 10 })?.0 else {
+            return XCTFail("No visible card differs from the top slot's \(topSlot)pt: \(heights)")
+        }
+
+        drag(app.otherElements[moved], onto: app.otherElements[cards[0]])
+        attachScreenshot(app, "moodboard-after-resize")
+
+        XCTAssertEqual(app.otherElements[moved].frame.height, topSlot, accuracy: 1.5,
+                       "\(moved) should have resized into the top slot")
+    }
+
     // MARK: - Lineup
 
     @MainActor

@@ -34,6 +34,78 @@ final class CollectionViewDragDropTests: XCTestCase {
         return collectionView
     }
 
+    /// Rows alternate short and tall, so moving between two of them is a
+    /// resize rather than just a reposition.
+    private final class VariableHeightSource: NSObject, UICollectionViewDataSource,
+                                              UICollectionViewDelegateFlowLayout {
+        static let contentTag = 99
+
+        func collectionView(_ collectionView: UICollectionView,
+                            numberOfItemsInSection section: Int) -> Int { 20 }
+
+        func collectionView(_ collectionView: UICollectionView,
+                            cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "Cell", for: indexPath)
+            if cell.contentView.viewWithTag(Self.contentTag) == nil {
+                let content = UIView(frame: cell.contentView.bounds)
+                content.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+                content.tag = Self.contentTag
+                cell.contentView.addSubview(content)
+            }
+            return cell
+        }
+
+        func collectionView(_ collectionView: UICollectionView,
+                            layout collectionViewLayout: UICollectionViewLayout,
+                            sizeForItemAt indexPath: IndexPath) -> CGSize {
+            CGSize(width: 200, height: indexPath.row.isMultiple(of: 2) ? 80 : 200)
+        }
+    }
+
+    private var variableSource: VariableHeightSource!
+
+    private func makeVariableHeightCollectionView() -> UICollectionView {
+        let layout = UICollectionViewFlowLayout()
+        layout.minimumLineSpacing = 0
+        layout.minimumInteritemSpacing = 0
+        layout.sectionInset = .zero
+        let collectionView = UICollectionView(
+            frame: CGRect(x: 0, y: 0, width: 200, height: 600),
+            collectionViewLayout: layout)
+        collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "Cell")
+        variableSource = VariableHeightSource()
+        collectionView.dataSource = variableSource
+        collectionView.delegate = variableSource
+        collectionView.reloadData()
+        collectionView.layoutIfNeeded()
+        return collectionView
+    }
+
+    /// A cell lays its contentView out in `layoutSubviews`, which runs after the
+    /// vacancy animation block unless the resize forces it. Everything a cell
+    /// actually draws with lives in there, so without the forced pass the only
+    /// thing that animates is an empty container and the visible card snaps.
+    func testResizingACellLaysItsContentsOutWithinTheSameAnimation() {
+        let collectionView = makeVariableHeightCollectionView()
+        let origin = IndexPath(row: 0, section: 0)
+        let destination = IndexPath(row: 1, section: 0)
+
+        let cell = collectionView.cellForItem(at: origin)
+        XCTAssertEqual(cell?.bounds.height, 80, "row 0 should start short")
+
+        collectionView.createVacancyForMovement(from: origin,
+                                                to: destination,
+                                                animated: false,
+                                                completion: nil)
+
+        XCTAssertEqual(cell?.bounds.height, 200, "the cell should take the destination's height")
+        XCTAssertEqual(cell?.contentView.bounds.height, cell?.bounds.height,
+                       "the contentView was left at its old size for the next layout pass")
+        XCTAssertEqual(cell?.contentView.viewWithTag(VariableHeightSource.contentTag)?.bounds.height,
+                       cell?.bounds.height,
+                       "the cell's contents were left behind by the resize")
+    }
+
     func testStateIsCreatedLazilyAndIsStable() {
         let collectionView = makeCollectionView()
 
