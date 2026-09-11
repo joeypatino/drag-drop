@@ -75,6 +75,45 @@ internal extension TableViewDragDropState {
     }
 }
 
+// MARK: - Resolving a drop
+
+internal extension UITableView {
+
+    /// The row a drop at `location` lands on.
+    ///
+    /// `indexPathForRow(at:)` answers nil in the two places a table has no row.
+    /// Below the last one means append; above the first means prepend.
+    func indexPath(at location: CGPoint) -> IndexPath {
+        if let indexPath = indexPathForRow(at: location) { return indexPath }
+        if location.y < 0 { return IndexPath(row: 0, section: 0) }
+
+        let section = max(numberOfSections - 1, 0)
+        return IndexPath(row: numberOfRows(inSection: section), section: section)
+    }
+
+    /// Where a row arriving at `target` will sit.
+    ///
+    /// `rectForRow(at:)` has no answer for one past the last row, which is
+    /// exactly where an append lands, so that case is worked out from the row
+    /// above it.
+    func rectForRow(arrivingAt target: IndexPath, height: CGFloat) -> CGRect {
+        if target.section < numberOfSections,
+           target.row < numberOfRows(inSection: target.section) {
+            return rectForRow(at: target)
+        }
+
+        let section = max(numberOfSections - 1, 0)
+        let rows = numberOfSections > 0 ? numberOfRows(inSection: section) : 0
+
+        guard rows > 0 else {
+            return CGRect(x: 0, y: 0, width: bounds.width, height: height)
+        }
+
+        let last = rectForRow(at: IndexPath(row: rows - 1, section: section))
+        return CGRect(x: last.minX, y: last.maxY, width: last.width, height: height)
+    }
+}
+
 // MARK: - DragDropController conformances
 //
 // Filled in by later work. `frameFor:in:` is the datasource protocol's only
