@@ -19,6 +19,14 @@ extension XCTestCase {
         return app
     }
 
+    /// A container addressed by identifier, whatever element type it is -- a
+    /// panel is an `other`, the queue is a `table`, the grids are
+    /// `collectionView`s, and a caller should not have to care which.
+    @MainActor
+    func container(_ identifier: String, in app: XCUIApplication) -> XCUIElement {
+        app.descendants(matching: .any).matching(identifier: identifier).firstMatch
+    }
+
     /// The identifiers of the draggable views inside `container`, in visual
     /// order -- top to bottom, then left to right.
     ///
@@ -32,6 +40,11 @@ extension XCTestCase {
         return app.descendants(matching: .any)
             .allElementsBoundByAccessibilityElement
             .filter { $0.exists && $0.identifier.hasPrefix(prefix) }
+            // On screen, and hittable. A row scrolled out of a table still
+            // exists and still reports a frame, but that frame cannot be
+            // pressed -- treating it as "present" makes a drag land on
+            // whatever happens to be at those coordinates instead.
+            .filter { $0.isHittable && !$0.frame.isEmpty }
             .filter { bounds.contains(CGPoint(x: $0.frame.midX, y: $0.frame.midY)) }
             .sorted {
                 $0.frame.minY == $1.frame.minY

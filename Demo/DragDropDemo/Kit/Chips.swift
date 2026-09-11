@@ -30,11 +30,13 @@ final class AvatarChip: UIView, Liftable {
 
     private let label = UILabel()
 
-    init(name: String, identifier: String) {
+    /// `hue` defaults to one derived from the name, which is what the rota
+    /// wants -- there, colour is only identity. Pass one to make the colour
+    /// mean something instead, as the lineup does with position.
+    init(name: String, hue: DemoTheme.Hue? = nil, identifier: String) {
         super.init(frame: .zero)
 
-        let hue = DemoTheme.hue(for: name)
-        backgroundColor = DemoTheme.color(hue)
+        backgroundColor = DemoTheme.color(hue ?? DemoTheme.hue(for: name))
 
         label.text = StaffMember(id: 0, name: name, role: "").initials
         label.font = DemoTheme.Font.number(15, weight: .bold)
@@ -174,17 +176,44 @@ final class SwatchChip: UIView, Liftable {
     private let captionLabel = UILabel()
     private let detailLabel = UILabel()
 
-    init(seed: String, caption: String? = nil, detail: String? = nil, identifier: String) {
-        super.init(frame: .zero)
-
+    /// Seeded from a string: for content that has no colour of its own, like a
+    /// photo thumbnail or album art.
+    convenience init(seed: String,
+                     caption: String? = nil,
+                     detail: String? = nil,
+                     identifier: String) {
         // Two hues a third of the way apart on the ramp, so a swatch reads as
         // one image rather than two colours fighting.
         let all = DemoTheme.Hue.allCases
         let index = Int(DemoTheme.stableHash(seed) % UInt64(all.count))
-        let first = all[index]
-        let second = all[(index + 3) % all.count]
+        self.init(base: DemoTheme.color(all[index]),
+                  partner: DemoTheme.color(all[(index + 3) % all.count]),
+                  caption: caption,
+                  detail: detail,
+                  identifier: identifier)
+    }
 
-        gradient.colors = [DemoTheme.color(first).cgColor, DemoTheme.color(second).cgColor]
+    /// Built from an actual colour: for content that names one. A moodboard
+    /// card printing "#E86A4A" has to be that colour, or the label is a lie.
+    convenience init(color: UIColor,
+                     caption: String? = nil,
+                     detail: String? = nil,
+                     identifier: String) {
+        self.init(base: color,
+                  partner: color.gradientPartner,
+                  caption: caption,
+                  detail: detail,
+                  identifier: identifier)
+    }
+
+    private init(base: UIColor,
+                 partner: UIColor,
+                 caption: String?,
+                 detail: String?,
+                 identifier: String) {
+        super.init(frame: .zero)
+
+        gradient.colors = [base.cgColor, partner.cgColor]
         gradient.startPoint = CGPoint(x: 0, y: 0)
         gradient.endPoint = CGPoint(x: 1, y: 1)
         layer.addSublayer(gradient)
