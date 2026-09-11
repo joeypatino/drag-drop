@@ -114,7 +114,91 @@ internal extension UITableView {
     }
 }
 
-extension TableViewDragDropState: DragDropControllerDelegate {}
+// MARK: - DragDropController Delegate
+
+extension TableViewDragDropState: DragDropControllerDelegate {
+
+    func dragDropController(_ controller: DragDropController,
+                            willStartDrag drag: DragAction,
+                            animated: Bool) {
+        DLog()
+
+        // The controller has already reparented the dragged view into the
+        // interaction view, so `drag.sourceView` is the only way back to the
+        // cell it came from.
+        sourceIndexPath = indexPath(forDragStartingIn: drag.sourceView)
+    }
+
+    // The hover pair rather than dragDidEnter/dragDidMove/dragDidExit: those
+    // report to the controller a drag started *from*, and a table has to react
+    // to drags it did not start. Implementing both families would also run the
+    // vacancy twice per move whenever a table is its own destination.
+
+    func dragDropController(_ controller: DragDropController,
+                            dragDidHover drag: DragAction,
+                            from source: DragDropController) {
+        guard let tableView, let view = drag.view else { return }
+
+        let target = tableView.indexPath(at: drag.currentLocation)
+        let height = tableView.vacancyHeight(for: target, draggedView: view)
+
+        vacancyIndexPath = target
+        vacancyHeight = height
+
+        tableView.openVacancy(at: target, height: height, animated: true)
+    }
+
+    func dragDropController(_ controller: DragDropController,
+                            dragDidLeave drag: DragAction,
+                            from source: DragDropController) {
+        DLog()
+        guard let tableView else { return }
+
+        clearVacancy()
+        tableView.closeVacancy(animated: true)
+    }
+
+    func dragDropController(_ controller: DragDropController,
+                            didMove view: UIView,
+                            to destination: DragDropController) {
+        DLog()
+        guard let tableView, let source = sourceIndexPath else { return }
+
+        sourceIndexPath = nil
+
+        // Released back over the table it came from: a reorder, and the one
+        // case where both halves belong to the same table. Handled here so the
+        // two row updates can share one animation; `didReceive` stays out of it.
+        if destination === controller {
+            guard let target = vacancyIndexPath else { return }
+
+            tableView.moveRow(from: source, to: target, for: view)
+            clearVacancy()
+            return
+        }
+
+        // Dropped anywhere else, table or not: this table only loses a row. A
+        // destination that is a table inserts its own in `didReceive`.
+        tableView.removeRow(at: source)
+    }
+
+    func dragDropController(_ controller: DragDropController,
+                            didReceive view: UIView,
+                            from source: DragDropController) {
+        DLog()
+        guard source !== controller else { return }
+        guard let tableView, let target = vacancyIndexPath else { return }
+
+        // `completeDrop` added the dragged view as a raw subview of the table.
+        // That is right for a plain drop target and wrong for a table, which
+        // renders its own rows -- left there the view floats over the real
+        // cells. The same correction the collection view extension makes.
+        view.removeFromSuperview()
+
+        clearVacancy()
+        tableView.insertRow(at: target, for: view)
+    }
+}
 
 // MARK: - DragDropController Datasource
 
