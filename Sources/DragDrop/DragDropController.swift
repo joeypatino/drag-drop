@@ -268,6 +268,11 @@ public final class DragDropController {
         let secondStepFrame: CGRect
         var animationCompletionBlock: ((Bool) -> Void)?
 
+        /// The controller the view is actually handed to, so the end of the
+        /// hover can spare it a leave it never had. Nil for a refused drop or
+        /// a release over nothing, both of which really are departures.
+        var receiver: DragDropController?
+
         // Look for a dropTarget at our current drag location.
         let dropDestination = controllerForDrop(at: drag.currentLocation)
 
@@ -282,6 +287,7 @@ public final class DragDropController {
         if let dropDestination, canDrop, let dataSource = dragDropDataSource, let view = drag.view {
             // In this case, we are moving the view to a different superview,
             // and to a different DragDropController.. Take the nesessary steps....
+            receiver = dropDestination
 
             // call the datasource and have them return the proper frames
             firstStepFrame = frameForDrop(of: view, into: dropDestination)
@@ -340,7 +346,7 @@ public final class DragDropController {
 
         } completion: { finished in
 
-            self.notifyDropTarget(nil, of: drag)
+            self.notifyDropTarget(nil, of: drag, handingTo: receiver)
 
             // call the animation complete block we set above..
             animationCompletionBlock?(finished)
@@ -403,7 +409,20 @@ public final class DragDropController {
     // MARK: - Helpers
 
     /// Notifys the datasource when we start, continue, or end dragging above a valid dropTargetView.
-    private func notifyDropTarget(_ dropTarget: DragDropController?, of drag: DragAction) {
+    ///
+    /// `receiver` is the controller the drop is being handed to, when the drag
+    /// ended over one that accepted it. That controller is deliberately not
+    /// told the drag *left* it: a drop that lands is not a departure, and its
+    /// notice is `didReceive` -- or `didMove`, for a drag that ends where it
+    /// began -- a moment later from `completeDrop`. Sending a leave first asks
+    /// a destination to undo the preview it is about to commit.
+    ///
+    /// The source's own `dragDidExit` is sent either way. That family reports
+    /// where the drag *is* rather than what it did, and a collection view
+    /// finishes its rearrangement from it.
+    internal func notifyDropTarget(_ dropTarget: DragDropController?,
+                                   of drag: DragAction,
+                                   handingTo receiver: DragDropController? = nil) {
 
         if let currentDragDestination, currentDragDestination === dropTarget {
 
@@ -422,8 +441,11 @@ public final class DragDropController {
                     drag.currentLocation = dropTargetView.convert(drag.currentLocation, from: nil)
                 }
                 dragDropDelegate?.dragDropController(self, dragDidExit: drag, destinationController: currentDragDestination)
-                currentDragDestination.dragDropDelegate?
-                    .dragDropController(currentDragDestination, dragDidLeave: drag, from: self)
+
+                if currentDragDestination !== receiver {
+                    currentDragDestination.dragDropDelegate?
+                        .dragDropController(currentDragDestination, dragDidLeave: drag, from: self)
+                }
 
                 self.currentDragDestination = nil
             }

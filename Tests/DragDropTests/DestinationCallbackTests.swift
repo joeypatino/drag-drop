@@ -110,6 +110,79 @@ final class DestinationCallbackTests: XCTestCase {
         XCTAssertEqual(order, ["didMove", "didReceive"])
     }
 
+    // MARK: - Ending the hover
+
+    private final class HoverSpy: DragDropControllerDelegate {
+        var log: [String] = []
+
+        func dragDropController(_ controller: DragDropController,
+                                dragDidHover drag: DragAction,
+                                from source: DragDropController) { log.append("hover") }
+
+        func dragDropController(_ controller: DragDropController,
+                                dragDidLeave drag: DragAction,
+                                from source: DragDropController) { log.append("leave") }
+
+        func dragDropController(_ controller: DragDropController,
+                                dragDidEnter drag: DragAction,
+                                destinationController destination: DragDropController) {
+            log.append("enter")
+        }
+
+        func dragDropController(_ controller: DragDropController,
+                                dragDidExit drag: DragAction,
+                                destinationController destination: DragDropController) {
+            log.append("exit")
+        }
+    }
+
+    /// A drop that lands is not a departure. Telling the destination the drag
+    /// left it asks it to undo the preview it is about to commit -- which is
+    /// how a table came to animate its open gap shut and straight back open
+    /// again, half a row's worth, after the dropped row had already landed.
+    func testADestinationTheDropLandsInIsNotToldTheDragLeftIt() {
+        makeControllers()
+        let destinationSpy = HoverSpy()
+        extraDelegates = [destinationSpy]
+        destination.dragDropDelegate = destinationSpy
+
+        let drag = DragAction(view: UIView())
+        source.notifyDropTarget(destination, of: drag)
+        source.notifyDropTarget(nil, of: drag, handingTo: destination)
+
+        XCTAssertEqual(destinationSpy.log, ["hover"])
+    }
+
+    /// A drag that moves off the target, or ends nowhere, still leaves it.
+    func testADestinationTheDragMovesAwayFromIsToldItLeft() {
+        makeControllers()
+        let destinationSpy = HoverSpy()
+        extraDelegates = [destinationSpy]
+        destination.dragDropDelegate = destinationSpy
+
+        let drag = DragAction(view: UIView())
+        source.notifyDropTarget(destination, of: drag)
+        source.notifyDropTarget(nil, of: drag)
+
+        XCTAssertEqual(destinationSpy.log, ["hover", "leave"])
+    }
+
+    /// The source's own family is untouched. It reports where the drag is
+    /// rather than what it did, and the collection view finishes a
+    /// rearrangement from `dragDidExit`.
+    func testTheSourceStillHearsDragDidExitWhenTheDropLands() {
+        makeControllers()
+        let sourceSpy = HoverSpy()
+        extraDelegates = [sourceSpy]
+        source.dragDropDelegate = sourceSpy
+
+        let drag = DragAction(view: UIView())
+        source.notifyDropTarget(destination, of: drag)
+        source.notifyDropTarget(nil, of: drag, handingTo: destination)
+
+        XCTAssertEqual(sourceSpy.log, ["enter", "exit"])
+    }
+
     /// A delegate that ignores the new callbacks is untouched, which is what
     /// keeps the collection view extension working exactly as it did.
     func testADelegateThatIgnoresTheCallbacksIsUnaffected() {
