@@ -182,3 +182,100 @@ final class ResetAfterRearrangeTests: XCTestCase {
         XCTAssertEqual(restored?.origin.y ?? -1, expected.origin.y, accuracy: 0.5)
     }
 }
+
+// MARK: - Drop teardown
+
+@MainActor
+final class DroppedCellTests: XCTestCase {
+    private final class Source: NSObject, UICollectionViewDataSource {
+        func collectionView(_ cv: UICollectionView, numberOfItemsInSection s: Int) -> Int { 40 }
+        func collectionView(_ cv: UICollectionView, cellForItemAt ip: IndexPath) -> UICollectionViewCell {
+            cv.dequeueReusableCell(withReuseIdentifier: "Cell", for: ip)
+        }
+    }
+
+    private var source: Source!
+    private var window: UIWindow!
+
+    private func makeCollectionView() -> UICollectionView {
+        let layout = UICollectionViewFlowLayout()
+        layout.itemSize = CGSize(width: 100, height: 100)
+        layout.minimumLineSpacing = 0
+        layout.minimumInteritemSpacing = 0
+        layout.sectionInset = .zero
+
+        let collectionView = UICollectionView(frame: CGRect(x: 0, y: 0, width: 200, height: 400),
+                                              collectionViewLayout: layout)
+        collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "Cell")
+        source = Source()
+        collectionView.dataSource = source
+
+        window = UIWindow(frame: CGRect(x: 0, y: 0, width: 200, height: 400))
+        window.addSubview(collectionView)
+        window.isHidden = false
+
+        collectionView.reloadData()
+        collectionView.layoutIfNeeded()
+        return collectionView
+    }
+
+    /// DragDropController finishes a drop by re-parenting the dragged view into
+    /// the drop target. For a collection view cell that is wrong: teardown has
+    /// already reloaded and recycled that cell object for another index path, so
+    /// adding it back as a raw subview drags the other item's cell to the drop
+    /// position. On screen the dropped cell showed some other item's content and
+    /// that item's own slot was left empty.
+    func testDroppedCellIsNotLeftAsARawSubview() {
+        let collectionView = makeCollectionView()
+        guard let cell = collectionView.cellForItem(at: IndexPath(row: 0, section: 0))
+        else { return XCTFail("expected a cell at row 0") }
+
+        // Reproduce exactly what the controller does on drop.
+        cell.removeFromSuperview()
+        cell.frame = CGRect(x: 4, y: 4, width: 100, height: 100)
+        collectionView.addSubview(cell)
+        XCTAssertTrue(collectionView.subviews.contains(cell), "precondition")
+
+        collectionView.dragDropState.dragDropController(DragDropController(), didEndDrag: DragAction(view: cell))
+
+        // The cell object may legitimately be recycled and reappear, but every
+        // rendered cell must sit at its own index path's layout frame. A cell
+        // left at the drop position while belonging to another index path is
+        // the stranded cell the user saw.
+        for view in collectionView.subviews {
+            guard let rendered = view as? UICollectionViewCell,
+                  let indexPath = collectionView.indexPath(for: rendered),
+                  let attributes = collectionView.collectionViewLayout
+                      .layoutAttributesForItem(at: indexPath)
+            else { continue }
+
+            XCTAssertEqual(rendered.frame.origin.x, attributes.frame.origin.x, accuracy: 0.5,
+                           "cell at \(indexPath) is stranded away from its layout slot")
+            XCTAssertEqual(rendered.frame.origin.y, attributes.frame.origin.y, accuracy: 0.5,
+                           "cell at \(indexPath) is stranded away from its layout slot")
+        }
+
+        XCTAssertFalse(collectionView.visibleCells.isEmpty,
+                       "the collection view must still be rendering cells after a drop")
+    }
+
+    /// The visible outcome of the bug: two cells stacked at one position, and a
+    /// hole where the stranded one belonged.
+    func testNoTwoCellsShareAPositionAfterADrop() {
+        let collectionView = makeCollectionView()
+        guard let cell = collectionView.cellForItem(at: IndexPath(row: 0, section: 0))
+        else { return XCTFail("expected a cell at row 0") }
+
+        cell.removeFromSuperview()
+        cell.frame = CGRect(x: 100, y: 100, width: 100, height: 100)
+        collectionView.addSubview(cell)
+
+        collectionView.dragDropState.dragDropController(DragDropController(), didEndDrag: DragAction(view: cell))
+
+        let origins = collectionView.subviews
+            .compactMap { $0 as? UICollectionViewCell }
+            .map { "\($0.frame.origin.x),\($0.frame.origin.y)" }
+        XCTAssertEqual(origins.count, Set(origins).count,
+                       "two cells must never occupy the same position")
+    }
+}

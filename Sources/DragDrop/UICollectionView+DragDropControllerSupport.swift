@@ -175,6 +175,24 @@ extension CollectionViewDragDropState: DragDropControllerDelegate {
                             didEndDrag drag: DragAction) {
         DLog()
         collectionView?.isDroppingCell = false
+
+        // The controller finishes a drop by re-parenting the dragged view into
+        // the drop target. For a plain view that is exactly right, but a
+        // collection view cell is owned by UIKit: teardown has already reloaded
+        // and recycled that very cell object for some other index path. Adding
+        // it back as a raw subview drags that other item's cell to the drop
+        // position -- it renders the wrong number on top of the dropped cell and
+        // leaves a hole where it belongs. Hand it back and let the collection
+        // view render the item itself.
+        guard let cell = drag.view as? UICollectionViewCell,
+              let destination = cell.superview as? UICollectionView else { return }
+
+        cell.removeFromSuperview()
+
+        UIView.setAnimationsEnabled(false)
+        destination.reloadData()
+        destination.layoutIfNeeded()
+        UIView.setAnimationsEnabled(true)
     }
 
     // MARK: -
