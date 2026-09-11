@@ -8,6 +8,7 @@
 
 import UIKit
 import DragDrop
+import DemoKit
 
 final class EmbeddedViewController: UIViewController {
 
@@ -77,7 +78,11 @@ final class EmbeddedViewController: UIViewController {
     }
 
     private func populate(_ view: UIView, withCount viewCount: Int, andDragDropController dragDropController: DragDropController?) {
-        SlotLayout.populate(view, withCount: viewCount, controller: dragDropController)
+        SlotPopulator.fill(view, count: viewCount, controller: dragDropController) { _ in
+            let square = UIView()
+            square.backgroundColor = .black
+            return square
+        }
     }
 }
 

@@ -8,6 +8,7 @@
 
 import UIKit
 import DragDrop
+import DemoKit
 
 final class NormalTableViewController: UIViewController {
 
