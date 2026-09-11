@@ -120,11 +120,35 @@ final class TableViewDragOrchestrationTests: XCTestCase {
         drag.currentLocation = CGPoint(x: 100, y: 100)
 
         guard let leftController = left.dragDropController else { return XCTFail("no controller") }
+        let resting = left.rectForRow(at: IndexPath(row: 4, section: 0))
+
         left.dragDropState.dragDropController(leftController, dragDidHover: drag, from: leftController)
+        XCTAssertNotEqual(left.cellForRow(at: IndexPath(row: 4, section: 0))?.frame, resting,
+                          "precondition: the gap is open")
+
         left.dragDropState.dragDropController(leftController, dragDidLeave: drag, from: leftController)
 
-        XCTAssertNil(left.dragDropState.vacancyIndexPath)
-        XCTAssertEqual(left.dragDropState.vacancyHeight, 0)
+        XCTAssertEqual(left.cellForRow(at: IndexPath(row: 4, section: 0))?.frame, resting)
+    }
+
+    /// Leaving must not forget *where* the gap was. `endDrag` sends the leave
+    /// from its animation completion before it hands the view over, so a drop on
+    /// this table reaches `didReceive` just after its own leave. Clearing the
+    /// target on leave lost it every time, and the row was never inserted.
+    func testLeavingKeepsTheTargetSoADropStillLands() {
+        makeScene()
+        let drag = dragAction(from: panel, at: CGPoint(x: 100, y: 100))
+
+        guard let leftController = left.dragDropController, let view = drag.view else {
+            return XCTFail("no controller")
+        }
+
+        left.dragDropState.dragDropController(leftController, dragDidHover: drag, from: panelController)
+        left.dragDropState.dragDropController(leftController, dragDidLeave: drag, from: panelController)
+        left.dragDropState.dragDropController(leftController, didReceive: view, from: panelController)
+        left.layoutIfNeeded()
+
+        XCTAssertEqual(leftSource.items, [0, 1, 99, 2, 3, 4, 5, 6, 7])
     }
 
     /// Dropped on something that is not a table: the row simply goes.

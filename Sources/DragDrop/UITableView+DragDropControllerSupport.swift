@@ -154,7 +154,12 @@ extension TableViewDragDropState: DragDropControllerDelegate {
         DLog()
         guard let tableView else { return }
 
-        clearVacancy()
+        // The gap closes, but where it was is deliberately kept. `endDrag`
+        // sends this leave from its animation completion *before* it hands the
+        // view over, so a drop on this table arrives at `didReceive` just after
+        // its own leave -- and the target recorded by the last hover is exactly
+        // the row the drop belongs in. Clearing here would lose it every time.
+        // The two callbacks that consume it clear it instead.
         tableView.closeVacancy(animated: true)
     }
 
