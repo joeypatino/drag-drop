@@ -121,6 +121,13 @@ view is dropped into one. They are what lets a drop target react to a drag it
 did not itself start — which is how the table view extension below inserts a row
 for a view dragged in from anywhere.
 
+Reach for those three whenever a drop target needs to show it is being hovered.
+The source-side `dragDidEnter` and `dragDidExit` go to the *source* controller's
+delegate, and when a drag begins inside a table or collection view that source
+is the controller the extension built for the scroll view — not your view
+controller — so a drop target that only implements the source-side callbacks
+gets no hover feedback for a row dragged out of a list.
+
 Every one has a default no-op, so implement only the ones you need.
 
 ### Dragging from inside a scroll view
