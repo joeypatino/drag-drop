@@ -107,3 +107,78 @@ final class CollectionViewDragDropTests: XCTestCase {
         XCTAssertEqual(found, IndexPath(row: source.itemCount - 1, section: 0))
     }
 }
+
+// MARK: - Rearrange teardown
+
+@MainActor
+final class ResetAfterRearrangeTests: XCTestCase {
+    private final class Source: NSObject, UICollectionViewDataSource {
+        func collectionView(_ cv: UICollectionView, numberOfItemsInSection s: Int) -> Int { 40 }
+        func collectionView(_ cv: UICollectionView, cellForItemAt ip: IndexPath) -> UICollectionViewCell {
+            cv.dequeueReusableCell(withReuseIdentifier: "Cell", for: ip)
+        }
+    }
+
+    private var source: Source!
+    private var window: UIWindow!
+
+    private func makeCollectionView() -> UICollectionView {
+        let layout = UICollectionViewFlowLayout()
+        layout.itemSize = CGSize(width: 100, height: 100)
+        layout.minimumLineSpacing = 0
+        layout.minimumInteritemSpacing = 0
+        layout.sectionInset = .zero
+
+        let collectionView = UICollectionView(frame: CGRect(x: 0, y: 0, width: 200, height: 400),
+                                              collectionViewLayout: layout)
+        collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "Cell")
+        source = Source()
+        collectionView.dataSource = source
+
+        window = UIWindow(frame: CGRect(x: 0, y: 0, width: 200, height: 400))
+        window.addSubview(collectionView)
+        window.isHidden = false
+
+        collectionView.reloadData()
+        collectionView.layoutIfNeeded()
+        return collectionView
+    }
+
+    /// Regression test. reloadItems defers cell creation to the next layout
+    /// pass; without forcing one the collection view was left tracking no cells
+    /// at all, orphaning everything already on screen so it kept stale content
+    /// and stale frames through every subsequent drag.
+    func testResetAfterRearrangeKeepsCellsTracked() {
+        let collectionView = makeCollectionView()
+        XCTAssertFalse(collectionView.visibleCells.isEmpty, "precondition: cells are tracked")
+        let before = collectionView.visibleCells.count
+
+        collectionView.resetAfterRearrange()
+
+        XCTAssertEqual(collectionView.visibleCells.count, before,
+                       "reloading must not leave the collection view tracking zero cells")
+        XCTAssertFalse(collectionView.indexPathsForVisibleItems.isEmpty)
+    }
+
+    /// The vacancy animations assign cell frames directly. Teardown has to put
+    /// them back, or cells stay in each other's positions.
+    func testResetAfterRearrangeRestoresDisplacedFrames() {
+        let collectionView = makeCollectionView()
+        let indexPath = IndexPath(row: 0, section: 0)
+
+        guard let cell = collectionView.cellForItem(at: indexPath),
+              let expected = collectionView.collectionViewLayout
+                  .layoutAttributesForItem(at: indexPath)?.frame
+        else { return XCTFail("expected a cell at row 0") }
+
+        // Displace it the way createVacancyForMovement would.
+        cell.frame = cell.frame.offsetBy(dx: 137, dy: 211)
+        XCTAssertNotEqual(collectionView.cellForItem(at: indexPath)?.frame, expected)
+
+        collectionView.resetAfterRearrange()
+
+        let restored = collectionView.cellForItem(at: indexPath)?.frame
+        XCTAssertEqual(restored?.origin.x ?? -1, expected.origin.x, accuracy: 0.5)
+        XCTAssertEqual(restored?.origin.y ?? -1, expected.origin.y, accuracy: 0.5)
+    }
+}

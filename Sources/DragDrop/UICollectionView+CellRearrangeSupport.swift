@@ -177,6 +177,22 @@ public extension UICollectionView {
 
         UIView.setAnimationsEnabled(false)
         reloadItems(at: indexPathsForVisibleItems)
+
+        // reloadItems defers cell creation to the next layout pass. Without
+        // forcing one here the collection view is left tracking *no* cells at
+        // all -- visibleCells and indexPathsForVisibleItems both drop to zero
+        // and stay there -- while the cells already on screen become orphaned
+        // views UIKit no longer manages. They then keep stale content at stale
+        // frames forever, and every further drag compounds it.
+        layoutIfNeeded()
+
+        // reloadItems restores cell *content* but does not re-apply layout
+        // attributes over the frames the vacancy animations set by hand, so
+        // cells are left sitting in each other's positions. invalidateLayout()
+        // does not clear them either; assigning the layout frames directly
+        // does, which is exactly what layoutCollectionView already exists to do.
+        layoutCollectionView(animated: false, completion: nil)
+
         UIView.setAnimationsEnabled(true)
     }
 }
