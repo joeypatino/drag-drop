@@ -24,6 +24,12 @@ Requires iOS 26 and Swift 6.
 Add the package in Xcode, or declare it as a dependency:
 
 ```swift
+.package(url: "https://github.com/joeypatino/drag-drop.git", branch: "master")
+```
+
+Once a release is tagged, prefer the version form:
+
+```swift
 .package(url: "https://github.com/joeypatino/drag-drop.git", from: "1.0.0")
 ```
 

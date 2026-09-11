@@ -96,11 +96,11 @@ public extension UICollectionView {
     /// Objective-C nil-messaging turned a missing layout attribute into
     /// CGRectZero. Stating that once here keeps every call site consistent and
     /// stops Swift from trapping on an out-of-range index path.
-    func frameForItem(at indexPath: IndexPath) -> CGRect {
+    internal func frameForItem(at indexPath: IndexPath) -> CGRect {
         collectionViewLayout.layoutAttributesForItem(at: indexPath)?.frame ?? .zero
     }
 
-    func sizeForItem(at indexPath: IndexPath) -> CGSize {
+    internal func sizeForItem(at indexPath: IndexPath) -> CGSize {
         collectionViewLayout.layoutAttributesForItem(at: indexPath)?.size ?? .zero
     }
 

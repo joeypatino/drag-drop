@@ -70,7 +70,9 @@ public extension UICollectionView {
 
         cellSwapDestination = indexPath(at: location)
 
-        if cellSwapOrigin?.isSame(as: cellSwapDestination ?? IndexPath(row: -1, section: -1)) != true {
+        // Optional comparison covers every nil combination the Objective-C
+        // relied on nil-messaging for, with no sentinel index path.
+        if cellSwapOrigin != cellSwapDestination {
 
             var canMove = true
             if let origin = cellSwapOrigin {
