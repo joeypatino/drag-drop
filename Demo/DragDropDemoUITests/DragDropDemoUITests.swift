@@ -56,8 +56,16 @@ final class DragDropDemoUITests: XCTestCase {
         let fourthCell = cells.element(boundBy: 3)
         XCTAssertTrue(fourthCell.exists)
 
-        // The pickup delay for a cell is 0.12s, so hold before moving.
-        cells.element(boundBy: 0).press(forDuration: 0.5, thenDragTo: fourthCell)
+        // kDragPickupBeginDelay is 0.12s for anything inside a scroll view, so
+        // the press must be held before moving or DragDropGesture fails. The
+        // velocity/hold form also generates the intermediate touchesMoved events
+        // the drag depends on; the short form can register as a scroll instead.
+        cells.element(boundBy: 0)
+            .coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            .press(forDuration: 0.6,
+                   thenDragTo: fourthCell.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)),
+                   withVelocity: .slow,
+                   thenHoldForDuration: 1.2)
 
         // Let the drop animation settle.
         let settled = expectation(description: "drop settles")
