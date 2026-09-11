@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		DD00000000000000000031 /* DragDrop in Frameworks */ = {isa = PBXBuildFile; productRef = DD00000000000000000030 /* DragDrop */; };
+		DD00000000000000000033 /* DemoKit in Frameworks */ = {isa = PBXBuildFile; productRef = DD00000000000000000032 /* DemoKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,6 +28,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DD00000000000000000031 /* DragDrop in Frameworks */,
+				DD00000000000000000033 /* DemoKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -80,6 +82,7 @@
 			name = DragDropDemo;
 			packageProductDependencies = (
 				DD00000000000000000030 /* DragDrop */,
+				DD00000000000000000032 /* DemoKit */,
 			);
 			productName = DragDropDemo;
 			productReference = DD00000000000000000001 /* DragDropDemo.app */;
@@ -357,6 +360,10 @@
 		DD00000000000000000030 /* DragDrop */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = DragDrop;
+		};
+		DD00000000000000000032 /* DemoKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = DemoKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

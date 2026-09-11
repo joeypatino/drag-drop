@@ -249,18 +249,42 @@ described above exists to keep scroll and drag apart in the first place.
 
 ## Demo
 
-`Demo/DragDropDemo.xcodeproj` builds an app with seven examples: a 4x4 grid of
-drop targets, embedded and doubly-embedded containers, an embedded drop target,
-a table view, a collection view, and two collection views swapping cells.
+`Demo/DragDropDemo.xcodeproj` builds an app with seven screens. Each one
+exercises a distinct capability of the library, and each is dressed as the kind
+of app you would actually build with it, so you can go from "I want to build
+that" to the file that does it.
+
+| Screen | Capability | Source |
+| --- | --- | --- |
+| Shift Rota | Four peer drop targets, and a datasource that refuses a drop | `FourByFourViewController` |
+| Shared Album | A drop target nested inside another drop target | `EmbeddedViewController` |
+| Widget Composer | A drop target inset inside a container that is not one | `DoubleEmbeddedViewController` |
+| Files | An individual item that is itself a drop target | `EmbeddedDropTargetViewController` |
+| Up Next | Table rows dragging out with gap closing, and dropping in | `NormalTableViewController` |
+| Moodboard | Reordering a masonry collection view | `NormalCollectionViewController` |
+| Lineup | Moving between two collection views, with a move the datasource can veto | `DoubleCollectionViewController` |
 
 ```
 open Demo/DragDropDemo.xcodeproj
 ```
 
+Launch with `-demo <ViewControllerName>` to open straight onto one screen,
+which is how the UI tests and screenshots skip the index.
+
+`Sources/DemoKit` supports that app and is not part of the library's public
+surface: it holds the demo's colour theme, its slot and folder geometry, and
+its sample content. It lives in the package rather than the app target so that
+geometry gets fast unit tests. The demo app therefore links two package
+products, `DragDrop` and `DemoKit`.
+
 ## Tests
 
+The package scheme is `DragDrop-Package`: with two products, Swift Package
+Manager generates a per-product scheme plus this umbrella one, and only the
+umbrella runs the tests.
+
 ```
-xcodebuild test -scheme DragDrop -destination 'platform=iOS Simulator,name=iPhone 17'
+xcodebuild test -scheme DragDrop-Package -destination 'platform=iOS Simulator,name=iPhone 17'
 xcodebuild test -project Demo/DragDropDemo.xcodeproj -scheme DragDropDemo \
   -destination 'platform=iOS Simulator,name=iPhone 17'
 ```

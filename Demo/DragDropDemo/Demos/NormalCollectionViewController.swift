@@ -8,67 +8,52 @@
 
 import UIKit
 import DragDrop
+import DemoKit
 
-final class NormalCollectionViewController: UIViewController {
+/// A curation grid: masonry cards reordered by dragging. One collection view,
+/// one section, 300 items -- the reorder path at a scale where a wrong frame is
+/// visible immediately.
+final class NormalCollectionViewController: DemoViewController {
 
     private var collection: UICollectionView?
-    private var layout: UICollectionViewFlowLayout?
-    private var collectionSource: [Int] = []
-    private var collectionHeights: [Int] = []
+    private var cards: [Int] = []
+    private var heights: [CGFloat] = []
 
-    private var hasLoadedContent = false
+    override func loadContent() {
+        title = "Moodboard"
 
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        guard !hasLoadedContent else { return }
-        hasLoadedContent = true
-        loadContent()
-    }
-
-    private func loadContent() {
-
-        collectionSource = []
-        collectionHeights = []
-
-        for i in 0..<300 {
-            collectionSource.append(i)
-            var n = Int(arc4random() % 120)
-            if n < 40 { n = 40 }
-            collectionHeights.append(n)
+        cards = Array(0..<300)
+        // Seeded, not random: the same position always gets the same height, so
+        // a screenshot taken today matches one taken tomorrow, and a reorder
+        // leaves the masonry rhythm alone rather than dragging a card's height
+        // around with it.
+        heights = cards.map { index in
+            90 + CGFloat(DemoTheme.stableHash("card-\(index)") % 90)
         }
 
         let layout = UICollectionViewFlowLayout()
-        layout.minimumInteritemSpacing = 4
-        layout.minimumLineSpacing = 4
-        layout.sectionInset = UIEdgeInsets(top: 4, left: 4, bottom: 4, right: 4)
-        self.layout = layout
+        layout.minimumInteritemSpacing = 10
+        layout.minimumLineSpacing = 10
+        layout.sectionInset = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
 
-        let collection = UICollectionView(frame: CGRect(x: 0, y: 20,
-                                                        width: view.bounds.size.width,
-                                                        height: view.bounds.size.height - 20),
-                                          collectionViewLayout: layout)
+        let collection = UICollectionView(frame: view.bounds, collectionViewLayout: layout)
         // The Objective-C never set this: UICollectionView used to default to a
         // black background, which is what separated the white cells in the
-        // original demo. Modern iOS defaults it to the system background, so
-        // white cells on a white collection view became invisible. Setting it
-        // explicitly restores the original appearance.
-        collection.backgroundColor = .black
-
+        // original demo. The cards now carry their own hairline and shadow, so
+        // the background can be the ordinary grouped one.
+        collection.backgroundColor = DemoTheme.Surface.background
         collection.delegate = self
         collection.dataSource = self
-        view.addSubview(collection)
+        collection.accessibilityIdentifier = "moodboard"
         collection.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
+        view.addSubview(collection)
         self.collection = collection
 
         collection.reloadData()
     }
 
-    private func applyLabel(_ string: String, to view: UIView) {
-        let label = UILabel()
-        label.text = string
-        label.sizeToFit()
-        label.frame = CGRect(x: 0, y: 0, width: label.frame.width, height: label.frame.height)
-        view.addSubview(label)
+    private func palette(for card: Int) -> Palette {
+        SampleData.palettes[card % SampleData.palettes.count]
     }
 }
 
@@ -76,23 +61,29 @@ final class NormalCollectionViewController: UIViewController {
 
 extension NormalCollectionViewController: UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
 
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        collectionSource.count
-    }
+    func numberOfSections(in collectionView: UICollectionView) -> Int { 1 }
 
-    func numberOfSections(in collectionView: UICollectionView) -> Int {
-        1
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        cards.count
     }
 
     func collectionView(_ collectionView: UICollectionView,
                         cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
 
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "CollectionViewCell", for: indexPath)
-        cell.backgroundColor = .white
-
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "CollectionViewCell",
+                                                      for: indexPath)
+        cell.backgroundColor = .clear
         cell.contentView.subviews.forEach { $0.removeFromSuperview() }
-        let n = collectionSource[indexPath.row]
-        applyLabel("\(n)", to: cell.contentView)
+
+        let card = cards[indexPath.row]
+        let palette = palette(for: card)
+        let swatch = SwatchChip(color: UIColor(hex: palette.hex) ?? .systemGray,
+                                caption: palette.name,
+                                detail: palette.hex,
+                                identifier: "swatch-\(card)")
+        swatch.frame = cell.contentView.bounds
+        swatch.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        cell.contentView.addSubview(swatch)
 
         return cell
     }
@@ -100,22 +91,21 @@ extension NormalCollectionViewController: UICollectionViewDataSource, UICollecti
     func collectionView(_ collectionView: UICollectionView,
                         willDisplay cell: UICollectionViewCell,
                         forItemAt indexPath: IndexPath) {
+        // On the cell, not the swatch: the collection view resolves an index
+        // path from the cell.
         collectionView.enableDragAndDrop(for: cell)
     }
 
     func collectionView(_ collectionView: UICollectionView,
                         layout collectionViewLayout: UICollectionViewLayout,
                         sizeForItemAt indexPath: IndexPath) -> CGSize {
-
-        CGSize(width: (view.bounds.size.width / 2) - 6,
-               height: CGFloat(collectionHeights[indexPath.row]))
+        CGSize(width: (view.bounds.width / 2) - 17, height: heights[indexPath.row])
     }
 
     func collectionView(_ collectionView: UICollectionView,
                         moveItemAt sourceIndexPath: IndexPath,
                         to destinationIndexPath: IndexPath) {
-
-        let item = collectionSource.remove(at: sourceIndexPath.row)
-        collectionSource.insert(item, at: destinationIndexPath.row)
+        let card = cards.remove(at: sourceIndexPath.row)
+        cards.insert(card, at: destinationIndexPath.row)
     }
 }

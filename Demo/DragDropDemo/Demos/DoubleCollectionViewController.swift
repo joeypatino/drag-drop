@@ -8,90 +8,86 @@
 
 import UIKit
 import DragDrop
+import DemoKit
 
-final class DoubleCollectionViewController: UIViewController {
+/// Two collection views, and a move between them that the datasource can veto:
+/// a player already on the destination list cannot be moved there again.
+final class DoubleCollectionViewController: DemoViewController {
 
     private var leftCollectionView: UICollectionView?
-    private var leftLayout: UICollectionViewFlowLayout?
-    private var leftDataSource: [Int] = []
+    private var leftDataSource: [Player] = []
+    private var leftPanel: PanelView?
 
     private var rightCollectionView: UICollectionView?
-    private var rightLayout: UICollectionViewFlowLayout?
-    private var rightDataSource: [Int] = []
+    private var rightDataSource: [Player] = []
+    private var rightPanel: PanelView?
 
-    private var hasLoadedContent = false
+    override func loadContent() {
+        title = "Lineup"
 
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        guard !hasLoadedContent else { return }
-        hasLoadedContent = true
-        loadContent()
+        leftDataSource = Array(SampleData.players.prefix(8))
+        rightDataSource = Array(SampleData.players.suffix(8))
+
+        // Each side is its own titled card. Two bare collection views side by
+        // side read as one grid with a line down it; a card with its own
+        // header, hue and count reads as two lists, which is what they are.
+        let (leftPanel, leftGrid) = installSide(title: "Starters",
+                                                subtitle: "On the pitch",
+                                                symbol: "figure.soccer",
+                                                hue: .mint,
+                                                identifier: "starters",
+                                                x: 0)
+        self.leftPanel = leftPanel
+        self.leftCollectionView = leftGrid
+
+        let (rightPanel, rightGrid) = installSide(title: "Bench",
+                                                 subtitle: "Available",
+                                                 symbol: "chair.lounge.fill",
+                                                 hue: .slate,
+                                                 identifier: "bench",
+                                                 x: view.bounds.width / 2)
+        self.rightPanel = rightPanel
+        self.rightCollectionView = rightGrid
+
+        leftGrid.reloadData()
+        rightGrid.reloadData()
+        refreshCounts()
     }
 
-    private func loadContent() {
-        loadLeftContent()
-        loadRightContent()
-    }
+    private func installSide(title: String,
+                             subtitle: String,
+                             symbol: String,
+                             hue: DemoTheme.Hue,
+                             identifier: String,
+                             x: CGFloat) -> (PanelView, UICollectionView) {
 
-    private func loadLeftContent() {
-        leftDataSource = Array(0..<8)
+        let top = view.safeAreaInsets.top + 8
+        let panel = PanelView(title: title, subtitle: subtitle, symbolName: symbol, hue: hue)
+        let frame = CGRect(x: x + 8, y: top,
+                           width: view.bounds.width / 2 - 16,
+                           height: view.bounds.height - top - view.safeAreaInsets.bottom - 8)
+        let content = install(panel, in: view, frame: frame)
 
         let layout = UICollectionViewFlowLayout()
-        layout.minimumInteritemSpacing = 4
-        layout.minimumLineSpacing = 4
-        layout.sectionInset = UIEdgeInsets(top: 4, left: 4, bottom: 4, right: 4)
-        leftLayout = layout
+        layout.minimumInteritemSpacing = 6
+        layout.minimumLineSpacing = 6
+        layout.sectionInset = UIEdgeInsets(top: 2, left: 0, bottom: 8, right: 0)
 
-        let collectionView = UICollectionView(frame: CGRect(x: 0, y: 0,
-                                                            width: view.frame.width / 2,
-                                                            height: view.frame.height - 60),
-                                              collectionViewLayout: layout)
-        // The Objective-C never set this: UICollectionView used to default to a
-        // black background, which is what separated the white cells in the
-        // original demo. Modern iOS defaults it to the system background, so
-        // white cells on a white collection view became invisible. Setting it
-        // explicitly restores the original appearance.
-        collectionView.backgroundColor = .black
+        let grid = UICollectionView(frame: content.bounds, collectionViewLayout: layout)
+        grid.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        grid.backgroundColor = .clear
+        grid.delegate = self
+        grid.dataSource = self
+        grid.accessibilityIdentifier = identifier
+        grid.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
+        content.addSubview(grid)
 
-        collectionView.delegate = self
-        collectionView.dataSource = self
-        view.addSubview(collectionView)
-        collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
-        leftCollectionView = collectionView
-
-        collectionView.reloadData()
+        return (panel, grid)
     }
 
-    private func loadRightContent() {
-        rightDataSource = Array(4..<12)
-
-        let layout = UICollectionViewFlowLayout()
-        layout.minimumInteritemSpacing = 4
-        layout.minimumLineSpacing = 4
-        layout.sectionInset = UIEdgeInsets(top: 4, left: 4, bottom: 4, right: 4)
-        rightLayout = layout
-
-        let collectionView = UICollectionView(frame: CGRect(x: view.frame.width / 2, y: 0,
-                                                            width: view.frame.width / 2,
-                                                            height: view.frame.height - 60),
-                                              collectionViewLayout: layout)
-        collectionView.backgroundColor = .black
-
-        collectionView.delegate = self
-        collectionView.dataSource = self
-        view.addSubview(collectionView)
-        collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
-        rightCollectionView = collectionView
-
-        collectionView.reloadData()
-    }
-
-    private func applyLabel(_ string: String, to view: UIView) {
-        let label = UILabel()
-        label.text = string
-        label.sizeToFit()
-        label.frame = CGRect(x: 0, y: 0, width: label.frame.width, height: label.frame.height)
-        view.addSubview(label)
+    private func refreshCounts() {
+        leftPanel?.count = leftDataSource.count
+        rightPanel?.count = rightDataSource.count
     }
 }
 
@@ -102,8 +98,7 @@ extension DoubleCollectionViewController: UICollectionViewDelegate, UICollection
     func collectionView(_ collectionView: UICollectionView,
                         layout collectionViewLayout: UICollectionViewLayout,
                         sizeForItemAt indexPath: IndexPath) -> CGSize {
-
-        CGSize(width: (collectionView.bounds.size.width / 2) - 6, height: 120)
+        CGSize(width: (collectionView.bounds.size.width / 2) - 12, height: 120)
     }
 }
 
@@ -112,35 +107,32 @@ extension DoubleCollectionViewController: UICollectionViewDelegate, UICollection
 extension DoubleCollectionViewController: UICollectionViewDataSourceCellSwapSupport {
 
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-
         if collectionView === leftCollectionView { return leftDataSource.count }
-
         return rightDataSource.count
     }
 
-    func numberOfSections(in collectionView: UICollectionView) -> Int {
-        1
-    }
+    func numberOfSections(in collectionView: UICollectionView) -> Int { 1 }
 
     // MARK: -
 
     func collectionView(_ collectionView: UICollectionView,
                         cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
 
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "CollectionViewCell", for: indexPath)
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "CollectionViewCell",
+                                                      for: indexPath)
         collectionView.enableDragAndDrop(for: cell)
 
-        cell.backgroundColor = .white
+        cell.backgroundColor = .clear
         cell.contentView.subviews.forEach { $0.removeFromSuperview() }
 
-        let n: Int
-        if collectionView === rightCollectionView {
-            n = rightDataSource[indexPath.row]
-        } else {
-            n = leftDataSource[indexPath.row]
-        }
+        let player = collectionView === rightCollectionView
+            ? rightDataSource[indexPath.row]
+            : leftDataSource[indexPath.row]
 
-        applyLabel("\(n)", to: cell.contentView)
+        let card = PlayerCardView(player: player, identifier: "player-\(player.id)")
+        card.frame = cell.contentView.bounds
+        card.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        cell.contentView.addSubview(card)
 
         return cell
     }
@@ -151,79 +143,61 @@ extension DoubleCollectionViewController: UICollectionViewDataSourceCellSwapSupp
                         moveItemAt sourceIndexPath: IndexPath,
                         to destinationCollectionView: UICollectionView,
                         to destinationIndexPath: IndexPath) {
-        DLogDemo()
 
-        var item: Int?
+        var moved: Player?
         if collectionView === leftCollectionView {
-            item = leftDataSource.remove(at: sourceIndexPath.row)
+            moved = leftDataSource.remove(at: sourceIndexPath.row)
         } else if collectionView === rightCollectionView {
-            item = rightDataSource.remove(at: sourceIndexPath.row)
+            moved = rightDataSource.remove(at: sourceIndexPath.row)
         }
 
-        guard let item else { return }
+        guard let moved else { return }
 
         if destinationCollectionView === rightCollectionView {
-            rightDataSource.insert(item, at: min(destinationIndexPath.row, rightDataSource.count))
+            rightDataSource.insert(moved, at: min(destinationIndexPath.row, rightDataSource.count))
         } else if destinationCollectionView === leftCollectionView {
-            leftDataSource.insert(item, at: min(destinationIndexPath.row, leftDataSource.count))
+            leftDataSource.insert(moved, at: min(destinationIndexPath.row, leftDataSource.count))
         }
 
-        print("L: \(leftDataSource)")
-        print("R: \(rightDataSource)")
+        refreshCounts()
     }
 
+    /// A player already on the destination list cannot be moved there again.
     func collectionView(_ collectionView: UICollectionView,
                         canMoveItemAt indexPath: IndexPath,
                         to destinationCollectionView: UICollectionView,
                         to toIndexPath: IndexPath) -> Bool {
-        DLogDemo()
 
-        let source: [Int]
-        let obj: Int
+        let destination: [Player]
+        let player: Player
 
         if collectionView === leftCollectionView {
-            source = rightDataSource
-            obj = leftDataSource[indexPath.row]
+            destination = rightDataSource
+            player = leftDataSource[indexPath.row]
         } else if collectionView === rightCollectionView {
-            source = leftDataSource
-            obj = rightDataSource[indexPath.row]
+            destination = leftDataSource
+            player = rightDataSource[indexPath.row]
         } else {
             return true
         }
 
-        if source.firstIndex(of: obj) == nil {
-            return true
-        }
-
-        return false
+        return !destination.contains(player)
     }
 
     func collectionView(_ collectionView: UICollectionView, canMoveItemAt indexPath: IndexPath) -> Bool {
-        DLogDemo()
-        //    if (indexPath.row == 0) return NO;
-
-        return true
+        true
     }
 
     func collectionView(_ collectionView: UICollectionView,
                         moveItemAt sourceIndexPath: IndexPath,
                         to destinationIndexPath: IndexPath) {
-        DLogDemo()
 
         if collectionView === leftCollectionView {
-            let item = leftDataSource.remove(at: sourceIndexPath.row)
-            leftDataSource.insert(item, at: destinationIndexPath.row)
+            let player = leftDataSource.remove(at: sourceIndexPath.row)
+            leftDataSource.insert(player, at: destinationIndexPath.row)
         } else if collectionView === rightCollectionView {
-            let item = rightDataSource.remove(at: sourceIndexPath.row)
-            rightDataSource.insert(item, at: destinationIndexPath.row)
+            let player = rightDataSource.remove(at: sourceIndexPath.row)
+            rightDataSource.insert(player, at: destinationIndexPath.row)
         }
     }
-}
-
-/// The demo's own DLog. The library's is internal to the DragDrop module.
-@inline(__always)
-func DLogDemo(_ function: StaticString = #function) {
-    #if DEBUG
-    print("\(function)")
-    #endif
 }

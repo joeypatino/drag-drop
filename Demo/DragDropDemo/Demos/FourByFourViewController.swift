@@ -11,148 +11,89 @@
 
 import UIKit
 import DragDrop
+import DemoKit
 
-final class FourByFourViewController: UIViewController {
+/// Four peer drop targets. The capability on show is that a controller can
+/// refuse a drop: a person cannot be dropped back onto the shift they are
+/// already on.
+final class FourByFourViewController: DemoViewController {
 
-    private var topLeftView: UIView?
-    private var bottomRightView: UIView?
-
-    private var topRightView: UIView?
-    private var bottomLeftView: UIView?
-
-    private var topLeftController: DragDropController?
-    private var bottomRightController: DragDropController?
-
-    private var topRightController: DragDropController?
-    private var bottomLeftController: DragDropController?
-
-    private var hasLoadedContent = false
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        view.backgroundColor = .gray
+    private struct Shift {
+        let title: String
+        let hours: String
+        let symbol: String
+        let hue: DemoTheme.Hue
+        let headcount: Int
+        let slug: String
     }
 
-    /// The Objective-C loaded content in viewDidLoad and read self.view.frame,
-    /// which is not yet sized under iOS 26. The arithmetic below is unchanged;
-    /// only the moment it runs has moved.
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        guard !hasLoadedContent else { return }
-        hasLoadedContent = true
-        loadContent()
+    /// Headcounts are the demo's original 5 / 4 / 3 / 6, in the original
+    /// top-left, top-right, bottom-left, bottom-right order.
+    private let shifts: [Shift] = [
+        Shift(title: "Morning",   hours: "06:00 – 14:00", symbol: "sunrise.fill",    hue: .amber,  headcount: 5, slug: "morning"),
+        Shift(title: "Afternoon", hours: "14:00 – 22:00", symbol: "sun.max.fill",    hue: .coral,  headcount: 4, slug: "afternoon"),
+        Shift(title: "Evening",   hours: "22:00 – 02:00", symbol: "sunset.fill",     hue: .violet, headcount: 3, slug: "evening"),
+        Shift(title: "Night",     hours: "02:00 – 06:00", symbol: "moon.stars.fill", hue: .indigo, headcount: 6, slug: "night")
+    ]
+
+    private var controllers: [DragDropController] = []
+
+    override func loadContent() {
+        title = "Shift Rota"
+
+        let cellWidth = view.bounds.width / 2
+        let cellHeight = (view.bounds.height - view.safeAreaInsets.top) / 2
+        var nextStaffIndex = 0
+
+        for (index, shift) in shifts.enumerated() {
+            let controller = makeController()
+            controllers.append(controller)
+
+            let panel = PanelView(title: shift.title,
+                                  subtitle: shift.hours,
+                                  symbolName: shift.symbol,
+                                  hue: shift.hue)
+            panel.emptyMessage = "No cover"
+
+            let cell = CGRect(x: CGFloat(index % 2) * cellWidth,
+                              y: view.safeAreaInsets.top + CGFloat(index / 2) * cellHeight,
+                              width: cellWidth,
+                              height: cellHeight)
+            let target = install(panel, in: view, frame: cell.insetBy(dx: 8, dy: 8))
+            target.accessibilityIdentifier = "panel-\(shift.slug)"
+            controller.dropTargetView = target
+
+            // Read out of the mutating cursor before the closure captures it.
+            let first = nextStaffIndex
+            SlotPopulator.fill(target,
+                               count: shift.headcount,
+                               metrics: .chip,
+                               controller: controller) { offset in
+                let member = SampleData.staff[first + offset]
+                return AvatarChip(name: member.name, identifier: "staff-\(member.id)")
+            }
+            nextStaffIndex += shift.headcount
+
+            panel.count = shift.headcount
+            panel.updateEmptyState()
+        }
     }
 
-    private func loadContent() {
-
-        topLeftController = controller()
-        bottomRightController = controller()
-        topRightController = controller()
-        bottomLeftController = controller()
-
-        var frame = CGRect(x: 0, y: 0,
-                           width: view.bounds.width / 2,
-                           height: view.bounds.height / 2 - 32)
-        frame = frame.insetBy(dx: 10, dy: 10)
-
-        let topLeftView = UIView(frame: frame.offsetBy(dx: 0, dy: 0))
-        topLeftView.backgroundColor = .white
-        view.addSubview(topLeftView)
-        topLeftController?.dropTargetView = topLeftView
-        applyLabel("TopLeft", to: topLeftView)
-        self.topLeftView = topLeftView
-
-        let topRightView = UIView(frame: frame.offsetBy(dx: frame.width + 20, dy: 0))
-        topRightView.backgroundColor = .white
-        view.addSubview(topRightView)
-        topRightController?.dropTargetView = topRightView
-        applyLabel("TopRight", to: topRightView)
-        self.topRightView = topRightView
-
-        let bottomLeftView = UIView(frame: frame.offsetBy(dx: 0, dy: frame.height + 20))
-        bottomLeftView.backgroundColor = .white
-        view.addSubview(bottomLeftView)
-        bottomLeftController?.dropTargetView = bottomLeftView
-        applyLabel("BottomLeft", to: bottomLeftView)
-        self.bottomLeftView = bottomLeftView
-
-        let bottomRightView = UIView(frame: frame.offsetBy(dx: frame.width + 20,
-                                                           dy: frame.height + 20))
-        bottomRightView.backgroundColor = .white
-        view.addSubview(bottomRightView)
-        bottomRightController?.dropTargetView = bottomRightView
-        applyLabel("BottomRight", to: bottomRightView)
-        self.bottomRightView = bottomRightView
-
-        populate(topLeftView, withCount: 5, andDragDropController: topLeftController)
-        populate(bottomRightView, withCount: 6, andDragDropController: bottomRightController)
-
-        populate(topRightView, withCount: 4, andDragDropController: topRightController)
-        populate(bottomLeftView, withCount: 3, andDragDropController: bottomLeftController)
+    /// Badges and the "No cover" placeholder track the panels after every move.
+    /// `panels` comes from the base class and is in install order, which is the
+    /// order the controllers were made in.
+    private func refreshCounts() {
+        for (panel, controller) in zip(panels, controllers) {
+            panel.count = controller.draggableViews.count
+            panel.updateEmptyState()
+        }
     }
 
-    private func controller() -> DragDropController {
-        let controller = DragDropController()
-        controller.dragDropDataSource = self
-        controller.dragDropDelegate = self
-        return controller
-    }
-
-    private func applyLabel(_ string: String, to view: UIView) {
-        let label = UILabel()
-        label.text = string
-        label.sizeToFit()
-        label.center = CGPoint(x: view.frame.size.width / 2, y: view.frame.size.height / 2)
-        view.addSubview(label)
-    }
-
-    private func populate(_ view: UIView, withCount viewCount: Int, andDragDropController dragDropController: DragDropController?) {
-        SlotLayout.populate(view, withCount: viewCount, controller: dragDropController)
-    }
-}
-
-// MARK: - DragDropController Delegate
-
-extension FourByFourViewController: DragDropControllerDelegate {
-
-    func dragDropController(_ controller: DragDropController, willStartDrag drag: DragAction, animated: Bool) {
-    }
-
-    func dragDropController(_ controller: DragDropController, didStartDrag drag: DragAction) {
-    }
-
-    func dragDropController(_ controller: DragDropController, willEndDrag drag: DragAction, animated: Bool) {
-    }
-
-    func dragDropController(_ controller: DragDropController, didEndDrag drag: DragAction) {
-    }
-
-    // MARK: -
-
-    func dragDropController(_ controller: DragDropController,
-                            dragDidEnter drag: DragAction,
-                            destinationController destination: DragDropController) {
-        destination.dropTargetView?.layer.borderColor = UIColor.red.cgColor
-        destination.dropTargetView?.layer.borderWidth = 2.0
-    }
-
-    func dragDropController(_ controller: DragDropController,
-                            dragDidMove drag: DragAction,
-                            destinationController destination: DragDropController) {
-    }
-
-    func dragDropController(_ controller: DragDropController,
-                            dragDidExit drag: DragAction,
-                            destinationController destination: DragDropController) {
-        destination.dropTargetView?.layer.borderColor = UIColor.clear.cgColor
-        destination.dropTargetView?.layer.borderWidth = 0.0
-    }
-
-    // MARK: -
-
-    func dragDropController(_ controller: DragDropController,
-                            didMove view: UIView,
-                            to destination: DragDropController) {
+    override func dragDropController(_ controller: DragDropController,
+                                     didMove view: UIView,
+                                     to destination: DragDropController) {
+        super.dragDropController(controller, didMove: view, to: destination)
+        refreshCounts()
     }
 }
 
@@ -164,29 +105,29 @@ extension FourByFourViewController: DragDropControllerDataSource {
         true
     }
 
+    /// A person cannot be dropped onto the shift they are already on.
     func dragDropController(_ controller: DragDropController,
                             canDrop view: UIView,
                             to destination: DragDropController?) -> Bool {
-        if controller === destination { return false }
-        return true
+        controller !== destination
     }
 
     func dragDropController(_ controller: DragDropController,
                             frameFor view: UIView,
                             in destination: DragDropController) -> CGRect {
-        guard let dropTargetView = destination.dropTargetView else { return .zero }
-
-        // The arriving view takes the first free slot. `draggableViews` counts
-        // only the squares, so the quadrant's own title label does not shift it.
+        guard let target = destination.dropTargetView else { return .zero }
+        // `draggableViews` counts only the avatars, so the panel's own chrome
+        // does not shift the slot index.
         return SlotLayout.frame(at: destination.draggableViews.count,
                                 size: view.frame.size,
-                                in: dropTargetView)
+                                in: target,
+                                metrics: .chip)
     }
 
     func dragDropController(_ controller: DragDropController,
                             frameFor view: UIView,
                             at index: Int) -> CGRect? {
-        guard let dropTargetView = controller.dropTargetView else { return nil }
-        return SlotLayout.frame(at: index, size: view.frame.size, in: dropTargetView)
+        guard let target = controller.dropTargetView else { return nil }
+        return SlotLayout.frame(at: index, size: view.frame.size, in: target, metrics: .chip)
     }
 }
