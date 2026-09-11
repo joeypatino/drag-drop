@@ -75,12 +75,25 @@ extension XCTestCase {
     ///   `DragDropGesture` goes straight to `.failed`;
     /// * the hold must outlast the destination's 0.3s hover animation, so the
     ///   release lands on a settled layout rather than a moving one.
+    ///
+    /// The velocity is the same trade in reverse. The runner synthesises move
+    /// events at a fixed rate, so velocity decides how many land along the way,
+    /// and the library needs enough of them to enter a target and open its
+    /// vacancy. `.slow` spent about a second crossing a screen to deliver far
+    /// more than the one entry and one settle that needs.
+    ///
+    /// All three were run over the whole suite. `.default` took 14s off it;
+    /// `.fast` gave none of that back and cost 4s, with the drags that cross
+    /// between two panels the worst of it -- past some point the drag outruns
+    /// the previews it is supposed to trigger, and the `waitFor` after it spins
+    /// for longer than the drag ever saved. So `.default`, measured rather than
+    /// assumed, and there is nothing further up this axis worth having.
     @MainActor
     func drag(_ source: XCUIElement, onto destination: XCUIElement) {
         source.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
             .press(forDuration: 0.25,
                    thenDragTo: destination.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)),
-                   withVelocity: .slow,
+                   withVelocity: .default,
                    thenHoldForDuration: 0.4)
     }
 
