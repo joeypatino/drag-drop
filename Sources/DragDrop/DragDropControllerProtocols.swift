@@ -42,6 +42,29 @@ public protocol DragDropControllerDelegate: AnyObject {
                             dragDidExit drag: DragAction,
                             destinationController destination: DragDropController)
 
+    // MARK: - The destination's side of a drag
+
+    /// Sent to the delegate of the controller the drag is currently over, on
+    /// entry and on every move. `source` is the controller it came from.
+    ///
+    /// The rest of this protocol reports to the controller a drag *started*
+    /// from. These three report to the one it is happening *to*, which is the
+    /// only way a drop target can react to a drag it did not itself start.
+    func dragDropController(_ controller: DragDropController,
+                            dragDidHover drag: DragAction,
+                            from source: DragDropController)
+
+    /// Sent when the drag leaves that controller.
+    func dragDropController(_ controller: DragDropController,
+                            dragDidLeave drag: DragAction,
+                            from source: DragDropController)
+
+    /// Sent to the delegate of the controller a view was dropped into, after
+    /// the source's `didMove(_:to:)`.
+    func dragDropController(_ controller: DragDropController,
+                            didReceive view: UIView,
+                            from source: DragDropController)
+
     // MARK: -
 
     func dragDropController(_ controller: DragDropController,
@@ -58,6 +81,9 @@ public extension DragDropControllerDelegate {
     func dragDropController(_ controller: DragDropController, dragDidMove drag: DragAction, destinationController destination: DragDropController) {}
     func dragDropController(_ controller: DragDropController, dragDidExit drag: DragAction, destinationController destination: DragDropController) {}
     func dragDropController(_ controller: DragDropController, didMove view: UIView, to destination: DragDropController) {}
+    func dragDropController(_ controller: DragDropController, dragDidHover drag: DragAction, from source: DragDropController) {}
+    func dragDropController(_ controller: DragDropController, dragDidLeave drag: DragAction, from source: DragDropController) {}
+    func dragDropController(_ controller: DragDropController, didReceive view: UIView, from source: DragDropController) {}
 }
 
 @MainActor

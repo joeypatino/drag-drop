@@ -175,6 +175,11 @@ public final class DragDropController {
         // This was originally set when the drag began.
         drag.firstTouchOffset = gesture.touchBeginOffset
 
+        // The init captured the interaction view, because that is where the
+        // view lives once the drag is under way. Every action in one drag
+        // should report the container the drag actually began in.
+        drag.sourceView = sourceView
+
         return drag
     }
 
@@ -279,7 +284,7 @@ public final class DragDropController {
             // and to a different DragDropController.. Take the nesessary steps....
 
             // call the datasource and have them return the proper frames
-            firstStepFrame = dataSource.dragDropController(self, frameFor: view, in: dropDestination)
+            firstStepFrame = frameForDrop(of: view, into: dropDestination)
 
             // The correct frame for the view in it's new superviews coordinates
             secondStepFrame = firstStepFrame
@@ -377,7 +382,22 @@ public final class DragDropController {
         // and notify the delegate if they are listening..
         dragDropDelegate?.dragDropController(self, didMove: view, to: destination)
 
+        // and let the destination know something arrived, which is the only
+        // notice it gets when the drag came from a controller it does not own.
+        destination.dragDropDelegate?.dragDropController(destination, didReceive: view, from: self)
+
         closeGapInDropTarget(animated: true)
+    }
+
+    /// Where `view` should land in `destination`.
+    ///
+    /// The answer is in the destination's coordinate space, and the destination
+    /// is what knows how it lays views out, so it answers when it has a
+    /// datasource of its own. Controllers that set a datasource only on the
+    /// dragging side keep the behaviour they had.
+    internal func frameForDrop(of view: UIView, into destination: DragDropController) -> CGRect {
+        let dataSource = destination.dragDropDataSource ?? dragDropDataSource
+        return dataSource?.dragDropController(self, frameFor: view, in: destination) ?? .zero
     }
 
     // MARK: - Helpers
@@ -392,6 +412,8 @@ public final class DragDropController {
             }
 
             dragDropDelegate?.dragDropController(self, dragDidMove: drag, destinationController: currentDragDestination)
+            currentDragDestination.dragDropDelegate?
+                .dragDropController(currentDragDestination, dragDidHover: drag, from: self)
         } else {
 
             if let currentDragDestination {
@@ -400,6 +422,8 @@ public final class DragDropController {
                     drag.currentLocation = dropTargetView.convert(drag.currentLocation, from: nil)
                 }
                 dragDropDelegate?.dragDropController(self, dragDidExit: drag, destinationController: currentDragDestination)
+                currentDragDestination.dragDropDelegate?
+                    .dragDropController(currentDragDestination, dragDidLeave: drag, from: self)
 
                 self.currentDragDestination = nil
             }
@@ -411,6 +435,8 @@ public final class DragDropController {
                     drag.currentLocation = dropTargetView.convert(drag.currentLocation, from: nil)
                 }
                 dragDropDelegate?.dragDropController(self, dragDidEnter: drag, destinationController: dropTarget)
+                dropTarget.dragDropDelegate?
+                    .dragDropController(dropTarget, dragDidHover: drag, from: self)
             }
         }
     }

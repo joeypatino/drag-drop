@@ -44,3 +44,38 @@ final class DragActionTests: XCTestCase {
         XCTAssertIdentical(interactionView.hitTest(CGPoint(x: 5, y: 5), with: nil), interactionView)
     }
 }
+
+// MARK: - Source view
+
+@MainActor
+final class DragActionSourceViewTests: XCTestCase {
+
+    func testDragActionCapturesTheSuperviewItStartedIn() {
+        let container = UIView()
+        let view = UIView()
+        container.addSubview(view)
+
+        let drag = DragAction(view: view)
+
+        XCTAssertIdentical(drag.sourceView, container)
+    }
+
+    /// `startDrag` reparents the dragged view into the interaction view before
+    /// any delegate callback runs, so this has to be the container the drag
+    /// began in, not wherever the view happens to be now.
+    func testSourceViewIsCapturedNotRecomputed() {
+        let container = UIView()
+        let elsewhere = UIView()
+        let view = UIView()
+        container.addSubview(view)
+
+        let drag = DragAction(view: view)
+        elsewhere.addSubview(view)
+
+        XCTAssertIdentical(drag.sourceView, container)
+    }
+
+    func testSourceViewIsNilForALooseView() {
+        XCTAssertNil(DragAction(view: UIView()).sourceView)
+    }
+}

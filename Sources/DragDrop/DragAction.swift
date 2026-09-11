@@ -22,8 +22,16 @@ public final class DragAction {
     /// this is the views frame in its original superviews coordinate.
     public private(set) var frame: CGRect
 
+    /// The view's superview when the drag began.
+    ///
+    /// `startDrag` reparents the dragged view into the interaction view before
+    /// `willStartDrag` fires, so a delegate cannot reach the container the view
+    /// came from through `view.superview`. This is that container.
+    public internal(set) weak var sourceView: UIView?
+
     public init(view: UIView) {
         self.view = view
         self.frame = view.frame
+        self.sourceView = view.superview
     }
 }
