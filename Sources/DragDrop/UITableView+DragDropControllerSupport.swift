@@ -114,15 +114,36 @@ internal extension UITableView {
     }
 }
 
-// MARK: - DragDropController conformances
-//
-// Filled in by later work. `frameFor:in:` is the datasource protocol's only
-// requirement without a default, so it needs a body from the start.
-
 extension TableViewDragDropState: DragDropControllerDelegate {}
 
+// MARK: - DragDropController Datasource
+
 extension TableViewDragDropState: DragDropControllerDataSource {
+
     func dragDropController(_ controller: DragDropController,
                             frameFor view: UIView,
-                            in destination: DragDropController) -> CGRect { .zero }
+                            in destination: DragDropController) -> CGRect {
+
+        // `endDrag` asks the destination's own datasource, so this is only ever
+        // reached for a table destination. Anything else is not ours to answer.
+        guard let destinationTable = destination.dropTargetView as? UITableView,
+              let target = destinationTable.dragDropState.vacancyIndexPath else { return .zero }
+
+        return destinationTable.rectForRow(arrivingAt: target,
+                                           height: destinationTable.dragDropState.vacancyHeight)
+    }
+
+    func dragDropController(_ controller: DragDropController, shouldDrag view: UIView) -> Bool {
+
+        // Called before the view is reparented, so its superview is still the
+        // cell it belongs to.
+        guard let tableView,
+              let indexPath = indexPath(forDragStartingIn: view.superview),
+              let dataSource = tableView.rowMoveDataSource else { return true }
+
+        return dataSource.tableView(tableView, canDragRowAt: indexPath)
+    }
+
+    // `frameFor:at:` deliberately takes its nil default. That hook re-flows the
+    // views inside a plain drop target; a table's rows are UIKit's to place.
 }
