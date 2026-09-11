@@ -47,6 +47,13 @@ final class NormalCollectionViewController: UIViewController {
                                                         width: view.bounds.size.width,
                                                         height: view.bounds.size.height - 20),
                                           collectionViewLayout: layout)
+        // The Objective-C never set this: UICollectionView used to default to a
+        // black background, which is what separated the white cells in the
+        // original demo. Modern iOS defaults it to the system background, so
+        // white cells on a white collection view became invisible. Setting it
+        // explicitly restores the original appearance.
+        collection.backgroundColor = .black
+
         collection.delegate = self
         collection.dataSource = self
         view.addSubview(collection)
