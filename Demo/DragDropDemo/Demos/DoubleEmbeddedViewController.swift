@@ -122,8 +122,11 @@ extension DoubleEmbeddedViewController: DragDropControllerDataSource {
                             frameFor view: UIView,
                             in destination: DragDropController) -> CGRect {
         guard let target = destination.dropTargetView else { return .zero }
+        // Not `view.frame.size`: the lift scales the tile for the duration of
+        // the drag, and `frame` is the transformed box, which is wide enough to
+        // wrap the arrival onto a row of its own.
         return SlotLayout.frame(at: destination.draggableViews.count,
-                                size: view.frame.size,
+                                size: SlotLayout.Metrics.chip.itemSize,
                                 in: target,
                                 metrics: .chip)
     }
@@ -132,6 +135,9 @@ extension DoubleEmbeddedViewController: DragDropControllerDataSource {
                             frameFor view: UIView,
                             at index: Int) -> CGRect? {
         guard let target = controller.dropTargetView else { return nil }
-        return SlotLayout.frame(at: index, size: view.frame.size, in: target, metrics: .chip)
+        return SlotLayout.frame(at: index,
+                                size: SlotLayout.Metrics.chip.itemSize,
+                                in: target,
+                                metrics: .chip)
     }
 }

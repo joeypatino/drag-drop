@@ -118,8 +118,13 @@ extension FourByFourViewController: DragDropControllerDataSource {
         guard let target = destination.dropTargetView else { return .zero }
         // `draggableViews` counts only the avatars, so the panel's own chrome
         // does not shift the slot index.
+        //
+        // Not `view.frame.size`: the lift scales the chip to 1.08 for the
+        // duration of the drag, and `frame` is the transformed box. A 47.5pt
+        // chip is one too wide for a three-across row, so the arrival wrapped
+        // onto a row of its own with the slot beside it still free.
         return SlotLayout.frame(at: destination.draggableViews.count,
-                                size: view.frame.size,
+                                size: SlotLayout.Metrics.chip.itemSize,
                                 in: target,
                                 metrics: .chip)
     }
@@ -128,6 +133,9 @@ extension FourByFourViewController: DragDropControllerDataSource {
                             frameFor view: UIView,
                             at index: Int) -> CGRect? {
         guard let target = controller.dropTargetView else { return nil }
-        return SlotLayout.frame(at: index, size: view.frame.size, in: target, metrics: .chip)
+        return SlotLayout.frame(at: index,
+                                size: SlotLayout.Metrics.chip.itemSize,
+                                in: target,
+                                metrics: .chip)
     }
 }

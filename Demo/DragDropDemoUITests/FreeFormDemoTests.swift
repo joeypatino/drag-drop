@@ -55,6 +55,40 @@ final class FreeFormDemoTests: XCTestCase {
                        "The next person should move up into the vacated slot")
     }
 
+    @MainActor
+    func testSomeoneArrivingTakesTheNextSlotOnTheRow() {
+        let app = launchDemo("FourByFourViewController")
+
+        let morning = app.otherElements["panel-morning"]
+        let afternoon = app.otherElements["panel-afternoon"]
+        XCTAssertTrue(morning.waitForExistence(timeout: 5))
+
+        let before = identifiers(withPrefix: "staff-", inside: afternoon, of: app)
+        let last = app.otherElements[before.last!].frame
+
+        // Only meaningful while Afternoon's last person has room beside them.
+        // Stated rather than assumed, so a change to the headcounts or the
+        // panel size fails here and says why.
+        let perRow = before.filter { app.otherElements[$0].frame.minY == app.otherElements[before[0]].frame.minY }.count
+        XCTAssertLessThan((before.count - 1) % perRow, perRow - 1,
+                          "Afternoon's row should have a free slot to the right, \(before.count) in rows of \(perRow)")
+
+        let moved = identifiers(withPrefix: "staff-", inside: morning, of: app)[0]
+        drag(app.otherElements[moved], onto: afternoon)
+        waitFor("staff-", inside: afternoon, of: app, toCount: before.count + 1)
+        attachScreenshot(app, "rota-after-arrival")
+
+        // The lift scales the chip up for the duration of the drag, so the
+        // frame it reports mid-flight is not the size of the slot it is owed.
+        let landed = app.otherElements[moved].frame
+        XCTAssertEqual(landed.width, last.width, accuracy: 0.01,
+                       "\(moved) should land the size of the people already there")
+        XCTAssertEqual(landed.minY, last.minY, accuracy: 0.01,
+                       "\(moved) should join the last row rather than start a new one")
+        XCTAssertGreaterThan(landed.minX, last.minX,
+                             "\(moved) should land to the right of the last person, not under them")
+    }
+
     // MARK: - Shared Album
 
     @MainActor
@@ -79,6 +113,9 @@ final class FreeFormDemoTests: XCTestCase {
 
         XCTAssertTrue(identifiers(withPrefix: "photo-", inside: album, of: app).contains(moved),
                       "\(moved) should now be in the album")
+        XCTAssertEqual(app.otherElements[moved].frame.width,
+                       app.otherElements[inAlbum[0]].frame.width, accuracy: 0.01,
+                       "\(moved) should land the size of the photos already there, not the size the lift made it")
     }
 
     // MARK: - Widget Composer
@@ -105,6 +142,9 @@ final class FreeFormDemoTests: XCTestCase {
         XCTAssertTrue(after.contains(moved),
                       "\(moved) should land on the stack despite the phone frame between them")
         XCTAssertEqual(after.count, 4)
+        XCTAssertEqual(app.otherElements[moved].frame.width,
+                       app.otherElements[onStack[0]].frame.width, accuracy: 0.01,
+                       "\(moved) should land the size of the widgets already there, not the size the lift made it")
     }
 
     // MARK: - Files
