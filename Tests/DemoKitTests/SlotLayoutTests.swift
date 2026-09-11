@@ -51,7 +51,7 @@ final class SlotLayoutTests: XCTestCase {
         let chip = CGSize(width: 44, height: 44)
         let frame = SlotLayout.frame(at: 1, size: chip,
                                      in: container(width: 300), metrics: .chip)
-        XCTAssertEqual(frame.origin, CGPoint(x: 12 + 44 + 10, y: 12))
+        XCTAssertEqual(frame.origin, CGPoint(x: 8 + 44 + 8, y: 8))
     }
 
     func testSlotsNeverOverlap() {

@@ -28,11 +28,11 @@ public enum SlotLayout {
 
         /// Avatars, widget tiles and file tiles.
         public static let chip = Metrics(itemSize: CGSize(width: 44, height: 44),
-                                         margin: 12, spacing: 10)
+                                         margin: 8, spacing: 8)
 
         /// Photo thumbnails.
         public static let thumbnail = Metrics(itemSize: CGSize(width: 56, height: 56),
-                                              margin: 12, spacing: 10)
+                                              margin: 8, spacing: 8)
     }
 
     /// The frame of the `index`-th slot for a view of `size` in `container`.

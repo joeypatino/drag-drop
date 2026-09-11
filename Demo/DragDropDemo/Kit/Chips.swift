@@ -53,6 +53,12 @@ final class AvatarChip: UIView, Liftable {
         accessibilityIdentifier = identifier
         isAccessibilityElement = true
         accessibilityLabel = name
+
+        // CGColor does not resolve dynamically, so the ring has to be redrawn
+        // when the appearance changes.
+        registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (chip: AvatarChip, _) in
+            chip.layer.borderColor = DemoTheme.Surface.card.cgColor
+        }
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
@@ -104,6 +110,7 @@ final class TileChip: UIView, Liftable {
 
         captionLabel.text = caption
         captionLabel.font = UIFont.systemFont(ofSize: 8, weight: .medium)
+        captionLabel.numberOfLines = 1
         captionLabel.textColor = DemoTheme.Text.secondary
         captionLabel.textAlignment = .center
         captionLabel.adjustsFontSizeToFitWidth = true
@@ -132,7 +139,11 @@ final class TileChip: UIView, Liftable {
 
         layer.cornerRadius = min(DemoTheme.Radius.medium, bounds.height / 4)
 
-        let captionHeight: CGFloat = captionLabel.isHidden ? 0 : 10
+        // Proportional, so a 44pt file tile and a 72pt folder are both labelled
+        // at a size that suits them.
+        let captionSize = min(11, max(8, bounds.height * 0.135))
+        captionLabel.font = UIFont.systemFont(ofSize: captionSize, weight: .medium)
+        let captionHeight: CGFloat = captionLabel.isHidden ? 0 : captionSize + 2
         let iconInset = bounds.height * 0.20
         iconView.frame = CGRect(x: iconInset,
                                 y: iconInset,

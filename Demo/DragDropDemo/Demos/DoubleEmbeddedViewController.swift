@@ -10,134 +10,97 @@ import UIKit
 import DragDrop
 import DemoKit
 
-final class DoubleEmbeddedViewController: UIViewController {
+/// A drop target inset inside a container that is not a target. The phone
+/// frame receives nothing; the widget stack drawn inside it does. This is the
+/// arrangement that requires the library to translate coordinates through a
+/// view that knows nothing about dragging.
+final class DoubleEmbeddedViewController: DemoViewController {
 
-    private var containerController: DragDropController?
-    private var embeddedController: DragDropController?
+    private var stackController: DragDropController?
+    private var galleryController: DragDropController?
 
-    private var containerView: UIView?
-    private var embeddedView: UIView?
+    private var stackPanel: PanelView?
+    private var galleryPanel: PanelView?
 
-    private var hasLoadedContent = false
+    override func loadContent() {
+        title = "Widget Composer"
 
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        guard !hasLoadedContent else { return }
-        hasLoadedContent = true
-        loadContent()
+        stackController = makeController()
+        galleryController = makeController()
+
+        let top = view.safeAreaInsets.top + 12
+        let available = view.bounds.height - top - view.safeAreaInsets.bottom - 12
+        // The phone frame keeps more height than the gallery below it -- a
+        // phone is tall, and the wallpaper needs room to read as wallpaper.
+        let half = CGRect(x: 16, y: top,
+                          width: view.bounds.width - 32,
+                          height: min(300, available / 2 - 8))
+
+        // Upper: the decorative frame, with the real drop target inset in it.
+        let phone = PhoneFrameView(frame: half)
+        view.addSubview(phone)
+
+        let stack = PanelView(title: "Widget Stack",
+                              subtitle: "On your home screen",
+                              symbolName: "square.stack.3d.up.fill",
+                              hue: .violet)
+        stack.emptyMessage = "Empty stack"
+        // Inset generously so the wallpaper shows on every side: that margin
+        // is the only thing saying the stack is *on* a home screen.
+        let stackFrame = CGRect(x: 28, y: 52,
+                                width: phone.bounds.width - 56,
+                                height: phone.bounds.height - 52 - 28)
+        let stackTarget = install(stack, in: phone, frame: stackFrame)
+        stackTarget.accessibilityIdentifier = "panel-stack"
+        stackController?.dropTargetView = stackTarget
+        stackPanel = stack
+
+        // Lower: an ordinary panel, the second target.
+        let gallery = PanelView(title: "Widget Gallery",
+                                subtitle: "Everything available",
+                                symbolName: "square.grid.2x2.fill",
+                                hue: .teal)
+        gallery.emptyMessage = "Nothing left to add"
+        let galleryTarget = install(gallery, in: view,
+                                    frame: half.offsetBy(dx: 0, dy: half.height + 16))
+        galleryTarget.accessibilityIdentifier = "panel-gallery"
+        galleryController?.dropTargetView = galleryTarget
+        galleryPanel = gallery
+
+        // Three on the stack, five in the gallery -- the demo's original counts.
+        fill(stackTarget, controller: stackController,
+             widgets: Array(SampleData.widgets.prefix(3)))
+        fill(galleryTarget, controller: galleryController,
+             widgets: Array(SampleData.widgets.dropFirst(3).prefix(5)))
+
+        refreshCounts()
     }
 
-    private func loadContent() {
-
-        containerController = controller()
-        embeddedController = controller()
-
-        let frame = CGRect(x: 10, y: 10,
-                           width: view.frame.width - 20,
-                           height: view.frame.height / 2 - 32 - 20)
-
-        let embeddedViewContainer = UIView(frame: frame)
-        embeddedViewContainer.backgroundColor = .lightGray
-        view.addSubview(embeddedViewContainer)
-        applyLabel("Dummy Container View", to: embeddedViewContainer, atOffset: CGPoint(x: 0, y: -80))
-
-        let embeddedView = UIView(frame: embeddedViewContainer.bounds
-            .insetBy(dx: 20, dy: 80)
-            .offsetBy(dx: 0, dy: 60))
-        embeddedView.backgroundColor = .white
-        embeddedViewContainer.addSubview(embeddedView)
-        embeddedController?.dropTargetView = embeddedView
-        applyLabel("Inset Subview", to: embeddedView, atOffset: CGPoint(x: 0, y: 0))
-
-        embeddedView.layer.borderColor = UIColor.black.cgColor
-        embeddedView.layer.borderWidth = 2.0
-        self.embeddedView = embeddedView
-
-        let containerView = UIView(frame: frame.offsetBy(dx: 0, dy: frame.height + 20))
-        containerView.backgroundColor = .white
-        view.addSubview(containerView)
-        containerController?.dropTargetView = containerView
-        applyLabel("", to: containerView, atOffset: CGPoint(x: 0, y: 0))
-
-        containerView.layer.borderColor = UIColor.black.cgColor
-        containerView.layer.borderWidth = 2.0
-        self.containerView = containerView
-
-        populate(containerView, withCount: 5, andDragDropController: containerController)
-        populate(embeddedView, withCount: 3, andDragDropController: embeddedController)
-    }
-
-    private func controller() -> DragDropController {
-        let controller = DragDropController()
-        controller.dragDropDataSource = self
-        controller.dragDropDelegate = self
-        return controller
-    }
-
-    private func applyLabel(_ string: String, to view: UIView, atOffset offset: CGPoint) {
-        let label = UILabel()
-        label.text = string
-        label.sizeToFit()
-        label.center = CGPoint(x: view.frame.size.width / 2 + offset.x,
-                               y: view.frame.size.height / 2 + offset.y)
-        view.addSubview(label)
-    }
-
-    private func populate(_ view: UIView, withCount viewCount: Int, andDragDropController dragDropController: DragDropController?) {
-        SlotPopulator.fill(view, count: viewCount, controller: dragDropController) { _ in
-            let square = UIView()
-            square.backgroundColor = .black
-            return square
-        }
-    }
-}
-
-// MARK: - DragDropController Delegate
-
-extension DoubleEmbeddedViewController: DragDropControllerDelegate {
-
-    func dragDropController(_ controller: DragDropController, willStartDrag drag: DragAction, animated: Bool) {
-    }
-
-    func dragDropController(_ controller: DragDropController, didStartDrag drag: DragAction) {
-    }
-
-    func dragDropController(_ controller: DragDropController, willEndDrag drag: DragAction, animated: Bool) {
-    }
-
-    func dragDropController(_ controller: DragDropController, didEndDrag drag: DragAction) {
-    }
-
-    // MARK: -
-
-    func dragDropController(_ controller: DragDropController,
-                            dragDidEnter drag: DragAction,
-                            destinationController destination: DragDropController) {
-        destination.dropTargetView?.layer.borderColor = UIColor.red.cgColor
-        destination.dropTargetView?.layer.borderWidth = 2.0
-    }
-
-    func dragDropController(_ controller: DragDropController,
-                            dragDidMove drag: DragAction,
-                            destinationController destination: DragDropController) {
-    }
-
-    func dragDropController(_ controller: DragDropController,
-                            dragDidExit drag: DragAction,
-                            destinationController destination: DragDropController) {
-        if destination === containerController || destination === embeddedController {
-            destination.dropTargetView?.layer.borderColor = UIColor.black.cgColor
-        } else {
-            destination.dropTargetView?.layer.borderColor = UIColor.clear.cgColor
-            destination.dropTargetView?.layer.borderWidth = 0.0
+    private func fill(_ target: UIView, controller: DragDropController?, widgets: [Widget]) {
+        SlotPopulator.fill(target,
+                           count: widgets.count,
+                           metrics: .chip,
+                           controller: controller) { index in
+            let widget = widgets[index]
+            return TileChip(symbolName: widget.symbol,
+                            hue: DemoTheme.hue(for: widget.name),
+                            caption: widget.name,
+                            identifier: "widget-\(widget.id)")
         }
     }
 
-    // MARK: -
+    private func refreshCounts() {
+        stackPanel?.count = stackController?.draggableViews.count
+        galleryPanel?.count = galleryController?.draggableViews.count
+        stackPanel?.updateEmptyState()
+        galleryPanel?.updateEmptyState()
+    }
 
-    func dragDropController(_ controller: DragDropController,
-                            didMove view: UIView,
-                            to destination: DragDropController) {
+    override func dragDropController(_ controller: DragDropController,
+                                     didMove view: UIView,
+                                     to destination: DragDropController) {
+        super.dragDropController(controller, didMove: view, to: destination)
+        refreshCounts()
     }
 }
 
@@ -152,27 +115,23 @@ extension DoubleEmbeddedViewController: DragDropControllerDataSource {
     func dragDropController(_ controller: DragDropController,
                             canDrop view: UIView,
                             to destination: DragDropController?) -> Bool {
-        if controller === destination { return false }
-        return true
+        controller !== destination
     }
 
     func dragDropController(_ controller: DragDropController,
                             frameFor view: UIView,
                             in destination: DragDropController) -> CGRect {
-        guard let dropTargetView = destination.dropTargetView else { return .zero }
-
-        // The arriving view takes the first free slot. `draggableViews` counts
-        // only the squares, so neither the title label nor the embedded drop
-        // target shifts it.
+        guard let target = destination.dropTargetView else { return .zero }
         return SlotLayout.frame(at: destination.draggableViews.count,
                                 size: view.frame.size,
-                                in: dropTargetView)
+                                in: target,
+                                metrics: .chip)
     }
 
     func dragDropController(_ controller: DragDropController,
                             frameFor view: UIView,
                             at index: Int) -> CGRect? {
-        guard let dropTargetView = controller.dropTargetView else { return nil }
-        return SlotLayout.frame(at: index, size: view.frame.size, in: dropTargetView)
+        guard let target = controller.dropTargetView else { return nil }
+        return SlotLayout.frame(at: index, size: view.frame.size, in: target, metrics: .chip)
     }
 }

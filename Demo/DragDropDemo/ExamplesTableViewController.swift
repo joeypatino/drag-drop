@@ -13,6 +13,22 @@ final class ExamplesTableViewController: UITableViewController {
     private var titles: [String] = []
     private var segues: [String] = []
 
+    /// Jumps straight to a demo when launched with `-demo <SegueIdentifier>`.
+    /// Screenshots and UI tests would otherwise pay for a tap and a push
+    /// animation on every run.
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+
+        guard !hasFollowedLaunchArgument,
+              let index = ProcessInfo.processInfo.arguments.firstIndex(of: "-demo"),
+              index + 1 < ProcessInfo.processInfo.arguments.count else { return }
+
+        hasFollowedLaunchArgument = true
+        performSegue(withIdentifier: ProcessInfo.processInfo.arguments[index + 1], sender: nil)
+    }
+
+    private var hasFollowedLaunchArgument = false
+
     override func viewDidLoad() {
         super.viewDidLoad()
 

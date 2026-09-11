@@ -101,6 +101,12 @@ final class PanelView: UIView {
         contentView.addSubview(emptyLabel)
 
         applyBorder()
+
+        // CGColor does not resolve dynamically: without this, toggling dark
+        // mode while the app is running leaves the border at its old value.
+        registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (panel: PanelView, _) in
+            panel.applyBorder()
+        }
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }

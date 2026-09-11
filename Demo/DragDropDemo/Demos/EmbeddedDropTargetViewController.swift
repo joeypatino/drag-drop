@@ -10,131 +10,145 @@ import UIKit
 import DragDrop
 import DemoKit
 
-final class EmbeddedDropTargetViewController: UIViewController {
+/// The capability here is an item that is itself a drop target: dropping a
+/// file onto a folder. The folder is a 72pt tile parked at the trailing edge
+/// of Documents; a file that lands in it shrinks to a pip on
+/// `FolderPipLayout`'s 2x2 grid and the folder's badge counts what it holds.
+final class EmbeddedDropTargetViewController: DemoViewController {
 
-    private var containerController: DragDropController?
-    private var outerEmbeddedController: DragDropController?
-    private var innerEmbeddedController: DragDropController?
+    private var downloadsController: DragDropController?
+    private var documentsController: DragDropController?
+    private var folderController: DragDropController?
 
-    private var upperView: UIView?
-    private var lowerView: UIView?
+    private var downloadsPanel: PanelView?
+    private var documentsPanel: PanelView?
+    private var folderTile: TileChip?
 
-    private var hasLoadedContent = false
+    private static let folderSize: CGFloat = 72
 
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        guard !hasLoadedContent else { return }
-        hasLoadedContent = true
-        loadContent()
-    }
-
-    private func loadContent() {
-        containerController = controller()
-        outerEmbeddedController = controller()
-        innerEmbeddedController = controller()
-
-        let frame = CGRect(x: 10, y: 10,
-                           width: view.frame.width - 20,
-                           height: view.frame.height / 2 - 32 - 20)
-
-        let upperView = UIView(frame: frame)
-        upperView.backgroundColor = .white
-        view.addSubview(upperView)
-        containerController?.dropTargetView = upperView
-        applyLabel("Upper View", to: upperView)
-
-        upperView.layer.borderColor = UIColor.black.cgColor
-        upperView.layer.borderWidth = 2.0
-        self.upperView = upperView
-
-        let lowerView = UIView(frame: frame.offsetBy(dx: 0, dy: frame.height + 20))
-        lowerView.backgroundColor = .white
-        view.addSubview(lowerView)
-        outerEmbeddedController?.dropTargetView = lowerView
-        applyLabel("Lower View \n(Contains Embedded Drop Target)", to: lowerView)
-
-        lowerView.layer.borderColor = UIColor.black.cgColor
-        lowerView.layer.borderWidth = 2.0
-        self.lowerView = lowerView
-
-        populate(upperView, withCount: 5, andDragDropController: containerController)
-        populate(lowerView, withCount: 3, andDragDropController: outerEmbeddedController)
-
-        innerEmbeddedController?.dropTargetView = lowerView.subviews[1]
-    }
-
-    private func controller() -> DragDropController {
-        let controller = DragDropController()
-        controller.dragDropDataSource = self
-        controller.dragDropDelegate = self
-        return controller
-    }
-
-    private func applyLabel(_ string: String, to view: UIView) {
-        let label = UILabel()
-        label.numberOfLines = 2
-        label.textAlignment = .center
-        label.text = string
-        label.sizeToFit()
-        label.center = CGPoint(x: view.frame.size.width / 2, y: view.frame.size.height / 2)
-        view.addSubview(label)
-    }
-
-    private func populate(_ view: UIView, withCount viewCount: Int, andDragDropController dragDropController: DragDropController?) {
-        SlotPopulator.fill(view, count: viewCount, controller: dragDropController) { _ in
-            let square = UIView()
-            square.backgroundColor = .black
-            return square
-        }
-    }
-}
-
-// MARK: - DragDropController Delegate
-
-extension EmbeddedDropTargetViewController: DragDropControllerDelegate {
-
-    func dragDropController(_ controller: DragDropController, willStartDrag drag: DragAction, animated: Bool) {
-    }
-
-    func dragDropController(_ controller: DragDropController, didStartDrag drag: DragAction) {
-    }
-
-    func dragDropController(_ controller: DragDropController, willEndDrag drag: DragAction, animated: Bool) {
-    }
-
-    func dragDropController(_ controller: DragDropController, didEndDrag drag: DragAction) {
-    }
-
-    // MARK: -
-
-    func dragDropController(_ controller: DragDropController,
-                            dragDidEnter drag: DragAction,
-                            destinationController destination: DragDropController) {
-        destination.dropTargetView?.layer.borderColor = UIColor.red.cgColor
-        destination.dropTargetView?.layer.borderWidth = 2.0
-    }
-
-    func dragDropController(_ controller: DragDropController,
-                            dragDidMove drag: DragAction,
-                            destinationController destination: DragDropController) {
-    }
-
-    func dragDropController(_ controller: DragDropController,
-                            dragDidExit drag: DragAction,
-                            destinationController destination: DragDropController) {
-        if destination.dropTargetView === upperView || destination.dropTargetView === lowerView {
-            destination.dropTargetView?.layer.borderColor = UIColor.black.cgColor
-        } else {
-            destination.dropTargetView?.layer.borderColor = UIColor.clear.cgColor
-            destination.dropTargetView?.layer.borderWidth = 0.0
+    private func hue(for kind: FileItem.Kind) -> DemoTheme.Hue {
+        switch kind {
+        case .pdf: .rose
+        case .image: .mint
+        case .archive: .slate
+        case .sheet: .teal
+        case .text: .amber
         }
     }
 
-    // MARK: -
+    override func loadContent() {
+        title = "Files"
 
-    func dragDropController(_ controller: DragDropController,
-                            didMove view: UIView,
-                            to destination: DragDropController) {
+        downloadsController = makeController()
+        documentsController = makeController()
+        folderController = makeController()
+
+        let top = view.safeAreaInsets.top + 12
+        let available = view.bounds.height - top - view.safeAreaInsets.bottom - 12
+        // Capped: two rows of tiles need nowhere near half a screen, and a
+        // panel twice the height of its content reads as a layout mistake.
+        let half = CGRect(x: 16, y: top,
+                          width: view.bounds.width - 32,
+                          height: min(250, available / 2 - 8))
+
+        let downloads = PanelView(title: "Downloads",
+                                  subtitle: "Recent",
+                                  symbolName: "arrow.down.circle.fill",
+                                  hue: .teal)
+        downloads.emptyMessage = "Nothing downloaded"
+        let downloadsTarget = install(downloads, in: view, frame: half)
+        downloadsTarget.accessibilityIdentifier = "panel-downloads"
+        downloadsController?.dropTargetView = downloadsTarget
+        downloadsPanel = downloads
+
+        let documents = PanelView(title: "Documents",
+                                  subtitle: "Drop a file on the folder to file it",
+                                  symbolName: "folder.fill",
+                                  hue: .indigo)
+        let documentsTarget = install(documents, in: view,
+                                      frame: half.offsetBy(dx: 0, dy: half.height + 16))
+        documentsTarget.accessibilityIdentifier = "panel-documents"
+        documentsController?.dropTargetView = documentsTarget
+        documentsPanel = documents
+
+        // Five in Downloads, three in Documents -- the demo's original counts.
+        fill(downloadsTarget, controller: downloadsController,
+             files: Array(SampleData.files.prefix(5)))
+        fill(documentsTarget, controller: documentsController,
+             files: Array(SampleData.files.dropFirst(5).prefix(3)))
+
+        installFolder(in: documentsTarget)
+        refreshCounts()
+    }
+
+    private func fill(_ target: UIView, controller: DragDropController?, files: [FileItem]) {
+        SlotPopulator.fill(target,
+                           count: files.count,
+                           metrics: .chip,
+                           controller: controller) { index in
+            let file = files[index]
+            return TileChip(symbolName: file.symbol,
+                            hue: self.hue(for: file.kind),
+                            caption: file.name,
+                            identifier: "file-\(file.id)")
+        }
+    }
+
+    /// The folder is placed by hand at the trailing edge, not by `SlotLayout`,
+    /// so the ordinary tiles keep their run and flow around it.
+    private func installFolder(in target: UIView) {
+        let size = Self.folderSize
+        let tile = TileChip(symbolName: "folder.fill",
+                            hue: .indigo,
+                            caption: "Projects",
+                            identifier: "folder-projects")
+        tile.frame = CGRect(x: target.bounds.width - size - DemoTheme.Space.s,
+                            y: target.bounds.height - size - DemoTheme.Space.s,
+                            width: size,
+                            height: size)
+        target.addSubview(tile)
+
+        folderController?.dropTargetView = tile
+        folderTile = tile
+    }
+
+    private func refreshCounts() {
+        downloadsPanel?.count = downloadsController?.draggableViews.count
+        downloadsPanel?.updateEmptyState()
+
+        // Documents counts only the loose tiles; what is in the folder is the
+        // folder's own badge.
+        documentsPanel?.count = documentsController?.draggableViews.count
+        folderTile?.badge = folderController?.draggableViews.count
+    }
+
+    override func dragDropController(_ controller: DragDropController,
+                                     didMove view: UIView,
+                                     to destination: DragDropController) {
+        super.dragDropController(controller, didMove: view, to: destination)
+        refreshCounts()
+    }
+
+    /// The folder is a tile, not a panel, so the base class's panel highlight
+    /// does not reach it. It lifts and tints itself instead.
+    override func dragDropController(_ controller: DragDropController,
+                                     dragDidEnter drag: DragAction,
+                                     destinationController destination: DragDropController) {
+        super.dragDropController(controller, dragDidEnter: drag, destinationController: destination)
+        guard destination === folderController else { return }
+        UIView.animate(withDuration: 0.15) {
+            self.folderTile?.transform = CGAffineTransform(scaleX: 1.12, y: 1.12)
+        }
+    }
+
+    override func dragDropController(_ controller: DragDropController,
+                                     dragDidExit drag: DragAction,
+                                     destinationController destination: DragDropController) {
+        super.dragDropController(controller, dragDidExit: drag, destinationController: destination)
+        guard destination === folderController else { return }
+        UIView.animate(withDuration: 0.15) {
+            self.folderTile?.transform = .identity
+        }
     }
 }
 
@@ -143,42 +157,51 @@ extension EmbeddedDropTargetViewController: DragDropControllerDelegate {
 extension EmbeddedDropTargetViewController: DragDropControllerDataSource {
 
     func dragDropController(_ controller: DragDropController, shouldDrag view: UIView) -> Bool {
-        true
+        // The folder itself stays put.
+        view !== folderTile
     }
 
     func dragDropController(_ controller: DragDropController,
                             canDrop view: UIView,
                             to destination: DragDropController?) -> Bool {
-        if controller === destination { return false }
+        guard controller !== destination else { return false }
+        // Past four, the folder keeps counting but has nowhere to draw.
+        if destination === folderController {
+            return (folderController?.draggableViews.count ?? 0) < FolderPipLayout.capacity
+        }
         return true
     }
 
     func dragDropController(_ controller: DragDropController,
                             frameFor view: UIView,
                             in destination: DragDropController) -> CGRect {
-        guard let dropTargetView = destination.dropTargetView else { return .zero }
+        guard let target = destination.dropTargetView else { return .zero }
 
-        if destination === innerEmbeddedController {
-            return dropTargetView.bounds
+        if destination === folderController {
+            return FolderPipLayout.frame(at: destination.draggableViews.count,
+                                         in: target.bounds) ?? .zero
         }
 
-        // The arriving view takes the first free slot. `draggableViews` counts
-        // only the squares, so neither the title label nor the embedded drop
-        // target shifts it.
+        // Not `view.frame.size`: a file dragged out of the folder is 24pt at
+        // that moment, and would land as a 24pt tile in a 44pt slot.
         return SlotLayout.frame(at: destination.draggableViews.count,
-                                size: view.frame.size,
-                                in: dropTargetView)
+                                size: SlotLayout.Metrics.chip.itemSize,
+                                in: target,
+                                metrics: .chip)
     }
 
     func dragDropController(_ controller: DragDropController,
                             frameFor view: UIView,
                             at index: Int) -> CGRect? {
-        guard let dropTargetView = controller.dropTargetView else { return nil }
+        guard let target = controller.dropTargetView else { return nil }
 
-        // The inner target holds a single view filling it, so there is never a
-        // gap to close.
-        if controller === innerEmbeddedController { return nil }
+        if controller === folderController {
+            return FolderPipLayout.frame(at: index, in: target.bounds)
+        }
 
-        return SlotLayout.frame(at: index, size: view.frame.size, in: dropTargetView)
+        return SlotLayout.frame(at: index,
+                                size: SlotLayout.Metrics.chip.itemSize,
+                                in: target,
+                                metrics: .chip)
     }
 }
