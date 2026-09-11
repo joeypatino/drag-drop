@@ -24,7 +24,10 @@ final class EmbeddedDropTargetViewController: DemoViewController {
     private var documentsPanel: PanelView?
     private var folderTile: TileChip?
 
+    /// The folder's square. Its chip is taller, because the name sits
+    /// underneath as it does on every other item here.
     private static let folderSize: CGFloat = 72
+    private static let folderCaptionHeight: CGFloat = 21
 
     private func hue(for kind: FileItem.Kind) -> DemoTheme.Hue {
         switch kind {
@@ -84,12 +87,13 @@ final class EmbeddedDropTargetViewController: DemoViewController {
     private func fill(_ target: UIView, controller: DragDropController?, files: [FileItem]) {
         SlotPopulator.fill(target,
                            count: files.count,
-                           metrics: .chip,
+                           metrics: .labelledTile,
                            controller: controller) { index in
             let file = files[index]
             return TileChip(symbolName: file.symbol,
                             hue: self.hue(for: file.kind),
                             caption: file.name,
+                            captionPlacement: .below,
                             identifier: "file-\(file.id)")
         }
     }
@@ -98,18 +102,27 @@ final class EmbeddedDropTargetViewController: DemoViewController {
     /// so the ordinary tiles keep their run and flow around it.
     private func installFolder(in target: UIView) {
         let size = Self.folderSize
+        let height = size + Self.folderCaptionHeight
         let tile = TileChip(symbolName: "folder.fill",
                             hue: .indigo,
                             caption: "Projects",
+                            captionPlacement: .below,
                             identifier: "folder-projects")
         tile.frame = CGRect(x: target.bounds.width - size - DemoTheme.Space.s,
-                            y: target.bounds.height - size - DemoTheme.Space.s,
+                            y: target.bounds.height - height - DemoTheme.Space.s,
                             width: size,
-                            height: size)
+                            height: height)
         target.addSubview(tile)
 
         folderController?.dropTargetView = tile
         folderTile = tile
+    }
+
+    /// Pips belong in the folder's square, not in its whole chip. The chip now
+    /// includes the name underneath, and centring the grid in that would push
+    /// the files down across their own label.
+    private func folderPipArea(of target: UIView) -> CGRect {
+        (target as? TileChip)?.tileBounds ?? target.bounds
     }
 
     private func refreshCounts() {
@@ -189,15 +202,15 @@ extension EmbeddedDropTargetViewController: DragDropControllerDataSource {
 
         if destination === folderController {
             return FolderPipLayout.frame(at: destination.draggableViews.count,
-                                         in: target.bounds) ?? .zero
+                                         in: folderPipArea(of: target)) ?? .zero
         }
 
         // Not `view.frame.size`: a file dragged out of the folder is 24pt at
-        // that moment, and would land as a 24pt tile in a 44pt slot.
+        // that moment, and would land as a 24pt tile in a full-size slot.
         return SlotLayout.frame(at: destination.draggableViews.count,
-                                size: SlotLayout.Metrics.chip.itemSize,
+                                size: SlotLayout.Metrics.labelledTile.itemSize,
                                 in: target,
-                                metrics: .chip)
+                                metrics: .labelledTile)
     }
 
     func dragDropController(_ controller: DragDropController,
@@ -206,12 +219,12 @@ extension EmbeddedDropTargetViewController: DragDropControllerDataSource {
         guard let target = controller.dropTargetView else { return nil }
 
         if controller === folderController {
-            return FolderPipLayout.frame(at: index, in: target.bounds)
+            return FolderPipLayout.frame(at: index, in: folderPipArea(of: target))
         }
 
         return SlotLayout.frame(at: index,
-                                size: SlotLayout.Metrics.chip.itemSize,
+                                size: SlotLayout.Metrics.labelledTile.itemSize,
                                 in: target,
-                                metrics: .chip)
+                                metrics: .labelledTile)
     }
 }

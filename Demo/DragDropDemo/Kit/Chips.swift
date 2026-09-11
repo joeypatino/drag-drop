@@ -77,9 +77,33 @@ final class AvatarChip: UIView, Liftable {
 /// A widget, a file, a folder. A symbol on a tinted rounded square.
 final class TileChip: UIView, Liftable {
 
+    /// Where the name goes.
+    ///
+    /// `.inside` overlays it on the bottom of the square, which only works for
+    /// a word or two on a large tile. `.below` gives it the item's full width
+    /// underneath, which is how a file manager has always labelled a document
+    /// and the only way a 44pt tile can carry a name like "Moodboard" at a
+    /// size anyone can read.
+    enum CaptionPlacement {
+        case inside
+        case below
+    }
+
+    /// The tinted square. Separate from the chip itself so `.below` can label
+    /// the item without the label sitting on the colour, and so a folder's
+    /// contents can be laid out in the square rather than in the whole item.
+    private let tileView = UIView()
     private let iconView = UIImageView()
     private let captionLabel = UILabel()
     private let badgeLabel = PaddedLabel()
+
+    private let captionPlacement: CaptionPlacement
+    private let hasCaption: Bool
+
+    /// The square's frame in this chip's coordinates. What a drop target nested
+    /// in a tile should lay its contents out in -- `bounds` would include the
+    /// caption and push the contents down over it.
+    var tileBounds: CGRect { tileView.frame }
 
     /// Shown top-trailing when non-nil. The Files folder uses it to count what
     /// it holds.
@@ -96,31 +120,48 @@ final class TileChip: UIView, Liftable {
     init(symbolName: String,
          hue: DemoTheme.Hue,
          caption: String? = nil,
+         captionPlacement: CaptionPlacement = .inside,
          identifier: String) {
 
         self.hue = hue
+        self.captionPlacement = captionPlacement
+        self.hasCaption = caption != nil
         super.init(frame: .zero)
 
-        backgroundColor = DemoTheme.tint(hue)
-        layer.cornerCurve = .continuous
-        layer.shadowColor = UIColor.black.cgColor
-        layer.shadowOpacity = 0.10
-        layer.shadowRadius = 3
-        layer.shadowOffset = CGSize(width: 0, height: 1)
+        tileView.backgroundColor = DemoTheme.tint(hue)
+        tileView.layer.cornerCurve = .continuous
+        tileView.layer.shadowColor = UIColor.black.cgColor
+        tileView.layer.shadowOpacity = 0.10
+        tileView.layer.shadowRadius = 3
+        tileView.layer.shadowOffset = CGSize(width: 0, height: 1)
+        addSubview(tileView)
 
         iconView.image = UIImage(systemName: symbolName)
         iconView.tintColor = DemoTheme.color(hue)
         iconView.contentMode = .scaleAspectFit
-        addSubview(iconView)
+        tileView.addSubview(iconView)
 
         captionLabel.text = caption
-        captionLabel.font = UIFont.systemFont(ofSize: 8, weight: .medium)
-        captionLabel.numberOfLines = 1
-        captionLabel.textColor = DemoTheme.Text.secondary
         captionLabel.textAlignment = .center
-        captionLabel.adjustsFontSizeToFitWidth = true
-        captionLabel.minimumScaleFactor = 0.7
         captionLabel.isHidden = caption == nil
+        captionLabel.adjustsFontSizeToFitWidth = true
+
+        switch captionPlacement {
+        case .inside:
+            captionLabel.font = UIFont.systemFont(ofSize: 8, weight: .medium)
+            captionLabel.numberOfLines = 1
+            captionLabel.textColor = DemoTheme.Text.secondary
+            captionLabel.minimumScaleFactor = 0.7
+        case .below:
+            // Full item width and the body text colour, so the name reads as
+            // content rather than as a watermark on the icon. Two lines for a
+            // name that wraps, and a floor of 0.85 rather than 0.7 -- a long
+            // single word should end up a little smaller, never unreadable.
+            captionLabel.font = UIFont.systemFont(ofSize: 11, weight: .medium)
+            captionLabel.numberOfLines = 2
+            captionLabel.textColor = DemoTheme.Text.primary
+            captionLabel.minimumScaleFactor = 0.85
+        }
         addSubview(captionLabel)
 
         badgeLabel.font = DemoTheme.Font.number(11, weight: .bold)
@@ -143,40 +184,86 @@ final class TileChip: UIView, Liftable {
     /// dragged tile sits on top of it, so the feedback has to live at the
     /// edges: a ring and a size change, not a fill the finger covers.
     func setDropState(_ accepting: Bool) {
-        layer.borderWidth = accepting ? DemoTheme.highlightWidth : 0
-        layer.borderColor = accepting ? DemoTheme.color(hue).cgColor : nil
+        // On the square, not the chip: with the caption below, a ring around
+        // the whole item would enclose the name as well and read as a text
+        // field rather than as a folder about to take a drop.
+        tileView.layer.borderWidth = accepting ? DemoTheme.highlightWidth : 0
+        tileView.layer.borderColor = accepting ? DemoTheme.color(hue).cgColor : nil
         transform = accepting ? CGAffineTransform(scaleX: 1.14, y: 1.14) : .identity
-        layer.shadowOpacity = accepting ? 0.3 : 0.10
-        layer.shadowRadius = accepting ? 10 : 3
+        tileView.layer.shadowOpacity = accepting ? 0.3 : 0.10
+        tileView.layer.shadowRadius = accepting ? 10 : 3
     }
 
     override func layoutSubviews() {
         super.layoutSubviews()
 
-        layer.cornerRadius = min(DemoTheme.Radius.medium, bounds.height / 4)
+        switch captionPlacement {
+        case .inside:
+            tileView.frame = bounds
 
-        // Proportional, so a 44pt file tile and a 72pt folder are both labelled
-        // at a size that suits them.
-        let captionSize = min(11, max(8, bounds.height * 0.135))
-        captionLabel.font = UIFont.systemFont(ofSize: captionSize, weight: .medium)
-        let captionHeight: CGFloat = captionLabel.isHidden ? 0 : captionSize + 2
-        let iconInset = bounds.height * 0.20
-        iconView.frame = CGRect(x: iconInset,
-                                y: iconInset,
-                                width: max(0, bounds.width - iconInset * 2),
-                                height: max(0, bounds.height - captionHeight - iconInset * 2))
-        captionLabel.frame = CGRect(x: 2,
-                                    y: bounds.height - captionHeight - 2,
-                                    width: max(0, bounds.width - 4),
-                                    height: captionHeight)
+            // Proportional, so a 44pt tile and a 72pt one are both labelled at
+            // a size that suits them.
+            let captionSize = min(11, max(8, bounds.height * 0.135))
+            captionLabel.font = UIFont.systemFont(ofSize: captionSize, weight: .medium)
+            let captionHeight: CGFloat = captionLabel.isHidden ? 0 : captionSize + 2
+            let iconInset = bounds.height * 0.20
+            iconView.frame = CGRect(x: iconInset,
+                                    y: iconInset,
+                                    width: max(0, tileView.bounds.width - iconInset * 2),
+                                    height: max(0, tileView.bounds.height - captionHeight - iconInset * 2))
+            captionLabel.frame = CGRect(x: 2,
+                                        y: bounds.height - captionHeight - 2,
+                                        width: max(0, bounds.width - 4),
+                                        height: captionHeight)
+
+        case .below:
+            // The name is measured first and the square takes what is left,
+            // rather than the other way round. Sizing the square first leaves
+            // the caption whatever remains, which is how you end up with an
+            // 11pt font in an 11pt box and the descenders shaved off.
+            var captionHeight: CGFloat = 0
+            if hasCaption {
+                let fits = captionLabel.sizeThatFits(CGSize(width: bounds.width,
+                                                            height: .greatestFiniteMagnitude))
+                captionHeight = min(ceil(captionLabel.font.lineHeight * 2), ceil(fits.height))
+            }
+
+            // Below a certain size there is no room for both, and a name
+            // crushed onto a pip is worse than no name: the item shrinks to a
+            // pip precisely when it has been filed somewhere that identifies
+            // it. Drop the caption and let the mark have the whole item.
+            if bounds.height - captionHeight - Self.captionGap < Self.minimumSquare {
+                captionHeight = 0
+            }
+            captionLabel.isHidden = !hasCaption || captionHeight == 0
+
+            let gap = captionHeight > 0 ? Self.captionGap : 0
+            let square = min(bounds.width, max(0, bounds.height - captionHeight - gap))
+            tileView.frame = CGRect(x: (bounds.width - square) / 2, y: 0,
+                                    width: square, height: square)
+
+            let iconInset = square * 0.22
+            iconView.frame = tileView.bounds.insetBy(dx: iconInset, dy: iconInset)
+
+            captionLabel.frame = CGRect(x: 0,
+                                        y: tileView.frame.maxY + gap,
+                                        width: bounds.width,
+                                        height: captionHeight)
+        }
+
+        tileView.layer.cornerRadius = min(DemoTheme.Radius.medium, tileView.bounds.height / 4)
 
         let size = badgeLabel.intrinsicContentSize
-        badgeLabel.frame = CGRect(x: bounds.width - size.width + 4,
-                                  y: -4,
+        badgeLabel.frame = CGRect(x: tileView.frame.maxX - size.width + 4,
+                                  y: tileView.frame.minY - 4,
                                   width: size.width,
                                   height: size.height)
         badgeLabel.layer.cornerRadius = size.height / 2
     }
+
+    private static let captionGap: CGFloat = 5
+    /// Under this, an item shows its mark and nothing else.
+    private static let minimumSquare: CGFloat = 34
 }
 
 // MARK: - Swatch

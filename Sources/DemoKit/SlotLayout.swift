@@ -33,6 +33,12 @@ public enum SlotLayout {
         /// Photo thumbnails.
         public static let thumbnail = Metrics(itemSize: CGSize(width: 56, height: 56),
                                               margin: 8, spacing: 8)
+
+        /// A tile that carries its name underneath: a 44pt square plus room for
+        /// two lines of caption. Wider than the square so a file name has
+        /// somewhere to go -- 60pt still fits five across a full-width panel.
+        public static let labelledTile = Metrics(itemSize: CGSize(width: 60, height: 76),
+                                                 margin: 8, spacing: 8)
     }
 
     /// The frame of the `index`-th slot for a view of `size` in `container`.
