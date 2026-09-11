@@ -75,6 +75,34 @@ extension MyViewController: DragDropControllerDataSource {
 `didEndDrag` and `didMove(_:to:)`. Every one has a default no-op, so implement
 only the ones you need.
 
+### Dragging from inside a scroll view
+
+When a draggable view sits inside a `UIScrollView`, `UITableView` or
+`UICollectionView`, the gesture waits `kDragPickupBeginDelay` (0.12s) before it
+will begin, and fails if the touch moves first. This is deliberate: it lets the
+scroll view win when the user actually means to scroll. In practice it means a
+cell must be **pressed and held briefly** before it can be dragged — a quick
+flick scrolls instead. Views outside a scroll view have no such delay and drag
+immediately.
+
+A consequence worth knowing when driving the library from a UI test: use
+`press(forDuration:thenDragTo:withVelocity:thenHoldForDuration:)` with a press
+longer than 0.12s. The short `press(forDuration:thenDragTo:)` form can register
+as a scroll instead of a drag.
+
+### Adding draggable views to a table view cell
+
+Add them to the cell's `contentView`, not to the cell:
+
+```swift
+cell.contentView.addSubview(dragView)
+controller.dropTargetView = cell.contentView
+```
+
+UIKit keeps `UITableViewCellContentView` above any view added directly to the
+cell. Such a view still renders (contentView is transparent) but contentView
+intercepts every touch, so the drag never starts.
+
 ## Collection views
 
 Collection views get drag and drop through an extension. Enable it per cell:
