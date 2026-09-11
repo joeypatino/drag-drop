@@ -186,13 +186,29 @@ extension NormalTableViewController: DragDropControllerDataSource {
         guard let dropTargetView = destination.dropTargetView else { return .zero }
 
         if destination === targetController {
-            let count = dropTargetView.subviews.count - 1
-            return CGRect(x: 5,
-                          y: CGFloat(count) * view.frame.height + (CGFloat(count + 1) * 5),
-                          width: dropTargetView.frame.width - 10,
-                          height: view.frame.height)
+            return panelSlot(at: destination.draggableViews.count,
+                             height: view.frame.height,
+                             in: dropTargetView)
         }
 
         return dropTargetView.bounds.insetBy(dx: 10, dy: 10)
+    }
+
+    func dragDropController(_ controller: DragDropController,
+                            frameFor view: UIView,
+                            at index: Int) -> CGRect? {
+        guard controller === targetController,
+              let dropTargetView = controller.dropTargetView else { return nil }
+
+        // Only the panel stacks views. A table cell holds one, so a view
+        // leaving it never leaves a gap behind.
+        return panelSlot(at: index, height: view.frame.height, in: dropTargetView)
+    }
+
+    /// The panel is one slot wide, so each view gets its own row.
+    private func panelSlot(at index: Int, height: CGFloat, in panel: UIView) -> CGRect {
+        SlotLayout.frame(at: index,
+                         size: CGSize(width: panel.frame.width - 10, height: height),
+                         in: panel)
     }
 }

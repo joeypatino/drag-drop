@@ -73,8 +73,43 @@ extension MyViewController: DragDropControllerDataSource {
     func dragDropController(_ controller: DragDropController,
                             canDrop view: UIView,
                             to destination: DragDropController?) -> Bool { true }
+
+    // Optional. Defaults to nil. See "Closing the gap" below.
+    func dragDropController(_ controller: DragDropController,
+                            frameFor view: UIView,
+                            at index: Int) -> CGRect? { nil }
 }
 ```
+
+### Closing the gap
+
+Drag a view out of a container and it leaves a hole where it used to be. To have
+the views left behind shuffle up and fill it, implement `frameFor:at:` — the
+frame a view should occupy as the `index`-th view in the controller's own drop
+target:
+
+```swift
+func dragDropController(_ controller: DragDropController,
+                        frameFor view: UIView,
+                        at index: Int) -> CGRect? {
+    guard let dropTargetView = controller.dropTargetView else { return nil }
+    return myLayout.frame(at: index, in: dropTargetView)
+}
+```
+
+Once a view has been handed to another controller, the one it left walks the
+views still in its drop target and moves each to the frame you return for its
+new index, animated over `dropAnimationDuration`. The views it walks are
+`controller.draggableViews` — the drop target's subviews that the controller
+enabled dragging for, in subview order — so furniture like a title label is left
+where it is.
+
+The default returns nil, which leaves the remaining views alone. A nil for any
+one view abandons the whole pass, so a partial answer cannot pile views on top
+of each other.
+
+Collection views need none of this: their cells belong to UIKit, and the
+`UICollectionView` extension already closes the gap through the layout.
 
 `DragDropControllerDelegate` reports the drag lifecycle — `willStartDrag`,
 `didStartDrag`, `dragDidEnter`, `dragDidMove`, `dragDidExit`, `willEndDrag`,

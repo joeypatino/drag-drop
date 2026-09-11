@@ -79,9 +79,24 @@ public protocol DragDropControllerDataSource: AnyObject {
     func dragDropController(_ controller: DragDropController,
                             frameFor view: UIView,
                             in destination: DragDropController) -> CGRect
+
+    /// Optional. Defaults to nil.
+    ///
+    /// The frame `view` should occupy as the `index`-th of the controller's
+    /// `draggableViews`. Implement it and a drop target closes the gap when one
+    /// of its views is dragged away: the controller walks the views that are
+    /// left and moves each one to the frame you return for its new index.
+    ///
+    /// Return nil -- as the default does -- to leave the remaining views where
+    /// they are. A nil for any one view abandons the whole re-flow, so a
+    /// partial answer cannot pile views on top of each other.
+    func dragDropController(_ controller: DragDropController,
+                            frameFor view: UIView,
+                            at index: Int) -> CGRect?
 }
 
 public extension DragDropControllerDataSource {
     func dragDropController(_ controller: DragDropController, shouldDrag view: UIView) -> Bool { true }
     func dragDropController(_ controller: DragDropController, canDrop view: UIView, to destination: DragDropController?) -> Bool { true }
+    func dragDropController(_ controller: DragDropController, frameFor view: UIView, at index: Int) -> CGRect? { nil }
 }

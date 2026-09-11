@@ -70,6 +70,21 @@ public final class DragDropController {
         }
     }
 
+    /// The drop target's subviews that this controller has enabled dragging
+    /// for, in subview order.
+    ///
+    /// A drop target usually holds furniture the controller does not manage --
+    /// the demos each put a title label in theirs. Carrying a DragDropGesture
+    /// is what separates the two, and it is the same test `disableDragAction`
+    /// already uses, so the answer stays correct as views come and go.
+    public var draggableViews: [UIView] {
+        (dropTargetView?.subviews ?? []).filter(isDraggable)
+    }
+
+    private func isDraggable(_ view: UIView) -> Bool {
+        (view.gestureRecognizers ?? []).contains { $0 is DragDropGesture }
+    }
+
     /// Call this to disable drag actions for the view.
     public func disableDragAction(for view: UIView) {
 
@@ -82,6 +97,32 @@ public final class DragDropController {
     }
 
     // MARK: -
+
+    /// Moves the views still in the drop target into the frames the datasource
+    /// gives for their new positions, closing the gap left by a view that was
+    /// dragged away.
+    ///
+    /// The datasource decides whether anything happens at all: the default
+    /// `frameFor:at:` returns nil, and one nil abandons the whole pass rather
+    /// than moving some views and stranding others.
+    internal func closeGapInDropTarget(animated: Bool) {
+        guard let dataSource = dragDropDataSource else { return }
+
+        let views = draggableViews
+        guard !views.isEmpty else { return }
+
+        var frames: [CGRect] = []
+        for (index, view) in views.enumerated() {
+            guard let frame = dataSource.dragDropController(self, frameFor: view, at: index) else { return }
+            frames.append(frame)
+        }
+
+        UIView.animate(withDuration: animated ? Self.dropAnimationDuration : 0.0) {
+            for (view, frame) in zip(views, frames) {
+                view.frame = frame
+            }
+        }
+    }
 
     @objc private func handleDragDropGesture(_ gesture: DragDropGesture) {
 
@@ -251,21 +292,7 @@ public final class DragDropController {
             animationCompletionBlock = { [weak self] _ in
                 guard let self else { return }
 
-                // when the animation of the drag representation view is complete,
-                // set the real view's frame to that specified by our datasource,
-                // andn then add the view as a subview.
-                if let dropTargetView = dropDestination.dropTargetView {
-                    view.frame = dropTargetView.convert(secondStepFrame, to: dropTargetView)
-                    dropTargetView.addSubview(view)
-                }
-
-                // now that the view belongs to another DragDropController,
-                // we also should hand over responsiblity of drag/drop operations
-                self.disableDragAction(for: view)
-                dropDestination.enableDragAction(for: view)
-
-                // and notify the delegate if they are listening..
-                self.dragDropDelegate?.dragDropController(self, didMove: view, to: dropDestination)
+                self.completeDrop(of: view, into: dropDestination, frame: secondStepFrame)
 
                 self.isDragging = false
                 self.isDropping = false
@@ -321,6 +348,36 @@ public final class DragDropController {
             self._dragInteractionView?.removeFromSuperview()
             self._dragInteractionView = nil
         }
+    }
+
+    /// Hands a dragged view over to the controller it was dropped on: the view
+    /// takes the frame the datasource asked for, the drag gesture follows it,
+    /// the delegate hears about the move, and the drop target it left closes
+    /// the gap.
+    ///
+    /// The delegate runs before the gap closes, so a delegate that rearranges
+    /// the container itself is not fighting the re-flow for the last word.
+    internal func completeDrop(of view: UIView,
+                               into destination: DragDropController,
+                               frame: CGRect) {
+
+        // when the animation of the drag representation view is complete,
+        // set the real view's frame to that specified by our datasource,
+        // andn then add the view as a subview.
+        if let dropTargetView = destination.dropTargetView {
+            view.frame = frame
+            dropTargetView.addSubview(view)
+        }
+
+        // now that the view belongs to another DragDropController,
+        // we also should hand over responsiblity of drag/drop operations
+        disableDragAction(for: view)
+        destination.enableDragAction(for: view)
+
+        // and notify the delegate if they are listening..
+        dragDropDelegate?.dragDropController(self, didMove: view, to: destination)
+
+        closeGapInDropTarget(animated: true)
     }
 
     // MARK: - Helpers
