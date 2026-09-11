@@ -274,8 +274,20 @@ final class SwatchChip: UIView, Liftable {
 
         // The gradient is clipped by its own corner radius rather than the
         // view's, so the view can keep a shadow outside its bounds.
+        //
+        // These are sublayers rather than views, so they do not inherit a
+        // UIView animation -- they take CALayer's own implicit one, which is
+        // wrong during a cell reuse and has to be suppressed. Suppressing it
+        // unconditionally was worse: the gradient and the scrim *are* the
+        // visible card, so a resize animated the bounds while the thing anyone
+        // can see jumped straight to its final size. Inherit the ambient
+        // duration when there is one, and suppress only when there is not.
+        let inherited = UIView.inheritedAnimationDuration
         CATransaction.begin()
-        CATransaction.setDisableActions(true)
+        CATransaction.setDisableActions(inherited == 0)
+        if inherited > 0 {
+            CATransaction.setAnimationDuration(inherited)
+        }
         gradient.frame = bounds
         gradient.cornerRadius = radius
         gradient.masksToBounds = true

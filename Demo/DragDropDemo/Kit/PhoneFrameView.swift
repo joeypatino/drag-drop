@@ -47,8 +47,18 @@ final class PhoneFrameView: UIView {
     override func layoutSubviews() {
         super.layoutSubviews()
 
+        // Latent rather than observed: this frame is built once and never
+        // resized, so the sublayer can never be caught mid-animation. Kept in
+        // step with `SwatchChip` all the same, because the pattern is the trap
+        // -- a sublayer does not inherit a UIView animation, and suppressing
+        // its implicit one unconditionally means the visible content snaps
+        // while the bounds animate.
+        let inherited = UIView.inheritedAnimationDuration
         CATransaction.begin()
-        CATransaction.setDisableActions(true)
+        CATransaction.setDisableActions(inherited == 0)
+        if inherited > 0 {
+            CATransaction.setAnimationDuration(inherited)
+        }
         wallpaper.frame = bounds
         CATransaction.commit()
 
