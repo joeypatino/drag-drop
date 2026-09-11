@@ -32,14 +32,23 @@ extension XCTestCase {
     ///
     /// Frame containment rather than the accessibility tree, because the
     /// question a gap-closing test asks is "what is on screen, and where".
+    ///
+    /// The query is narrowed twice over, because this is the most expensive
+    /// thing the suite does and `waitFor` runs it in a loop. Every property
+    /// read on an element makes the runner wait for the app to be idle and
+    /// then snapshot it, so the cost is per element examined -- and matching
+    /// `.any` examined every element in the app to keep a handful. Asking the
+    /// `other` elements for an identifier prefix pushes both filters into the
+    /// one query the runner already has to run.
     @MainActor
     func identifiers(withPrefix prefix: String,
                      inside container: XCUIElement,
                      of app: XCUIApplication) -> [String] {
         let bounds = container.frame
-        return app.descendants(matching: .any)
-            .allElementsBoundByAccessibilityElement
-            .filter { $0.exists && $0.identifier.hasPrefix(prefix) }
+        let matching = app.otherElements
+            .matching(NSPredicate(format: "identifier BEGINSWITH %@", prefix))
+
+        return matching.allElementsBoundByAccessibilityElement
             // On screen, and hittable. A row scrolled out of a table still
             // exists and still reports a frame, but that frame cannot be
             // pressed -- treating it as "present" makes a drag land on
@@ -54,17 +63,25 @@ extension XCTestCase {
             .map(\.identifier)
     }
 
-    /// The long form of the drag. The press must exceed the library's 0.12s
-    /// pickup delay or `DragDropGesture` goes straight to `.failed`; the short
-    /// `press(forDuration:thenDragTo:)` can register as a scroll inside a
-    /// scroll view, which makes assertions pass for the wrong reason.
+    /// The long form of the drag. The short `press(forDuration:thenDragTo:)`
+    /// can register as a scroll inside a scroll view, which makes assertions
+    /// pass for the wrong reason.
+    ///
+    /// Both durations are the smallest that clear what they are waiting for,
+    /// with room to spare -- a drag happens dozens of times in a suite run, so
+    /// a second of slack here is a minute across the whole thing:
+    ///
+    /// * the press must exceed the library's 0.12s pickup delay, or
+    ///   `DragDropGesture` goes straight to `.failed`;
+    /// * the hold must outlast the destination's 0.3s hover animation, so the
+    ///   release lands on a settled layout rather than a moving one.
     @MainActor
     func drag(_ source: XCUIElement, onto destination: XCUIElement) {
         source.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-            .press(forDuration: 0.5,
+            .press(forDuration: 0.25,
                    thenDragTo: destination.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)),
                    withVelocity: .slow,
-                   thenHoldForDuration: 0.8)
+                   thenHoldForDuration: 0.4)
     }
 
     /// Waits until `container` holds exactly `expected` matching views.

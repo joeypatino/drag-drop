@@ -41,7 +41,12 @@ final class CollectionCellVisibilityTests: XCTestCase {
         let app = XCUIApplication()
         app.launch()
         app.tables.staticTexts[title].tap()
-        sleep(2)
+
+        // The grid existing is the signal the screen arrived; the beat after it
+        // is for the push animation, which is still running at that point.
+        XCTAssertTrue(app.collectionViews.firstMatch.waitForExistence(timeout: 5),
+                      "\(title) never showed a grid")
+        Thread.sleep(forTimeInterval: 0.5)
 
         let shot = app.screenshot()
         let a = XCTAttachment(screenshot: shot); a.name = title; a.lifetime = .keepAlways; add(a)

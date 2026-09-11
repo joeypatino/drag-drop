@@ -48,14 +48,22 @@ final class NavBarAppearanceTests: XCTestCase {
             let row = app.tables.staticTexts[title]
             XCTAssertTrue(row.waitForExistence(timeout: 5), "Missing row: \(title)")
             row.tap()
-            sleep(1)
+
+            // Wait on the bar this screen brings with it, then give the push a
+            // beat: the bar exists from the moment the push starts and is
+            // still sliding, and the assertion is about its rendered pixels.
+            XCTAssertTrue(app.navigationBars[title].waitForExistence(timeout: 5),
+                          "\(title) never pushed")
+            Thread.sleep(forTimeInterval: 0.4)
 
             let c = meanColor(app.screenshot(), barRegion)
             XCTAssertGreaterThan(min(c.r, c.g, c.b), 100,
                                  "Navigation bar renders dark on \(title): \(c)")
 
-            app.navigationBars.buttons.element(boundBy: 0).tap()
-            sleep(1)
+            app.navigationBars[title].buttons.firstMatch.tap()
+            XCTAssertTrue(app.navigationBars["Drag & Drop"].waitForExistence(timeout: 5),
+                          "never popped back from \(title)")
+            Thread.sleep(forTimeInterval: 0.3)
         }
     }
 }
