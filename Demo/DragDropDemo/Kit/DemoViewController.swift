@@ -24,6 +24,12 @@ class DemoViewController: UIViewController, DragDropControllerDelegate {
 
     private var hasLoadedContent = false
 
+    /// Every panel this screen installed. Held so a drag that ends anywhere --
+    /// including a refused drop, which never reports a move -- can put all of
+    /// them back to rest. Without this a refused drop leaves the panel it was
+    /// over stuck in its hover state.
+    private(set) var panels: [PanelView] = []
+
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = DemoTheme.Surface.background
@@ -46,15 +52,16 @@ class DemoViewController: UIViewController, DragDropControllerDelegate {
         return controller
     }
 
-    /// The panel a controller drops into, if its target is a panel's
-    /// `contentView` -- or is nested somewhere inside one.
+    /// The panel a controller drops into -- and only when the panel itself is
+    /// the destination.
+    ///
+    /// Deliberately not a walk up the superview chain. The Files folder is a
+    /// drop target nested inside the Documents panel, and walking up would
+    /// light Documents when the drop is actually going into the folder,
+    /// promising the wrong destination.
     func panel(for controller: DragDropController) -> PanelView? {
-        var candidate: UIView? = controller.dropTargetView
-        while let view = candidate {
-            if let panel = view as? PanelView { return panel }
-            candidate = view.superview
-        }
-        return nil
+        guard let target = controller.dropTargetView else { return nil }
+        return panels.first { $0.contentView === target }
     }
 
     /// Adds a panel to `parent` at `frame` and returns the drop target inside
@@ -65,6 +72,7 @@ class DemoViewController: UIViewController, DragDropControllerDelegate {
         panel.frame = frame
         parent.addSubview(panel)
         panel.layoutIfNeeded()
+        panels.append(panel)
         return panel.contentView
     }
 
@@ -89,12 +97,33 @@ class DemoViewController: UIViewController, DragDropControllerDelegate {
         (drag.view as? any Liftable)?.setLifted(false)
     }
 
-    func dragDropController(_ controller: DragDropController, didEndDrag drag: DragAction) {}
+    func dragDropController(_ controller: DragDropController, didEndDrag drag: DragAction) {
+        clearDropStates()
+    }
+
+    /// Returns every panel to rest. Safe to call more than once.
+    func clearDropStates() {
+        for panel in panels {
+            panel.setDropState(.idle)
+        }
+    }
+
+    /// Whether this screen's datasource would accept `view` into `destination`.
+    /// The panel shows what will actually happen rather than assuming a drop
+    /// under the finger is a drop that lands.
+    private func wouldAccept(_ view: UIView?,
+                             from controller: DragDropController,
+                             into destination: DragDropController) -> Bool {
+        guard let view,
+              let dataSource = self as? any DragDropControllerDataSource else { return true }
+        return dataSource.dragDropController(controller, canDrop: view, to: destination)
+    }
 
     func dragDropController(_ controller: DragDropController,
                             dragDidEnter drag: DragAction,
                             destinationController destination: DragDropController) {
-        panel(for: destination)?.setHighlighted(true)
+        panel(for: destination)?.setDropState(
+            wouldAccept(drag.view, from: controller, into: destination) ? .accepting : .refusing)
     }
 
     func dragDropController(_ controller: DragDropController,
@@ -104,12 +133,45 @@ class DemoViewController: UIViewController, DragDropControllerDelegate {
     func dragDropController(_ controller: DragDropController,
                             dragDidExit drag: DragAction,
                             destinationController destination: DragDropController) {
-        panel(for: destination)?.setHighlighted(false)
+        panel(for: destination)?.setDropState(.idle)
     }
 
     func dragDropController(_ controller: DragDropController,
                             didMove view: UIView,
                             to destination: DragDropController) {
-        panel(for: destination)?.setHighlighted(false)
+        clearDropStates()
+    }
+
+    // MARK: - Feedback for drags that started somewhere else
+    //
+    // `dragDidEnter` and `dragDidExit` go to the *source* controller's
+    // delegate. When a drag starts inside a table or collection view, that
+    // source is the controller the library built for the scroll view, whose
+    // delegate is its own state object -- so a plain panel would get no hover
+    // feedback at all for a row dragged out of the queue.
+    //
+    // These two are the destination's own side of the same events, and they
+    // arrive whatever the drag came out of.
+
+    func dragDropController(_ controller: DragDropController,
+                            dragDidHover drag: DragAction,
+                            from source: DragDropController) {
+        panel(for: controller)?.setDropState(
+            wouldAccept(drag.view, from: source, into: controller) ? .accepting : .refusing)
+    }
+
+    func dragDropController(_ controller: DragDropController,
+                            dragDidLeave drag: DragAction,
+                            from source: DragDropController) {
+        panel(for: controller)?.setDropState(.idle)
+    }
+
+    /// The destination's notice that a drop landed. Also the only end-of-drag
+    /// signal a destination gets when the drag began in a scroll view, since
+    /// `didEndDrag` goes to the source.
+    func dragDropController(_ controller: DragDropController,
+                            didReceive view: UIView,
+                            from source: DragDropController) {
+        clearDropStates()
     }
 }

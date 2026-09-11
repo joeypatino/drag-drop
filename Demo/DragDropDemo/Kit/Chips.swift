@@ -91,11 +91,14 @@ final class TileChip: UIView, Liftable {
         }
     }
 
+    private let hue: DemoTheme.Hue
+
     init(symbolName: String,
          hue: DemoTheme.Hue,
          caption: String? = nil,
          identifier: String) {
 
+        self.hue = hue
         super.init(frame: .zero)
 
         backgroundColor = DemoTheme.tint(hue)
@@ -135,6 +138,17 @@ final class TileChip: UIView, Liftable {
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    /// For a tile that is itself a drop target -- the Files folder. The
+    /// dragged tile sits on top of it, so the feedback has to live at the
+    /// edges: a ring and a size change, not a fill the finger covers.
+    func setDropState(_ accepting: Bool) {
+        layer.borderWidth = accepting ? DemoTheme.highlightWidth : 0
+        layer.borderColor = accepting ? DemoTheme.color(hue).cgColor : nil
+        transform = accepting ? CGAffineTransform(scaleX: 1.14, y: 1.14) : .identity
+        layer.shadowOpacity = accepting ? 0.3 : 0.10
+        layer.shadowRadius = accepting ? 10 : 3
+    }
 
     override func layoutSubviews() {
         super.layoutSubviews()

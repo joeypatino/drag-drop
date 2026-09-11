@@ -129,15 +129,19 @@ final class EmbeddedDropTargetViewController: DemoViewController {
         refreshCounts()
     }
 
-    /// The folder is a tile, not a panel, so the base class's panel highlight
-    /// does not reach it. It lifts and tints itself instead.
+    /// The folder is a tile, not a panel, so the base class's panel feedback
+    /// does not reach it -- and must not: lighting the whole Documents panel
+    /// when the drop is going into the folder would promise the wrong
+    /// destination.
     override func dragDropController(_ controller: DragDropController,
                                      dragDidEnter drag: DragAction,
                                      destinationController destination: DragDropController) {
         super.dragDropController(controller, dragDidEnter: drag, destinationController: destination)
         guard destination === folderController else { return }
+
+        let accepted = dragDropController(controller, canDrop: drag.view ?? UIView(), to: destination)
         UIView.animate(withDuration: 0.15) {
-            self.folderTile?.transform = CGAffineTransform(scaleX: 1.12, y: 1.12)
+            self.folderTile?.setDropState(accepted)
         }
     }
 
@@ -147,8 +151,14 @@ final class EmbeddedDropTargetViewController: DemoViewController {
         super.dragDropController(controller, dragDidExit: drag, destinationController: destination)
         guard destination === folderController else { return }
         UIView.animate(withDuration: 0.15) {
-            self.folderTile?.transform = .identity
+            self.folderTile?.setDropState(false)
         }
+    }
+
+    override func dragDropController(_ controller: DragDropController, didEndDrag drag: DragAction) {
+        super.dragDropController(controller, didEndDrag: drag)
+        // The folder is not in `panels`, so clearing those does not reach it.
+        folderTile?.setDropState(false)
     }
 }
 

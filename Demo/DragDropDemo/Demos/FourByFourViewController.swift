@@ -37,7 +37,6 @@ final class FourByFourViewController: DemoViewController {
     ]
 
     private var controllers: [DragDropController] = []
-    private var panels: [PanelView] = []
 
     override func loadContent() {
         title = "Shift Rota"
@@ -63,7 +62,6 @@ final class FourByFourViewController: DemoViewController {
             let target = install(panel, in: view, frame: cell.insetBy(dx: 8, dy: 8))
             target.accessibilityIdentifier = "panel-\(shift.slug)"
             controller.dropTargetView = target
-            panels.append(panel)
 
             // Read out of the mutating cursor before the closure captures it.
             let first = nextStaffIndex
@@ -82,6 +80,8 @@ final class FourByFourViewController: DemoViewController {
     }
 
     /// Badges and the "No cover" placeholder track the panels after every move.
+    /// `panels` comes from the base class and is in install order, which is the
+    /// order the controllers were made in.
     private func refreshCounts() {
         for (panel, controller) in zip(panels, controllers) {
             panel.count = controller.draggableViews.count

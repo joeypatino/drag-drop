@@ -16,90 +16,78 @@ final class DoubleCollectionViewController: DemoViewController {
 
     private var leftCollectionView: UICollectionView?
     private var leftDataSource: [Player] = []
-    private let leftHeader = UILabel()
-    private let leftCount = UILabel()
+    private var leftPanel: PanelView?
 
     private var rightCollectionView: UICollectionView?
     private var rightDataSource: [Player] = []
-    private let rightHeader = UILabel()
-    private let rightCount = UILabel()
-
-    private let divider = UIView()
+    private var rightPanel: PanelView?
 
     override func loadContent() {
         title = "Lineup"
 
-        loadLeftContent()
-        loadRightContent()
+        leftDataSource = Array(SampleData.players.prefix(8))
+        rightDataSource = Array(SampleData.players.suffix(8))
+
+        // Each side is its own titled card. Two bare collection views side by
+        // side read as one grid with a line down it; a card with its own
+        // header, hue and count reads as two lists, which is what they are.
+        let (leftPanel, leftGrid) = installSide(title: "Starters",
+                                                subtitle: "On the pitch",
+                                                symbol: "figure.soccer",
+                                                hue: .mint,
+                                                identifier: "starters",
+                                                x: 0)
+        self.leftPanel = leftPanel
+        self.leftCollectionView = leftGrid
+
+        let (rightPanel, rightGrid) = installSide(title: "Bench",
+                                                 subtitle: "Available",
+                                                 symbol: "chair.lounge.fill",
+                                                 hue: .slate,
+                                                 identifier: "bench",
+                                                 x: view.bounds.width / 2)
+        self.rightPanel = rightPanel
+        self.rightCollectionView = rightGrid
+
+        leftGrid.reloadData()
+        rightGrid.reloadData()
         refreshCounts()
     }
 
-    private func columnFrame(x: CGFloat) -> CGRect {
-        let top = view.safeAreaInsets.top + 36
-        return CGRect(x: x, y: top,
-                      width: view.bounds.width / 2,
-                      height: view.bounds.height - top)
-    }
+    private func installSide(title: String,
+                             subtitle: String,
+                             symbol: String,
+                             hue: DemoTheme.Hue,
+                             identifier: String,
+                             x: CGFloat) -> (PanelView, UICollectionView) {
 
-    private func header(_ label: UILabel, _ count: UILabel, title: String, x: CGFloat) {
-        label.text = title
-        label.font = DemoTheme.Font.title
-        label.textColor = DemoTheme.Text.primary
-        label.frame = CGRect(x: x + 14, y: view.safeAreaInsets.top + 8,
-                             width: view.bounds.width / 2 - 52, height: 22)
-        view.addSubview(label)
+        let top = view.safeAreaInsets.top + 8
+        let panel = PanelView(title: title, subtitle: subtitle, symbolName: symbol, hue: hue)
+        let frame = CGRect(x: x + 8, y: top,
+                           width: view.bounds.width / 2 - 16,
+                           height: view.bounds.height - top - view.safeAreaInsets.bottom - 8)
+        let content = install(panel, in: view, frame: frame)
 
-        count.font = DemoTheme.Font.number(13)
-        count.textColor = DemoTheme.Text.secondary
-        count.textAlignment = .right
-        count.frame = CGRect(x: x + view.bounds.width / 2 - 42,
-                             y: view.safeAreaInsets.top + 8,
-                             width: 28, height: 22)
-        view.addSubview(count)
-    }
-
-    private func makeCollectionView(frame: CGRect, identifier: String) -> UICollectionView {
         let layout = UICollectionViewFlowLayout()
-        layout.minimumInteritemSpacing = 8
-        layout.minimumLineSpacing = 8
-        layout.sectionInset = UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
+        layout.minimumInteritemSpacing = 6
+        layout.minimumLineSpacing = 6
+        layout.sectionInset = UIEdgeInsets(top: 2, left: 0, bottom: 8, right: 0)
 
-        let collectionView = UICollectionView(frame: frame, collectionViewLayout: layout)
-        collectionView.backgroundColor = DemoTheme.Surface.background
-        collectionView.delegate = self
-        collectionView.dataSource = self
-        collectionView.accessibilityIdentifier = identifier
-        collectionView.register(UICollectionViewCell.self,
-                                forCellWithReuseIdentifier: "CollectionViewCell")
-        view.addSubview(collectionView)
-        return collectionView
-    }
+        let grid = UICollectionView(frame: content.bounds, collectionViewLayout: layout)
+        grid.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        grid.backgroundColor = .clear
+        grid.delegate = self
+        grid.dataSource = self
+        grid.accessibilityIdentifier = identifier
+        grid.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
+        content.addSubview(grid)
 
-    private func loadLeftContent() {
-        leftDataSource = Array(SampleData.players.prefix(8))
-        header(leftHeader, leftCount, title: "Starters", x: 0)
-        leftCollectionView = makeCollectionView(frame: columnFrame(x: 0), identifier: "starters")
-        leftCollectionView?.reloadData()
-    }
-
-    private func loadRightContent() {
-        rightDataSource = Array(SampleData.players.suffix(8))
-        header(rightHeader, rightCount, title: "Bench", x: view.bounds.width / 2)
-        rightCollectionView = makeCollectionView(frame: columnFrame(x: view.bounds.width / 2),
-                                                 identifier: "bench")
-        rightCollectionView?.reloadData()
-
-        divider.backgroundColor = DemoTheme.Surface.hairline
-        divider.frame = CGRect(x: view.bounds.width / 2 - 0.5,
-                               y: view.safeAreaInsets.top + 36,
-                               width: 1,
-                               height: view.bounds.height - view.safeAreaInsets.top - 36)
-        view.addSubview(divider)
+        return (panel, grid)
     }
 
     private func refreshCounts() {
-        leftCount.text = "\(leftDataSource.count)"
-        rightCount.text = "\(rightDataSource.count)"
+        leftPanel?.count = leftDataSource.count
+        rightPanel?.count = rightDataSource.count
     }
 }
 

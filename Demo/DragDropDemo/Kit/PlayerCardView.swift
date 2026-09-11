@@ -32,7 +32,9 @@ final class PlayerCardView: UIView {
                                  identifier: "face-\(identifier)")
         super.init(frame: .zero)
 
-        backgroundColor = DemoTheme.Surface.card
+        // Raised, not card: these sit inside a panel that is already
+        // Surface.card, and white on white needs more than a hairline.
+        backgroundColor = DemoTheme.Surface.raised
         layer.cornerRadius = DemoTheme.Radius.medium
         layer.cornerCurve = .continuous
         layer.borderWidth = DemoTheme.hairlineWidth

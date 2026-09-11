@@ -154,16 +154,51 @@ final class PanelView: UIView {
 
     // MARK: - State
 
-    /// The drag-hover state. Replaces the red 2pt border every demo used to
-    /// set by hand in `dragDidEnter`.
-    func setHighlighted(_ on: Bool) {
-        if on {
+    /// What a panel looks like while a drag is over it.
+    enum DropState {
+        /// Nothing is hovering.
+        case idle
+        /// A drop here would land. The panel lifts and takes the accent.
+        case accepting
+        /// A drop here would be refused -- the rota's "they are already on
+        /// this shift". Saying nothing would be a lie; saying "yes" would be
+        /// worse, so the panel visibly stands down.
+        case refusing
+    }
+
+    private(set) var dropState: DropState = .idle
+
+    /// Replaces the red 2pt border every demo used to set by hand in
+    /// `dragDidEnter`, and distinguishes a target that will accept from one
+    /// that will not.
+    func setDropState(_ state: DropState) {
+        guard state != dropState else { return }
+        dropState = state
+
+        switch state {
+        case .idle:
+            applyBorder()
+            backgroundColor = DemoTheme.Surface.card
+            layer.shadowOpacity = 0.06
+            layer.shadowRadius = 8
+            contentView.alpha = 1
+
+        case .accepting:
             layer.borderColor = DemoTheme.color(hue).cgColor
             layer.borderWidth = DemoTheme.highlightWidth
             backgroundColor = DemoTheme.tint(hue)
-        } else {
+            // Lifted, so "this one will take it" reads even peripherally,
+            // with the finger and the dragged view covering the middle.
+            layer.shadowOpacity = 0.18
+            layer.shadowRadius = 14
+            contentView.alpha = 1
+
+        case .refusing:
             applyBorder()
             backgroundColor = DemoTheme.Surface.card
+            layer.shadowOpacity = 0.06
+            layer.shadowRadius = 8
+            contentView.alpha = 0.45
         }
     }
 
