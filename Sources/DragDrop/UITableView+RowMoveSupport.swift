@@ -41,6 +41,65 @@ public extension UITableViewDataSourceRowMoveSupport {
     func tableView(_ tableView: UITableView, canDragRowAt indexPath: IndexPath) -> Bool { true }
 }
 
+// MARK: - The vacancy
+
+internal extension UITableView {
+
+    /// Opens a gap `height` tall at `target`, sliding the rows at and after it
+    /// down so the drop point is visible before the finger lifts.
+    ///
+    /// The collection view opens its gap by moving each cell into the *next*
+    /// index path's frame, which a table cannot borrow: the next row's frame is
+    /// the wrong answer when heights vary. A table is a single column, though,
+    /// so one uniform offset opens a correct gap whatever the heights are.
+    ///
+    /// Every frame is recomputed from `rectForRow(at:)` rather than nudged, so
+    /// calling this again for a different row closes the old gap and opens the
+    /// new one in the same pass. That is why a drag needs no explicit close
+    /// between moves.
+    func openVacancy(at target: IndexPath, height: CGFloat, animated: Bool) {
+        UIView.animate(withDuration: animated ? 0.3 : 0.0) { [self] in
+
+            for indexPath in indexPathsForVisibleRows ?? [] {
+                var frame = rectForRow(at: indexPath)
+
+                if indexPath.isSame(as: target) || indexPath.isAfter(target) {
+                    frame.origin.y += height
+                }
+
+                cellForRow(at: indexPath)?.frame = frame
+            }
+        }
+    }
+
+    /// Puts every visible row back where the table says it belongs.
+    func closeVacancy(animated: Bool) {
+        UIView.animate(withDuration: animated ? 0.3 : 0.0) { [self] in
+
+            for indexPath in indexPathsForVisibleRows ?? [] {
+                cellForRow(at: indexPath)?.frame = rectForRow(at: indexPath)
+            }
+        }
+    }
+
+    /// How tall a gap to open for a row arriving at `target`: the height of the
+    /// row already there, so nothing jumps when the real row appears. An append
+    /// has no such row, so it falls back to the table's own row height and
+    /// finally to the dragged view.
+    func vacancyHeight(for target: IndexPath, draggedView: UIView) -> CGFloat {
+        if target.section < numberOfSections,
+           target.row < numberOfRows(inSection: target.section) {
+            let existing = rectForRow(at: target).height
+            if existing > 0 { return existing }
+        }
+
+        // automaticDimension is negative, so this rejects it too.
+        if rowHeight > 0 { return rowHeight }
+
+        return draggedView.frame.height
+    }
+}
+
 // MARK: - Row updates
 
 internal extension UITableView {
