@@ -1,9 +1,22 @@
 import XCTest
 
-/// Drives one deliberate drag for the animation-trace harness: the tallest
-/// visible card onto the shortest, so any resize is as large as the grid can
-/// make it. Paced slowly and held at the end so the recording has unambiguous
-/// before/during/after stretches.
+// WORKED EXAMPLE, not a drop-in. A driver is necessarily specific to the app
+// under test; what carries over is its shape:
+//
+//   1. Launch straight onto the screen under test, with the flag that installs
+//      the clapperboard.
+//   2. Pick the input that makes the property under test change as much as the
+//      UI allows -- and assert the change really is large. A driver that
+//      silently exercises a no-op yields a confident, meaningless verdict.
+//   3. Be still for a beat before and after, so the recording has a clean
+//      baseline on both sides.
+//   4. Drive it slowly and hold at the end. A fast interaction can complete
+//      inside one recorded frame, which is indistinguishable from a snap.
+//
+// What follows is one instance of that shape.
+
+/// Drives one deliberate drag: the tallest visible card onto the shortest, so
+/// any resize is as large as the grid can make it.
 final class AnimationTraceDrag: XCTestCase {
 
     @MainActor
