@@ -303,9 +303,16 @@ umbrella runs the tests.
 
 ```
 xcodebuild test -scheme DragDrop-Package -destination 'platform=iOS Simulator,name=iPhone 17'
+xcodebuild test -scheme DragDrop-Package -destination 'platform=iOS Simulator,name=iPhone 17' \
+  -only-testing:DemoKitTests
 xcodebuild test -project Demo/DragDropDemo.xcodeproj -scheme DragDropDemo \
   -destination 'platform=iOS Simulator,name=iPhone 17'
 ```
+
+`DemoKitTests` needs that second line: the generated `DragDrop-Package` scheme
+runs only `DragDropTests`, so the first command silently skips it — and naming
+both bundles in one invocation does not help, only naming `DemoKitTests` alone
+does.
 
 Before adding a UI test, read
 [WRITING-UI-TESTS.md](Demo/DragDropDemoUITests/WRITING-UI-TESTS.md): which delay
