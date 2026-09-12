@@ -22,7 +22,7 @@ final class AnimationTraceDrag: XCTestCase {
     @MainActor
     func testDragTallCardOntoShortSlot() {
         let app = XCUIApplication()
-        app.launchArguments += ["-demo", "NormalCollectionViewController", "-animation-trace"]
+        app.launchArguments += ["-demo", "CollectionRearrangeViewController", "-animation-trace"]
         app.launch()
 
         let grid = container("moodboard", in: app)

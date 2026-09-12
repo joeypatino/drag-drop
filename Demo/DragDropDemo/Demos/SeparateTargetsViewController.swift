@@ -1,5 +1,5 @@
 //
-//  FourByFourViewController.swift
+//  SeparateTargetsViewController.swift
 //  DragDropDemo
 //
 //  Created by Joey Patino on 11/4/15.
@@ -16,7 +16,7 @@ import DemoKit
 /// Four peer drop targets. The capability on show is that a controller can
 /// refuse a drop: a person cannot be dropped back onto the shift they are
 /// already on.
-final class FourByFourViewController: DemoViewController {
+final class SeparateTargetsViewController: DemoViewController {
 
     private struct Shift {
         let title: String
@@ -99,7 +99,7 @@ final class FourByFourViewController: DemoViewController {
 
 // MARK: - DragDropController Datasource
 
-extension FourByFourViewController: DragDropControllerDataSource {
+extension SeparateTargetsViewController: DragDropControllerDataSource {
 
     func dragDropController(_ controller: DragDropController, shouldDrag view: UIView) -> Bool {
         true

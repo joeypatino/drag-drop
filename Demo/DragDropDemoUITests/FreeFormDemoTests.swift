@@ -14,7 +14,7 @@ final class FreeFormDemoTests: XCTestCase {
 
     @MainActor
     func testMovingSomeoneBetweenShiftsUpdatesBothPanels() {
-        let app = launchDemo("FourByFourViewController")
+        let app = launchDemo("SeparateTargetsViewController")
 
         let morning = app.otherElements["panel-morning"]
         let night = app.otherElements["panel-night"]
@@ -37,7 +37,7 @@ final class FreeFormDemoTests: XCTestCase {
 
     @MainActor
     func testTheSurvivorsCloseTheGapLeftBehind() {
-        let app = launchDemo("FourByFourViewController")
+        let app = launchDemo("SeparateTargetsViewController")
 
         let morning = app.otherElements["panel-morning"]
         XCTAssertTrue(morning.waitForExistence(timeout: 5))
@@ -57,7 +57,7 @@ final class FreeFormDemoTests: XCTestCase {
 
     @MainActor
     func testSomeoneArrivingTakesTheNextSlotOnTheRow() {
-        let app = launchDemo("FourByFourViewController")
+        let app = launchDemo("SeparateTargetsViewController")
 
         let morning = app.otherElements["panel-morning"]
         let afternoon = app.otherElements["panel-afternoon"]
@@ -93,7 +93,7 @@ final class FreeFormDemoTests: XCTestCase {
 
     @MainActor
     func testAPhotoMovesIntoTheNestedAlbum() {
-        let app = launchDemo("EmbeddedViewController")
+        let app = launchDemo("TargetInsideTargetViewController")
 
         let album = app.otherElements["panel-album"]
         let roll = app.otherElements["panel-roll"]
@@ -122,7 +122,7 @@ final class FreeFormDemoTests: XCTestCase {
 
     @MainActor
     func testAWidgetDropsIntoTheStackInsideTheDecorativeFrame() {
-        let app = launchDemo("DoubleEmbeddedViewController")
+        let app = launchDemo("TargetInsideNonTargetViewController")
 
         let stack = app.otherElements["panel-stack"]
         let gallery = app.otherElements["panel-gallery"]
@@ -151,7 +151,7 @@ final class FreeFormDemoTests: XCTestCase {
 
     @MainActor
     func testDroppingAFileOnTheFolderFilesIt() {
-        let app = launchDemo("EmbeddedDropTargetViewController")
+        let app = launchDemo("TargetOnAnItemViewController")
 
         let folder = app.otherElements["folder-projects"]
         let downloads = app.otherElements["panel-downloads"]

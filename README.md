@@ -8,7 +8,7 @@ Requires iOS 26 and Swift 6.
 
 | Between two collection views | Reordering in place | Between plain views |
 | --- | --- | --- |
-| <img src="docs/media/DoubleCollectionViewController.gif" width="240"> | <img src="docs/media/NormalCollectionViewController.gif" width="240"> | <img src="docs/media/FourByFourViewController.gif" width="240"> |
+| <img src="docs/media/CollectionSwapViewController.gif" width="240"> | <img src="docs/media/CollectionRearrangeViewController.gif" width="240"> | <img src="docs/media/SeparateTargetsViewController.gif" width="240"> |
 
 ## Installation
 
@@ -68,13 +68,13 @@ build with it.
 
 | Screen | Capability | Source |
 | --- | --- | --- |
-| Shift Rota | Four peer drop targets, and a datasource that refuses a drop | `FourByFourViewController` |
-| Shared Album | A drop target nested inside another drop target | `EmbeddedViewController` |
-| Widget Composer | A drop target inset inside a container that is not one | `DoubleEmbeddedViewController` |
-| Files | An individual item that is itself a drop target | `EmbeddedDropTargetViewController` |
-| Up Next | Table rows dragging out with gap closing, and dropping in | `NormalTableViewController` |
-| Moodboard | Reordering a masonry collection view | `NormalCollectionViewController` |
-| Lineup | Moving between two collection views, with a move the datasource can veto | `DoubleCollectionViewController` |
+| Shift Rota | Four peer drop targets, and a datasource that refuses a drop | `SeparateTargetsViewController` |
+| Shared Album | A drop target nested inside another drop target | `TargetInsideTargetViewController` |
+| Widget Composer | A drop target inset inside a container that is not one | `TargetInsideNonTargetViewController` |
+| Files | An individual item that is itself a drop target | `TargetOnAnItemViewController` |
+| Up Next | Table rows dragging out with gap closing, and dropping in | `TableRowMoveViewController` |
+| Moodboard | Reordering a masonry collection view | `CollectionRearrangeViewController` |
+| Lineup | Moving between two collection views, with a move the datasource can veto | `CollectionSwapViewController` |
 
 ```
 open Demo/DragDropDemo.xcodeproj

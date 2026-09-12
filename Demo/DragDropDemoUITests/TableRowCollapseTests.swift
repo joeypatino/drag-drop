@@ -12,7 +12,7 @@ final class TableRowCollapseTests: XCTestCase {
 
     @MainActor
     private func openQueue() -> (app: XCUIApplication, table: XCUIElement, panel: XCUIElement) {
-        let app = launchDemo("NormalTableViewController")
+        let app = launchDemo("TableRowMoveViewController")
         let table = container("queue-table", in: app)
         let panel = container("panel-saved", in: app)
         XCTAssertTrue(panel.waitForExistence(timeout: 5))

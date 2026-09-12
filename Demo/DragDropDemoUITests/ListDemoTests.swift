@@ -13,7 +13,7 @@ final class ListDemoTests: XCTestCase {
 
     @MainActor
     func testDraggingATrackOutOfTheQueueMovesItToSaved() {
-        let app = launchDemo("NormalTableViewController")
+        let app = launchDemo("TableRowMoveViewController")
 
         let panel = container("panel-saved", in: app)
         let table = container("queue-table", in: app)
@@ -35,7 +35,7 @@ final class ListDemoTests: XCTestCase {
 
     @MainActor
     func testTheSavedPanelClosesTheGapWhenATrackLeaves() {
-        let app = launchDemo("NormalTableViewController")
+        let app = launchDemo("TableRowMoveViewController")
 
         let panel = container("panel-saved", in: app)
         let table = container("queue-table", in: app)
@@ -66,7 +66,7 @@ final class ListDemoTests: XCTestCase {
 
     @MainActor
     func testReorderingAMoodboardCardLeavesNoHoleAndNoOverlap() {
-        let app = launchDemo("NormalCollectionViewController")
+        let app = launchDemo("CollectionRearrangeViewController")
 
         let grid = container("moodboard", in: app)
         XCTAssertTrue(grid.waitForExistence(timeout: 5))
@@ -95,7 +95,7 @@ final class ListDemoTests: XCTestCase {
 
     @MainActor
     func testTheMoodboardCardsAreVisiblyDifferentHeights() {
-        let app = launchDemo("NormalCollectionViewController")
+        let app = launchDemo("CollectionRearrangeViewController")
 
         let grid = container("moodboard", in: app)
         XCTAssertTrue(grid.waitForExistence(timeout: 5))
@@ -117,7 +117,7 @@ final class ListDemoTests: XCTestCase {
 
     @MainActor
     func testACardTakesTheHeightOfTheSlotItIsDraggedInto() {
-        let app = launchDemo("NormalCollectionViewController")
+        let app = launchDemo("CollectionRearrangeViewController")
 
         let grid = container("moodboard", in: app)
         XCTAssertTrue(grid.waitForExistence(timeout: 5))
@@ -144,7 +144,7 @@ final class ListDemoTests: XCTestCase {
 
     @MainActor
     func testAPlayerMovesFromTheBenchToTheStarters() {
-        let app = launchDemo("DoubleCollectionViewController")
+        let app = launchDemo("CollectionSwapViewController")
 
         let starters = container("starters", in: app)
         let bench = container("bench", in: app)
@@ -172,7 +172,7 @@ final class ListDemoTests: XCTestCase {
     /// cannot start fighting UIKit for the layout.
     @MainActor
     func testDraggingACardOutOfAGridClosesTheGap() {
-        let app = launchDemo("DoubleCollectionViewController")
+        let app = launchDemo("CollectionSwapViewController")
 
         let starters = container("starters", in: app)
         let bench = container("bench", in: app)

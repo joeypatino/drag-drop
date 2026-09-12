@@ -18,7 +18,7 @@ final class DropTargetLegibilityTests: XCTestCase {
     /// the screen claimed to have one receiving zone where it has two.
     @MainActor
     func testSharedAlbumHasATargetInsideATarget() {
-        let app = launchDemo("EmbeddedViewController")
+        let app = launchDemo("TargetInsideTargetViewController")
         XCTAssertEqual(state("panel-roll", in: app), "receiving")
         XCTAssertEqual(state("panel-album", in: app), "receiving")
     }
@@ -28,7 +28,7 @@ final class DropTargetLegibilityTests: XCTestCase {
     /// state. That absence is the difference from Shared Album.
     @MainActor
     func testWidgetComposerHasATargetInsideSomethingInert() {
-        let app = launchDemo("DoubleEmbeddedViewController")
+        let app = launchDemo("TargetInsideNonTargetViewController")
         XCTAssertEqual(state("panel-stack", in: app), "receiving")
         XCTAssertEqual(state("panel-gallery", in: app), "receiving")
     }
@@ -38,7 +38,7 @@ final class DropTargetLegibilityTests: XCTestCase {
     /// outright. Looking the owner up from the target would have missed them.
     @MainActor
     func testLineupPanelsReceiveThroughTheirGrids() {
-        let app = launchDemo("DoubleCollectionViewController")
+        let app = launchDemo("CollectionSwapViewController")
         XCTAssertEqual(state("panel-starters", in: app), "receiving")
         XCTAssertEqual(state("panel-bench", in: app), "receiving")
     }
@@ -47,11 +47,11 @@ final class DropTargetLegibilityTests: XCTestCase {
     /// before you touch anything at all.
     @MainActor
     func testEachScreenNamesWhatItProves() {
-        let album = launchDemo("EmbeddedViewController")
+        let album = launchDemo("TargetInsideTargetViewController")
         XCTAssertEqual(album.staticTexts["demo-proposition"].label,
                        "A drop target inside a drop target")
 
-        let widget = launchDemo("DoubleEmbeddedViewController")
+        let widget = launchDemo("TargetInsideNonTargetViewController")
         XCTAssertEqual(widget.staticTexts["demo-proposition"].label,
                        "A target inset in a non-target container")
     }

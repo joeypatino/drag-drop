@@ -1,5 +1,5 @@
 //
-//  EmbeddedDropTargetViewController.swift
+//  TargetOnAnItemViewController.swift
 //  DragDropDemo
 //
 //  Created by Joey Patino on 11/4/15.
@@ -14,7 +14,7 @@ import DemoKit
 /// file onto a folder. The folder is a 72pt tile parked at the trailing edge
 /// of Documents; a file that lands in it shrinks to a pip on
 /// `FolderPipLayout`'s 2x2 grid and the folder's badge counts what it holds.
-final class EmbeddedDropTargetViewController: DemoViewController {
+final class TargetOnAnItemViewController: DemoViewController {
 
     private var downloadsController: DragDropController?
     private var documentsController: DragDropController?
@@ -177,7 +177,7 @@ final class EmbeddedDropTargetViewController: DemoViewController {
 
 // MARK: - DragDropController Datasource
 
-extension EmbeddedDropTargetViewController: DragDropControllerDataSource {
+extension TargetOnAnItemViewController: DragDropControllerDataSource {
 
     func dragDropController(_ controller: DragDropController, shouldDrag view: UIView) -> Bool {
         // The folder itself stays put.

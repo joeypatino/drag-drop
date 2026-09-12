@@ -13,85 +13,85 @@ xcrun simctl launch <device> com.onitaps.Drag-Drop -demo <SegueIdentifier>
 
 ## Shift Rota
 
-<img src="media/FourByFourViewController.png" width="260"> <img src="media/FourByFourViewController.gif" width="260">
+<img src="media/SeparateTargetsViewController.png" width="260"> <img src="media/SeparateTargetsViewController.gif" width="260">
 
 Four panels in a 2x2 grid, each its own drop target, holding staff chips that
 can be dragged between them. The datasource refuses a drop onto the shift a
 person is already on.
 
-`FourByFourViewController`
+`SeparateTargetsViewController`
 
 ---
 
 ## Shared Album
 
-<img src="media/EmbeddedViewController.png" width="260"> <img src="media/EmbeddedViewController.gif" width="260">
+<img src="media/TargetInsideTargetViewController.png" width="260"> <img src="media/TargetInsideTargetViewController.gif" width="260">
 
 A Camera Roll panel containing an Iceland 2024 panel, both of which receive
 photos. A point inside the album lies within two drop targets; the innermost one
 takes the drop.
 
-`EmbeddedViewController`
+`TargetInsideTargetViewController`
 
 ---
 
 ## Widget Composer
 
-<img src="media/DoubleEmbeddedViewController.png" width="260"> <img src="media/DoubleEmbeddedViewController.gif" width="260">
+<img src="media/TargetInsideNonTargetViewController.png" width="260"> <img src="media/TargetInsideNonTargetViewController.gif" width="260">
 
 A decorative phone frame holding a Widget Stack panel, with a Widget Gallery
 panel below it. The frame is not a drop target; the drag position is translated
 through it to reach the stack inside.
 
-`DoubleEmbeddedViewController`
+`TargetInsideNonTargetViewController`
 
 ---
 
 ## Files
 
-<img src="media/EmbeddedDropTargetViewController.png" width="260"> <img src="media/EmbeddedDropTargetViewController.gif" width="260">
+<img src="media/TargetOnAnItemViewController.png" width="260"> <img src="media/TargetOnAnItemViewController.gif" width="260">
 
 A Downloads panel above a Documents panel, with a Projects folder tile in the
 corner of Documents. The folder is an item and a drop target at once; files
 dropped on it shrink to pips on its face.
 
-`EmbeddedDropTargetViewController`
+`TargetOnAnItemViewController`
 
 ---
 
 ## Up Next
 
-<img src="media/NormalTableViewController.png" width="260"> <img src="media/NormalTableViewController.gif" width="260">
+<img src="media/TableRowMoveViewController.png" width="260"> <img src="media/TableRowMoveViewController.gif" width="260">
 
 A table of tracks beside a Saved panel. The table as a whole is the drop target,
 so a card released anywhere on it lands in the row under the finger. Dragging a
 row out removes it and closes the gap.
 
-`NormalTableViewController`
+`TableRowMoveViewController`
 
 ---
 
 ## Moodboard
 
-<img src="media/NormalCollectionViewController.png" width="260"> <img src="media/NormalCollectionViewController.gif" width="260">
+<img src="media/CollectionRearrangeViewController.png" width="260"> <img src="media/CollectionRearrangeViewController.gif" width="260">
 
 One collection view of 300 cards in a masonry layout. Card heights belong to
 positions rather than to cards, so a card resizes into the slot it is dragged
 over and the mosaic itself does not move.
 
-`NormalCollectionViewController`
+`CollectionRearrangeViewController`
 
 ---
 
 ## Lineup
 
-<img src="media/DoubleCollectionViewController.png" width="260"> <img src="media/DoubleCollectionViewController.gif" width="260">
+<img src="media/CollectionSwapViewController.png" width="260"> <img src="media/CollectionSwapViewController.gif" width="260">
 
 Two collection views side by side, Starters and Bench, each inside a panel that
 provides its title and count. The destination refuses a player already on its
 list.
 
-`DoubleCollectionViewController`
+`CollectionSwapViewController`
 
 ---
 

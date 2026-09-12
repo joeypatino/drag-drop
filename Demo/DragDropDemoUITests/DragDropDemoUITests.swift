@@ -43,7 +43,7 @@ final class DragDropDemoUITests: XCTestCase {
     /// moodboard and asserts the ordering actually changed.
     @MainActor
     func testDraggingACellReordersTheCollectionView() {
-        let app = launchDemo("NormalCollectionViewController")
+        let app = launchDemo("CollectionRearrangeViewController")
 
         let grid = container("moodboard", in: app)
         XCTAssertTrue(grid.waitForExistence(timeout: 5))

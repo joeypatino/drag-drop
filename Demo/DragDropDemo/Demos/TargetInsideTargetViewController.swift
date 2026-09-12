@@ -1,5 +1,5 @@
 //
-//  EmbeddedViewController.swift
+//  TargetInsideTargetViewController.swift
 //  DragDropDemo
 //
 //  Created by Joey Patino on 11/4/15.
@@ -12,7 +12,7 @@ import DemoKit
 
 /// A drop target nested directly inside another drop target: photos move
 /// between the roll and an album that lives inside it.
-final class EmbeddedViewController: DemoViewController {
+final class TargetInsideTargetViewController: DemoViewController {
 
     private var rollController: DragDropController?
     private var albumController: DragDropController?
@@ -95,7 +95,7 @@ final class EmbeddedViewController: DemoViewController {
 
 // MARK: - DragDropController Datasource
 
-extension EmbeddedViewController: DragDropControllerDataSource {
+extension TargetInsideTargetViewController: DragDropControllerDataSource {
 
     func dragDropController(_ controller: DragDropController, shouldDrag view: UIView) -> Bool {
         true

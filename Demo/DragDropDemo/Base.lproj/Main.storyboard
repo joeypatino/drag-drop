@@ -25,7 +25,7 @@
         <!--Embedded View Controller-->
         <scene sceneID="Stc-sI-g8Y">
             <objects>
-                <viewController id="jyE-GX-ePH" customClass="EmbeddedViewController" customModule="DragDropDemo" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="jyE-GX-ePH" customClass="TargetInsideTargetViewController" customModule="DragDropDemo" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="F9v-gd-H3c"/>
                         <viewControllerLayoutGuide type="bottom" id="Jto-6u-OMh"/>
@@ -47,7 +47,7 @@
         <!--Double Embedded View Controller-->
         <scene sceneID="azg-9y-wXd">
             <objects>
-                <viewController id="Cve-8t-beB" customClass="DoubleEmbeddedViewController" customModule="DragDropDemo" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="Cve-8t-beB" customClass="TargetInsideNonTargetViewController" customModule="DragDropDemo" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="I7e-TP-gxu"/>
                         <viewControllerLayoutGuide type="bottom" id="tUM-V7-MMT"/>
@@ -69,7 +69,7 @@
         <!--Embedded Drop Target View Controller-->
         <scene sceneID="FOr-2t-98m">
             <objects>
-                <viewController id="C4T-k4-zLf" customClass="EmbeddedDropTargetViewController" customModule="DragDropDemo" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="C4T-k4-zLf" customClass="TargetOnAnItemViewController" customModule="DragDropDemo" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="Evz-hR-88m"/>
                         <viewControllerLayoutGuide type="bottom" id="Qe4-C6-dnV"/>
@@ -91,7 +91,7 @@
         <!--Normal Collection View Controller-->
         <scene sceneID="kJp-5p-ln8">
             <objects>
-                <viewController id="3ae-fy-XmT" customClass="NormalCollectionViewController" customModule="DragDropDemo" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="3ae-fy-XmT" customClass="CollectionRearrangeViewController" customModule="DragDropDemo" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="W1v-bC-go3"/>
                         <viewControllerLayoutGuide type="bottom" id="8k8-fr-uDc"/>
@@ -113,7 +113,7 @@
         <!--Double Collection View Controller-->
         <scene sceneID="fLa-Hq-bQQ">
             <objects>
-                <viewController id="syq-dD-ah1" customClass="DoubleCollectionViewController" customModule="DragDropDemo" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="syq-dD-ah1" customClass="CollectionSwapViewController" customModule="DragDropDemo" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="NxH-yp-xvG"/>
                         <viewControllerLayoutGuide type="bottom" id="iVf-Jj-CMF"/>
@@ -135,7 +135,7 @@
         <!--Normal Table View Controller-->
         <scene sceneID="NyN-SX-cZG">
             <objects>
-                <viewController automaticallyAdjustsScrollViewInsets="NO" id="grL-bh-cx5" customClass="NormalTableViewController" customModule="DragDropDemo" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController automaticallyAdjustsScrollViewInsets="NO" id="grL-bh-cx5" customClass="TableRowMoveViewController" customModule="DragDropDemo" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="egR-bk-7Ul"/>
                         <viewControllerLayoutGuide type="bottom" id="zUf-Vv-HBy"/>
@@ -157,7 +157,7 @@
         <!--X4 View Controller-->
         <scene sceneID="DCq-yI-gp7">
             <objects>
-                <viewController id="KEl-bF-nZK" customClass="FourByFourViewController" customModule="DragDropDemo" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="KEl-bF-nZK" customClass="SeparateTargetsViewController" customModule="DragDropDemo" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="0Gg-9O-plb"/>
                         <viewControllerLayoutGuide type="bottom" id="Fld-43-Ird"/>
@@ -204,13 +204,13 @@
                     </tableView>
                     <navigationItem key="navigationItem" id="qx0-vr-Tpl"/>
                     <connections>
-                        <segue destination="KEl-bF-nZK" kind="show" identifier="FourByFourViewController" id="dZv-lm-qTt"/>
-                        <segue destination="jyE-GX-ePH" kind="show" identifier="EmbeddedViewController" id="mNb-ud-1Tn"/>
-                        <segue destination="Cve-8t-beB" kind="show" identifier="DoubleEmbeddedViewController" id="4K2-Xj-HUb"/>
-                        <segue destination="grL-bh-cx5" kind="show" identifier="NormalTableViewController" id="41f-ct-19n"/>
-                        <segue destination="3ae-fy-XmT" kind="show" identifier="NormalCollectionViewController" id="VME-Jf-X33"/>
-                        <segue destination="C4T-k4-zLf" kind="show" identifier="EmbeddedDropTargetViewController" id="kZt-BE-fWW"/>
-                        <segue destination="syq-dD-ah1" kind="show" identifier="DoubleCollectionViewController" id="Gei-km-2Wa"/>
+                        <segue destination="KEl-bF-nZK" kind="show" identifier="SeparateTargetsViewController" id="dZv-lm-qTt"/>
+                        <segue destination="jyE-GX-ePH" kind="show" identifier="TargetInsideTargetViewController" id="mNb-ud-1Tn"/>
+                        <segue destination="Cve-8t-beB" kind="show" identifier="TargetInsideNonTargetViewController" id="4K2-Xj-HUb"/>
+                        <segue destination="grL-bh-cx5" kind="show" identifier="TableRowMoveViewController" id="41f-ct-19n"/>
+                        <segue destination="3ae-fy-XmT" kind="show" identifier="CollectionRearrangeViewController" id="VME-Jf-X33"/>
+                        <segue destination="C4T-k4-zLf" kind="show" identifier="TargetOnAnItemViewController" id="kZt-BE-fWW"/>
+                        <segue destination="syq-dD-ah1" kind="show" identifier="CollectionSwapViewController" id="Gei-km-2Wa"/>
                     </connections>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Icr-3F-HNJ" userLabel="First Responder" sceneMemberID="firstResponder"/>

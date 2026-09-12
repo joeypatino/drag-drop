@@ -1,5 +1,5 @@
 //
-//  DoubleCollectionViewController.swift
+//  CollectionSwapViewController.swift
 //  DragDropDemo
 //
 //  Created by Joey Patino on 11/14/15.
@@ -12,7 +12,7 @@ import DemoKit
 
 /// Two collection views, and a move between them that the datasource can veto:
 /// a player already on the destination list cannot be moved there again.
-final class DoubleCollectionViewController: DemoViewController {
+final class CollectionSwapViewController: DemoViewController {
 
     private var leftCollectionView: UICollectionView?
     private var leftDataSource: [Player] = []
@@ -110,7 +110,7 @@ final class DoubleCollectionViewController: DemoViewController {
 
 // MARK: -
 
-extension DoubleCollectionViewController: UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
+extension CollectionSwapViewController: UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
 
     func collectionView(_ collectionView: UICollectionView,
                         layout collectionViewLayout: UICollectionViewLayout,
@@ -121,7 +121,7 @@ extension DoubleCollectionViewController: UICollectionViewDelegate, UICollection
 
 // MARK: -
 
-extension DoubleCollectionViewController: UICollectionViewDataSourceCellSwapSupport {
+extension CollectionSwapViewController: UICollectionViewDataSourceCellSwapSupport {
 
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         if collectionView === leftCollectionView { return leftDataSource.count }

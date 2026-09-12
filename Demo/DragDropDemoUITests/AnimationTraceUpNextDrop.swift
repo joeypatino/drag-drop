@@ -13,7 +13,7 @@ final class AnimationTraceUpNextDrop: XCTestCase {
     @MainActor
     func testDropBackIntoTheQueue() {
         let app = XCUIApplication()
-        app.launchArguments += ["-demo", "NormalTableViewController", "-animation-trace"]
+        app.launchArguments += ["-demo", "TableRowMoveViewController", "-animation-trace"]
         app.launch()
 
         let table = container("queue-table", in: app)

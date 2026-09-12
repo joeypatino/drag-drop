@@ -1,5 +1,5 @@
 //
-//  NormalCollectionViewController.swift
+//  CollectionRearrangeViewController.swift
 //  DragDropDemo
 //
 //  Created by Joey Patino on 11/4/15.
@@ -13,7 +13,7 @@ import DemoKit
 /// A curation grid: masonry cards reordered by dragging. One collection view,
 /// one section, 300 items -- the reorder path at a scale where a wrong frame is
 /// visible immediately.
-final class NormalCollectionViewController: DemoViewController {
+final class CollectionRearrangeViewController: DemoViewController {
 
     private var collection: UICollectionView?
     private var cards: [Int] = []
@@ -79,7 +79,7 @@ final class NormalCollectionViewController: DemoViewController {
 
 // MARK: -
 
-extension NormalCollectionViewController: UICollectionViewDataSource, UICollectionViewDelegate {
+extension CollectionRearrangeViewController: UICollectionViewDataSource, UICollectionViewDelegate {
 
     func numberOfSections(in collectionView: UICollectionView) -> Int { 1 }
 
@@ -126,7 +126,7 @@ extension NormalCollectionViewController: UICollectionViewDataSource, UICollecti
 
 // MARK: -
 
-extension NormalCollectionViewController: MasonryCollectionViewLayoutDelegate {
+extension CollectionRearrangeViewController: MasonryCollectionViewLayoutDelegate {
 
     /// By position, not by card. The mosaic is a fixed set of tiles: reordering
     /// cards leaves the height sequence -- and therefore every frame -- exactly

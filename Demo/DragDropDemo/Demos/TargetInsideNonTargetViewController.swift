@@ -1,5 +1,5 @@
 //
-//  DoubleEmbeddedViewController.swift
+//  TargetInsideNonTargetViewController.swift
 //  DragDropDemo
 //
 //  Created by Joey Patino on 11/4/15.
@@ -14,7 +14,7 @@ import DemoKit
 /// frame receives nothing; the widget stack drawn inside it does. This is the
 /// arrangement that requires the library to translate coordinates through a
 /// view that knows nothing about dragging.
-final class DoubleEmbeddedViewController: DemoViewController {
+final class TargetInsideNonTargetViewController: DemoViewController {
 
     private var stackController: DragDropController?
     private var galleryController: DragDropController?
@@ -106,7 +106,7 @@ final class DoubleEmbeddedViewController: DemoViewController {
 
 // MARK: - DragDropController Datasource
 
-extension DoubleEmbeddedViewController: DragDropControllerDataSource {
+extension TargetInsideNonTargetViewController: DragDropControllerDataSource {
 
     func dragDropController(_ controller: DragDropController, shouldDrag view: UIView) -> Bool {
         true

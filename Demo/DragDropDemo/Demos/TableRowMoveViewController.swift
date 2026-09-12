@@ -1,5 +1,5 @@
 //
-//  NormalTableViewController.swift
+//  TableRowMoveViewController.swift
 //  DragDropDemo
 //
 //  Created by Joey Patino on 11/4/15.
@@ -12,7 +12,7 @@ import DemoKit
 
 /// The play queue. A row dragged out is removed and the table closes the gap;
 /// a card dropped onto the table inserts a row.
-final class NormalTableViewController: DemoViewController {
+final class TableRowMoveViewController: DemoViewController {
 
     private var savedController: DragDropController?
     private var table: UITableView?
@@ -107,7 +107,7 @@ final class NormalTableViewController: DemoViewController {
 
 // MARK: - UITableView
 
-extension NormalTableViewController: UITableViewDelegate {
+extension TableRowMoveViewController: UITableViewDelegate {
 
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         90
@@ -118,7 +118,7 @@ extension NormalTableViewController: UITableViewDelegate {
     }
 }
 
-extension NormalTableViewController: UITableViewDataSourceRowMoveSupport {
+extension TableRowMoveViewController: UITableViewDataSourceRowMoveSupport {
 
     func numberOfSections(in tableView: UITableView) -> Int { 1 }
 
@@ -176,7 +176,7 @@ extension NormalTableViewController: UITableViewDataSourceRowMoveSupport {
 // Only for the Saved panel, which is a plain view: it has no layout of its own,
 // so the demo places arriving views and closes the gap when one leaves.
 
-extension NormalTableViewController: DragDropControllerDataSource {
+extension TableRowMoveViewController: DragDropControllerDataSource {
 
     func dragDropController(_ controller: DragDropController,
                             frameFor view: UIView,

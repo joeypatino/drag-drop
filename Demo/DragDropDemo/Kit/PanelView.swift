@@ -11,7 +11,7 @@ import DemoKit
 /// `dropTargetView`, so items land in the body and never under the title.
 ///
 /// A drop target nested inside a non-target parent is an arrangement the
-/// library already supports; `DoubleEmbeddedViewController` has relied on it
+/// library already supports; `TargetInsideNonTargetViewController` has relied on it
 /// since the Objective-C original.
 final class PanelView: UIView {
 
