@@ -15,3 +15,7 @@ xcuserdata/
 
 # Byte-code from Tools/demo-media/regenerate.py
 __pycache__/
+
+# Internal design docs and brainstorm scratch — kept locally, not published
+docs/superpowers/
+.superpowers/
