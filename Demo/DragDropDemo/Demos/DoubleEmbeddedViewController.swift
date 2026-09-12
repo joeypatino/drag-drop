@@ -28,7 +28,7 @@ final class DoubleEmbeddedViewController: DemoViewController {
         stackController = makeController()
         galleryController = makeController()
 
-        let top = view.safeAreaInsets.top + 12
+        let top = contentTop + 12
         let available = view.bounds.height - top - view.safeAreaInsets.bottom - 12
         // The phone frame keeps more height than the gallery below it -- a
         // phone is tall, and the wallpaper needs room to read as wallpaper.

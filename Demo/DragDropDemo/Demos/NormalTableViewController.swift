@@ -30,7 +30,7 @@ final class NormalTableViewController: DemoViewController {
 
         savedController = makeController()
 
-        let top = view.safeAreaInsets.top
+        let top = contentTop
         // The queue gets the larger share: it holds the text, and an even
         // split left track titles truncating mid-word.
         let queueWidth = (view.bounds.width * 0.58).rounded()

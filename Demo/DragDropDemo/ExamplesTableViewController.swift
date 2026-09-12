@@ -11,58 +11,6 @@ import DemoKit
 
 final class ExamplesTableViewController: UITableViewController {
 
-    /// One row of the index. The subtitle names the library capability the
-    /// screen demonstrates, so the technical mapping stays discoverable
-    /// underneath the product name.
-    ///
-    /// One array of these rather than two arrays indexed by the same row
-    /// number, which is a bug waiting for someone to insert a demo.
-    private struct DemoEntry {
-        let title: String
-        let capability: String
-        let symbol: String
-        let hue: DemoTheme.Hue
-        let segue: String
-    }
-
-    private let entries: [DemoEntry] = [
-        DemoEntry(title: "Shift Rota",
-                  capability: "Four peer drop targets",
-                  symbol: "calendar.badge.clock",
-                  hue: .amber,
-                  segue: "FourByFourViewController"),
-        DemoEntry(title: "Shared Album",
-                  capability: "A drop target inside a drop target",
-                  symbol: "photo.on.rectangle.angled",
-                  hue: .teal,
-                  segue: "EmbeddedViewController"),
-        DemoEntry(title: "Widget Composer",
-                  capability: "A target inset in a non-target container",
-                  symbol: "square.stack.3d.up.fill",
-                  hue: .violet,
-                  segue: "DoubleEmbeddedViewController"),
-        DemoEntry(title: "Files",
-                  capability: "An item that is itself a drop target",
-                  symbol: "folder.fill",
-                  hue: .indigo,
-                  segue: "EmbeddedDropTargetViewController"),
-        DemoEntry(title: "Up Next",
-                  capability: "Table rows dragging out and dropping in",
-                  symbol: "list.bullet",
-                  hue: .rose,
-                  segue: "NormalTableViewController"),
-        DemoEntry(title: "Moodboard",
-                  capability: "Reordering a masonry collection view",
-                  symbol: "square.grid.3x3.fill",
-                  hue: .mint,
-                  segue: "NormalCollectionViewController"),
-        DemoEntry(title: "Lineup",
-                  capability: "Moving between two collection views",
-                  symbol: "person.2.fill",
-                  hue: .coral,
-                  segue: "DoubleCollectionViewController")
-    ]
-
     private var hasFollowedLaunchArgument = false
 
     override func viewDidLoad() {
@@ -88,7 +36,7 @@ final class ExamplesTableViewController: UITableViewController {
         // Only a name that actually matches a row: an unknown or empty
         // identifier would otherwise take the app down on launch.
         let requested = ProcessInfo.processInfo.arguments[index + 1]
-        guard entries.contains(where: { $0.segue == requested }) else { return }
+        guard DemoCatalog.entries.contains(where: { $0.segue == requested }) else { return }
 
         hasFollowedLaunchArgument = true
         performSegue(withIdentifier: requested, sender: nil)
@@ -99,11 +47,11 @@ final class ExamplesTableViewController: UITableViewController {
     override func numberOfSections(in tableView: UITableView) -> Int { 1 }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        entries.count
+        DemoCatalog.entries.count
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let entry = entries[indexPath.row]
+        let entry = DemoCatalog.entries[indexPath.row]
         let cell = tableView.dequeueReusableCell(withIdentifier: "ExampleCell", for: indexPath)
 
         var configuration = cell.defaultContentConfiguration()
@@ -125,6 +73,6 @@ final class ExamplesTableViewController: UITableViewController {
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        performSegue(withIdentifier: entries[indexPath.row].segue, sender: nil)
+        performSegue(withIdentifier: DemoCatalog.entries[indexPath.row].segue, sender: nil)
     }
 }

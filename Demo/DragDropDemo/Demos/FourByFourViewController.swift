@@ -42,7 +42,7 @@ final class FourByFourViewController: DemoViewController {
         title = "Shift Rota"
 
         let cellWidth = view.bounds.width / 2
-        let cellHeight = (view.bounds.height - view.safeAreaInsets.top) / 2
+        let cellHeight = (view.bounds.height - contentTop) / 2
         var nextStaffIndex = 0
 
         for (index, shift) in shifts.enumerated() {
@@ -56,7 +56,7 @@ final class FourByFourViewController: DemoViewController {
             panel.emptyMessage = "No cover"
 
             let cell = CGRect(x: CGFloat(index % 2) * cellWidth,
-                              y: view.safeAreaInsets.top + CGFloat(index / 2) * cellHeight,
+                              y: contentTop + CGFloat(index / 2) * cellHeight,
                               width: cellWidth,
                               height: cellHeight)
             let target = install(panel, in: view, frame: cell.insetBy(dx: 8, dy: 8))

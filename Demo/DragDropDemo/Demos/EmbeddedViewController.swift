@@ -27,9 +27,9 @@ final class EmbeddedViewController: DemoViewController {
         albumController = makeController()
 
         let outer = CGRect(x: 16,
-                           y: view.safeAreaInsets.top + 12,
+                           y: contentTop + 12,
                            width: view.bounds.width - 32,
-                           height: min(500, view.bounds.height - view.safeAreaInsets.top - view.safeAreaInsets.bottom - 24))
+                           height: min(500, view.bounds.height - contentTop - view.safeAreaInsets.bottom - 24))
 
         let roll = PanelView(title: "Camera Roll",
                              subtitle: "All photos on this device",

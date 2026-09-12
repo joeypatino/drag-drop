@@ -46,7 +46,7 @@ final class EmbeddedDropTargetViewController: DemoViewController {
         documentsController = makeController()
         folderController = makeController()
 
-        let top = view.safeAreaInsets.top + 12
+        let top = contentTop + 12
         let available = view.bounds.height - top - view.safeAreaInsets.bottom - 12
         // Capped: two rows of tiles need nowhere near half a screen, and a
         // panel twice the height of its content reads as a layout mistake.

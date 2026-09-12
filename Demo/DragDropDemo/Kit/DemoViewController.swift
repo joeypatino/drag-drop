@@ -63,10 +63,51 @@ class DemoViewController: UIViewController, DragDropControllerDelegate {
         view.backgroundColor = DemoTheme.Surface.background
     }
 
+    /// What this screen proves, in the words the index already uses. Shown
+    /// under the bar so the capability travels with the demo instead of being
+    /// left behind on the row you tapped.
+    private let propositionLabel = UILabel()
+
+    /// Height the caption takes off the top, or zero when there is none.
+    private var propositionHeight: CGFloat {
+        propositionLabel.superview == nil ? 0 : 34
+    }
+
+    /// Where a demo's content starts: below the bar, and below the caption.
+    /// Screens lay out from this rather than from `safeAreaInsets.top`.
+    var contentTop: CGFloat {
+        view.safeAreaInsets.top + propositionHeight
+    }
+
+    private func installProposition() {
+        let name = String(describing: type(of: self))
+        guard let entry = DemoCatalog.entry(forSegue: name) else { return }
+
+        propositionLabel.text = entry.capability
+        propositionLabel.font = DemoTheme.Font.caption
+        propositionLabel.textColor = DemoTheme.Text.secondary
+        propositionLabel.textAlignment = .center
+        propositionLabel.numberOfLines = 2
+        propositionLabel.adjustsFontSizeToFitWidth = true
+        propositionLabel.minimumScaleFactor = 0.85
+        propositionLabel.accessibilityIdentifier = "demo-proposition"
+        view.addSubview(propositionLabel)
+    }
+
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
+
+        if propositionLabel.superview != nil {
+            propositionLabel.frame = CGRect(x: DemoTheme.Space.l,
+                                            y: view.safeAreaInsets.top + DemoTheme.Space.xs,
+                                            width: max(0, view.bounds.width - DemoTheme.Space.l * 2),
+                                            height: 26)
+        }
+
         guard !hasLoadedContent else { return }
         hasLoadedContent = true
+        installProposition()
+        view.setNeedsLayout()
         loadContent()
     }
 

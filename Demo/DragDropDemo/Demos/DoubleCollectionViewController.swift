@@ -61,7 +61,7 @@ final class DoubleCollectionViewController: DemoViewController {
                              identifier: String,
                              x: CGFloat) -> (PanelView, UICollectionView) {
 
-        let top = view.safeAreaInsets.top + 8
+        let top = contentTop + 8
         let panel = PanelView(title: title, subtitle: subtitle, symbolName: symbol, hue: hue)
         let frame = CGRect(x: x + 8, y: top,
                            width: view.bounds.width / 2 - 16,
