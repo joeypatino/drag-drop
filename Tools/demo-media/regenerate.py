@@ -298,6 +298,18 @@ def main():
     os.makedirs(MEDIA, exist_ok=True)
     os.makedirs(work, exist_ok=True)
 
+    # `--skip-build` against a derived-data path with no build in it produces
+    # seven recordings of the iOS home screen and nothing else: the tests fail
+    # instantly, so the app never launches. Caught downstream by the checks
+    # below, but the message there blames the trimming rather than the cause.
+    if args.skip_build and not args.reuse_recordings:
+        runner = os.path.join(derived, "Build", "Products",
+                              "Debug-iphonesimulator", "DragDropDemoUITests-Runner.app")
+        if not os.path.exists(runner):
+            sys.exit(f"--skip-build, but there is no test build at {derived}.\n"
+                     f"Drop the flag, or point --derived-data at a directory whose\n"
+                     f"DerivedData subdirectory holds a `build-for-testing` result.")
+
     if not args.skip_build and not args.reuse_recordings:
         print("==> building for testing")
         build = subprocess.run(

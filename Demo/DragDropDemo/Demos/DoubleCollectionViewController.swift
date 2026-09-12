@@ -67,6 +67,11 @@ final class DoubleCollectionViewController: DemoViewController {
                            width: view.bounds.width / 2 - 16,
                            height: view.bounds.height - top - view.safeAreaInsets.bottom - 8)
         let content = install(panel, in: view, frame: frame)
+        // Named like every other demo's panel. The grid inside it carries the
+        // bare `identifier`, so the card needs its own to be addressable at
+        // all -- without it this screen is the only one whose panels cannot be
+        // asked whether they receive.
+        content.accessibilityIdentifier = "panel-\(identifier)"
 
         let layout = UICollectionViewFlowLayout()
         layout.minimumInteritemSpacing = 6
