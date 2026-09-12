@@ -13,12 +13,12 @@ xcodebuild test -project Demo/DragDropDemo.xcodeproj -scheme DragDropDemo \
 ```
 
 `DemoKitTests` needs that second line: the generated `DragDrop-Package` scheme
-runs only `DragDropTests`, so the first command silently skips it — and naming
+runs only `DragDropTests`, so the first command silently skips it; naming
 both bundles in one invocation does not help, only naming `DemoKitTests` alone
 does.
 
 Before adding a UI test, read
 [WRITING-UI-TESTS.md](../Demo/DragDropDemoUITests/WRITING-UI-TESTS.md): which delay
 to use and why that number, what makes a query expensive, and what a UI test
-cannot see. `Tools/animation-trace` covers the last of those — proving what an
+cannot see. `Tools/animation-trace` covers the last of those; it proves what an
 animation actually put on screen, frame by frame.

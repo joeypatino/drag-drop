@@ -2,7 +2,7 @@
 
 A flexible iOS drag and drop implementation written in Swift. Drag views
 between arbitrary containers, in and out of table views and collection views,
-and between two of them — with the destination free to refuse.
+and between two of them, with the destination free to refuse.
 
 Requires iOS 26 and Swift 6.
 
@@ -26,7 +26,7 @@ Once a release is tagged, prefer the version form:
 
 Then `import DragDrop`.
 
-## The shape of it
+## Setup
 
 One `DragDropController` per drop target. Register the views that should move,
 and answer one datasource method saying where a dropped view lands.
@@ -50,9 +50,6 @@ func dragDropController(_ controller: DragDropController,
 Controllers find each other, so a view dragged out of one target and released
 over another is handed across with no wiring between them.
 
-Lists are an extension rather than a separate API — `enableDragAndDrop(for:)` on
-the cell, plus a datasource protocol for the model updates.
-
 ## Documentation
 
 | | |
@@ -61,14 +58,13 @@ the cell, plus a datasource protocol for the model updates.
 | [Collection views](docs/collection-views.md) | Reordering, moving cells between two collection views, and the drop highlight |
 | [Table views](docs/table-views.md) | Rows dragging out and dropping in, the row-move datasource, and what it does not support |
 | [The demo screens](docs/demos.md) | All seven, with what each one receives and what it proves |
-| [Writing UI tests](Demo/DragDropDemoUITests/WRITING-UI-TESTS.md) | Which delay to use and why that number, what makes a query expensive, and what a UI test cannot see |
 | [Testing](docs/testing.md) | Schemes, and the one that silently skips a bundle |
 
 ## Demo
 
 `Demo/DragDropDemo.xcodeproj` builds an app with seven screens. Each exercises a
-distinct capability and is dressed as the kind of app you would actually build
-with it, so you can go from "I want to build that" to the file that does it.
+distinct capability and is dressed as the kind of app you might actually
+build with it.
 
 | Screen | Capability | Source |
 | --- | --- | --- |
@@ -84,10 +80,9 @@ with it, so you can go from "I want to build that" to the file that does it.
 open Demo/DragDropDemo.xcodeproj
 ```
 
-Launch with `-demo <ViewControllerName>` to open straight onto one screen, which
-is how the UI tests and screenshots skip the index.
-[docs/demos.md](docs/demos.md) walks each screen with a still and a clip of a
-real drag, and says which views receive a drop — the thing that separates
+Launch with `-demo <ViewControllerName>` to open straight onto one screen.
+[docs/demos.md](docs/demos.md) describes each screen with a still and a clip of a
+real drag, and says which views receive a drop; that is what separates
 otherwise similar-looking screens.
 
 `Sources/DemoKit` supports that app and is not part of the library's public
@@ -106,7 +101,7 @@ xcodebuild test -project Demo/DragDropDemo.xcodeproj -scheme DragDropDemo \
   -destination 'platform=iOS Simulator,name=iPhone 17'
 ```
 
-The second line is not redundant — see [docs/testing.md](docs/testing.md).
+The second line is not redundant; see [docs/testing.md](docs/testing.md).
 
 ## License
 
