@@ -11,6 +11,16 @@
 		DD00000000000000000033 /* DemoKit in Frameworks */ = {isa = PBXBuildFile; productRef = DD00000000000000000032 /* DemoKit */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		DD00000000000000000102 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DD00000000000000000070 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DD00000000000000000050;
+			remoteInfo = DragDropDemo;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		DD00000000000000000001 /* DragDropDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DragDropDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DD00000000000000000002 /* DragDropDemo-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "DragDropDemo-Info.plist"; sourceTree = "<group>"; };
@@ -18,8 +28,16 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		DD00000000000000000010 /* DragDropDemo */ = {isa = PBXFileSystemSynchronizedRootGroup; path = DragDropDemo; sourceTree = "<group>"; };
-		DD00000000000000000011 /* DragDropDemoUITests */ = {isa = PBXFileSystemSynchronizedRootGroup; path = DragDropDemoUITests; sourceTree = "<group>"; };
+		DD00000000000000000010 /* DragDropDemo */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = DragDropDemo;
+			sourceTree = "<group>";
+		};
+		DD00000000000000000011 /* DragDropDemoUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = DragDropDemoUITests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -111,24 +129,6 @@
 		};
 /* End PBXNativeTarget section */
 
-/* Begin PBXTargetDependency section */
-		DD00000000000000000101 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = DD00000000000000000050 /* DragDropDemo */;
-			targetProxy = DD00000000000000000102 /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
-
-/* Begin PBXContainerItemProxy section */
-		DD00000000000000000102 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = DD00000000000000000070 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = DD00000000000000000050;
-			remoteInfo = DragDropDemo;
-		};
-/* End PBXContainerItemProxy section */
-
 /* Begin PBXProject section */
 		DD00000000000000000070 /* Project object */ = {
 			isa = PBXProject;
@@ -198,6 +198,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		DD00000000000000000101 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DD00000000000000000050 /* DragDropDemo */;
+			targetProxy = DD00000000000000000102 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		DD00000000000000000090 /* Debug */ = {
