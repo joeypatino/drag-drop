@@ -19,7 +19,17 @@ public final class DragDropGesture: UIGestureRecognizer {
     public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) {
         super.touchesBegan(touches, with: event)
 
-        state = .possible
+        // Only the first finger starts a drag, and only while nothing is under
+        // way. A second one used to re-arm the recognizer: `location(in:)`
+        // answers the centroid of every touch, so the offset stopped
+        // describing the finger that picked the view up and it jumped; and the
+        // timestamp went back to now, so the next move read as inside
+        // `gestureBeginDelay` and failed the gesture. A failed gesture sends no
+        // action at all, so the controller never hears `.ended`, the drag never
+        // finishes, and the interaction view is left over the whole screen
+        // swallowing every touch in the app. `reset()` re-arms us instead.
+        guard state == .possible, numberOfTouches <= 1 else { return }
+
         touchBeginTimestamp = event.timestamp
         touchBeginOffset = location(in: view)
     }

@@ -177,7 +177,13 @@ public extension UICollectionView {
                 var frame = frameForItem(at: indexPath)
 
                 if indexPath.isAfter(toIndexPath) || indexPath.isSame(as: toIndexPath) {
-                    frame = frameForItem(at: indexPath.incrementingRow)
+                    // The last item in a section has no next slot to slide
+                    // into, and `frameForItem` answers .zero for an index path
+                    // the layout does not know -- which collapsed that cell
+                    // into the corner instead of moving it. Staying put is the
+                    // honest answer when there is nowhere to go.
+                    let next = frameForItem(at: indexPath.incrementingRow)
+                    if !next.isEmpty { frame = next }
                 }
 
                 cellForItem(at: indexPath)?.frame = frame
@@ -249,7 +255,11 @@ public extension UICollectionView {
 
             if let nearestIndexPath {
                 section = nearestIndexPath.section
-                row = (dataSource?.collectionView(self, numberOfItemsInSection: section) ?? 1) - 1
+                // An empty section answers 0, and a row of -1 throws when it
+                // reaches insertItems(at:). The model is mutated before the
+                // collection view is told, so mid-swap this is reachable.
+                let items = dataSource?.collectionView(self, numberOfItemsInSection: section) ?? 1
+                row = max(items - 1, 0)
             }
 
             nearestIndexPath = IndexPath(row: row, section: section)

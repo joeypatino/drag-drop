@@ -143,6 +143,14 @@ public final class DragDropController {
     private func touchBegan(_ gesture: DragDropGesture) {
         guard let view = gesture.view else { return }
 
+        // `startDrag` turns a second begin away, but by then this has already
+        // replaced `sourceView` with the view's *current* superview -- the
+        // interaction view, mid-drag -- and `sourceFrame` with the in-flight
+        // frame. The return-to-source path then re-parents the view into the
+        // interaction view, which is removed a line later, and the view is
+        // gone for good. Turn it away before touching either.
+        if isDragging || isDropping { return }
+
         let drag = DragAction(view: view)
         drag.currentLocation = gesture.location(in: nil)
 
@@ -335,7 +343,13 @@ public final class DragDropController {
 
                 if let view = drag.view {
                     view.frame = self.sourceFrame
-                    self.sourceView?.addSubview(view)
+
+                    // The container the drag began in can go away mid-drag --
+                    // a cell released by a reloadData. Optional-chaining the
+                    // re-parent away left the view in the interaction view,
+                    // which is torn down on the next line, so it vanished.
+                    let home = self.sourceView ?? self.dropTargetView
+                    home?.addSubview(view)
                 }
 
                 self.sourceView = nil
@@ -388,10 +402,14 @@ public final class DragDropController {
         // when the animation of the drag representation view is complete,
         // set the real view's frame to that specified by our datasource,
         // andn then add the view as a subview.
-        if let dropTargetView = destination.dropTargetView {
-            view.frame = frame
-            dropTargetView.addSubview(view)
-        }
+        // A weak drop target view that has gone away leaves nowhere to put the
+        // view. Carrying on told both delegates the move had succeeded while
+        // the view stayed in the interaction view, to be removed with it a
+        // moment later -- a drop that reported success and lost the view.
+        guard let dropTargetView = destination.dropTargetView else { return }
+
+        view.frame = frame
+        dropTargetView.addSubview(view)
 
         // now that the view belongs to another DragDropController,
         // we also should hand over responsiblity of drag/drop operations
@@ -500,6 +518,18 @@ public final class DragDropController {
 
         let controllers = candidates.filter { candidate in
             guard let targetView = candidate.dropTargetView else { return false }
+
+            // The registry is process-wide and never forgets a live
+            // controller, so a drop target from a screen that has been pushed
+            // past is still a candidate -- its view controller is retained by
+            // the navigation stack. Converting a rect between two hierarchies
+            // when one of them has no window is undefined, and in practice
+            // answered a rect that contained the point, so depth could hand
+            // the drop to an invisible table. A target has to be on screen.
+            guard let targetWindow = targetView.window,
+                  targetWindow === coordinateSpace?.window ?? targetWindow,
+                  !targetView.isHidden else { return false }
+
             let rect = targetView.convert(targetView.bounds, to: coordinateSpace)
             return rect.contains(point)
         }
