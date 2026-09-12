@@ -207,6 +207,35 @@ final class TableViewDragOrchestrationTests: XCTestCase {
         XCTAssertNil(view.superview)
     }
 
+    /// The same hand-back, for the one drop that never reaches didReceive.
+    ///
+    /// `completeDrop` parents the dragged view onto the table whichever
+    /// controller the drop came from, but the correction lived only in
+    /// didReceive -- which returns immediately when the source is this table.
+    /// A reorder therefore left the view floating over the row it had just
+    /// rendered, at the full row rect rather than the cell's inset content
+    /// frame, which reads as a row that stayed picked up.
+    func testTheViewIsHandedBackWhenTheDropIsAReorder() {
+        makeScene()
+        let drag = beginDrag(from: left, row: 1)
+        drag.currentLocation = CGPoint(x: 100, y: 180)
+
+        guard let leftController = left.dragDropController, let view = drag.view else {
+            return XCTFail("no controller")
+        }
+
+        left.dragDropState.dragDropController(leftController, dragDidHover: drag, from: leftController)
+
+        // What completeDrop does before any delegate is told.
+        left.addSubview(view)
+
+        left.dragDropState.dragDropController(leftController, didMove: view, to: leftController)
+        left.dragDropState.dragDropController(leftController, didReceive: view, from: leftController)
+
+        XCTAssertFalse(left.subviews.contains(view),
+                       "the dragged view was left floating over the table")
+    }
+
     /// A drop back into the table the drag started in is a reorder, and is
     /// handled once, in didMove. didReceive must not insert a second row.
     func testDroppingBackIntoTheSameTableReorders() {

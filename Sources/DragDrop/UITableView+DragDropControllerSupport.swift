@@ -183,6 +183,14 @@ extension TableViewDragDropState: DragDropControllerDelegate {
         if destination === controller {
             guard let target = vacancyIndexPath else { return }
 
+            // `completeDrop` added the dragged view as a raw subview of the
+            // table. `didReceive` makes that correction, but it is skipped
+            // when the drop came from this same table -- so a reorder left the
+            // view floating over the row it had just re-rendered, at the full
+            // row rect rather than the cell's inset content frame, which reads
+            // as a cell that stayed picked up.
+            view.removeFromSuperview()
+
             tableView.moveRow(from: source, to: target, for: view)
             clearVacancy()
             return
