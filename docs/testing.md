@@ -20,3 +20,10 @@ does.
 UI tests assert on final state, so a bug in how something animated will pass
 them. `Tools/animation-trace` covers that case; it proves what an animation
 actually put on screen, frame by frame.
+
+The GIFs and stills in `README.md` and `docs/demos.md` are generated rather
+than captured by hand. `Tools/demo-media/regenerate.py` drives one existing UI
+test per demo, records the simulator, and trims each clip down to the drag;
+run it after anything that changes how a demo looks. Renaming or adding a demo
+means updating its `DEMOS` map in the same commit, because that map is what
+pairs each demo with the test that drags something on it.
