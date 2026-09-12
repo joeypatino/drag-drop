@@ -159,9 +159,16 @@ internal extension UITableView {
                               dataSource.tableView(self, numberOfRowsInSection: destination.section))
         dataSource.tableView(self, didInsertRowAt: destination, for: view)
 
+        // `.none` for the insert, for the same reason `insertRow` uses it: the
+        // row is filling the spot the dragged view has just been taken away
+        // from, and it left at full opacity, so a `.fade` starts the row at
+        // nothing and the slot is visibly empty for a few frames. That gap
+        // used to be hidden behind the dragged view, which this path had left
+        // floating over the table; now that the view is handed back, the gap
+        // is what a reorder flickers.
         performBatchUpdates {
             deleteRows(at: [source], with: .automatic)
-            insertRows(at: [destination], with: .fade)
+            insertRows(at: [destination], with: .none)
         }
     }
 }
