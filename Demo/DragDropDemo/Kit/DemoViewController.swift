@@ -108,6 +108,12 @@ class DemoViewController: UIViewController, DragDropControllerDelegate {
         hasLoadedContent = true
         installProposition()
         view.setNeedsLayout()
+        defer {
+            // A screen that adds a full-bleed subview would otherwise bury the
+            // caption -- Moodboard's grid did exactly that. Cheaper to make
+            // that impossible than to remember it in each demo.
+            view.bringSubviewToFront(propositionLabel)
+        }
         loadContent()
     }
 

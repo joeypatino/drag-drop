@@ -46,7 +46,17 @@ final class NormalCollectionViewController: DemoViewController {
         let layout = MasonryCollectionViewLayout()
         layout.delegate = self
 
-        let collection = UICollectionView(frame: view.bounds, collectionViewLayout: layout)
+        // Below the caption rather than full-bleed. The grid used to be framed
+        // to `view.bounds`, which covered the proposition every other screen
+        // shows -- and a scrolling grid cannot simply be drawn under it, or the
+        // cards slide behind the text.
+        let grid = CGRect(x: 0, y: contentTop,
+                          width: view.bounds.width,
+                          height: view.bounds.height - contentTop)
+        let collection = UICollectionView(frame: grid, collectionViewLayout: layout)
+        // The frame already clears the safe area, so the automatic adjustment
+        // would inset it a second time.
+        collection.contentInsetAdjustmentBehavior = .never
         // The Objective-C never set this: UICollectionView used to default to a
         // black background, which is what separated the white cells in the
         // original demo. The cards now carry their own hairline and shadow, so

@@ -261,6 +261,20 @@ def check(gif):
     (ok, moved, max_saturation). A GIF must actually move, and must not have
     caught the springboard -- both failures have shipped from this script's
     ancestors and neither is visible in a file listing.
+
+    The test that matters is that the clip *ends somewhere else*: every one of
+    these demos permanently changes its screen -- a card moves, two counts
+    change -- so a clip whose last frame matches its first did not catch the
+    drop. That is exactly how the one bad clip failed, and counting motion
+    missed it: it had 46 frames and 7 changed transitions, which looks healthy.
+
+    Counting was tried twice and is not stable enough to gate on. Absolute
+    counts assume every frame survived, and the encoder drops duplicates, so a
+    clip with a still beat decodes to far fewer frames than fps x duration --
+    Lineup came back as 14 frames for 6.8s. A proportion then fails the clips
+    that are mostly still and correct. `moved` is kept as a floor against a
+    single jump cut, and reported for eyeballing, but the verdict is the
+    endpoints.
     """
     with tempfile.TemporaryDirectory() as tmp:
         subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", gif, "-vsync", "0",
@@ -274,8 +288,21 @@ def check(gif):
         if sum(raw) / (len(raw) / 3) > 2.0:
             moved += 1
 
-    worst = max((saturation(frame) for frame in frames), default=0.0)
-    return moved >= 8 and worst < 45, moved, worst
+    # Springboard detection looks only at the top of the frame. Whole-frame
+    # saturation was calibrated when Moodboard had whitespace between its
+    # cards; packing it as real masonry filled that in and the screen started
+    # reading as wallpaper. The bar at the top is near-white on every demo and
+    # is wallpaper on the springboard, whatever the content below it.
+    worst = max((saturation(frame.crop((0, 0, frame.width, frame.height // 7)))
+                 for frame in frames), default=0.0)
+
+    settled = 0.0
+    if len(frames) >= 2:
+        raw = ImageChops.difference(frames[0], frames[-1]).tobytes()
+        settled = sum(raw) / (len(raw) / 3)
+
+    ok = settled > 2.0 and moved >= 3 and worst < 45
+    return ok, moved, worst
 
 
 # --------------------------------------------------------------------------
