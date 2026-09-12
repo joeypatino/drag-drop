@@ -82,6 +82,11 @@ final class DoubleCollectionViewController: DemoViewController {
         grid.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
         content.addSubview(grid)
 
+        // The grid is the drop target, not the card's content view that holds
+        // it, so the owning panel has to be named rather than looked up. No
+        // controller to pass: a collection view builds its own internally.
+        register(grid, in: panel)
+
         // The grid fills the card, so the card is what should light up -- the
         // same accepting state the panel screens use, rather than a border
         // drawn around a scroll view inside it.

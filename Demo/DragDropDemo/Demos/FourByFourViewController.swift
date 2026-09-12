@@ -61,7 +61,7 @@ final class FourByFourViewController: DemoViewController {
                               height: cellHeight)
             let target = install(panel, in: view, frame: cell.insetBy(dx: 8, dy: 8))
             target.accessibilityIdentifier = "panel-\(shift.slug)"
-            controller.dropTargetView = target
+            register(target, with: controller)
 
             // Read out of the mutating cursor before the closure captures it.
             let first = nextStaffIndex

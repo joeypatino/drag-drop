@@ -30,6 +30,34 @@ class DemoViewController: UIViewController, DragDropControllerDelegate {
     /// over stuck in its hover state.
     private(set) var panels: [PanelView] = []
 
+    /// Every drop target this screen set up, with the panel that owns it.
+    ///
+    /// Resolved at registration rather than by walking the hierarchy later: the
+    /// Files folder is a target inside the Documents panel, and a walk upward
+    /// would call Documents its owner. The screen knows better, so it says.
+    private(set) var targets: [(view: UIView, panel: PanelView?)] = []
+
+    /// Records a drop target, and assigns it to `controller` when one is given.
+    ///
+    /// Every screen routes through this instead of setting `dropTargetView`
+    /// directly, because "is this panel a drop target?" has to be derived from
+    /// somewhere and this is the only place that knows. The flag it replaced
+    /// was hand-set, and wrong on Camera Roll.
+    ///
+    /// `panel` defaults to whichever installed panel owns `target` as its
+    /// content. Pass it explicitly when the target is something else -- the
+    /// Lineup grids sit *inside* a panel's content view -- or leave both nil
+    /// for a target that is not a panel at all, like the Files folder.
+    func register(_ target: UIView,
+                  with controller: DragDropController? = nil,
+                  in panel: PanelView? = nil) {
+        controller?.dropTargetView = target
+
+        let owner = panel ?? panels.first { $0.contentView === target }
+        targets.append((target, owner))
+        owner?.isDropTarget = true
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = DemoTheme.Surface.background
@@ -103,8 +131,24 @@ class DemoViewController: UIViewController, DragDropControllerDelegate {
 
     /// Returns every panel to rest. Safe to call more than once.
     func clearDropStates() {
-        for panel in panels {
-            panel.setDropState(.idle)
+        highlight(armed: nil)
+    }
+
+    /// Puts every panel into the state the armed target implies: the winner
+    /// lit, anything containing the winner drained, everything else at rest.
+    ///
+    /// The whole screen is updated at once rather than one panel in isolation,
+    /// because the interesting state belongs to a panel that is *not* under the
+    /// finger -- the one that just lost to a target inside itself.
+    private func highlight(armed: UIView?, refusing: Bool = false) {
+        for (target, panel) in targets {
+            guard let panel else { continue }
+
+            switch DropTargetHighlight.state(of: target, whenArmed: armed) {
+            case .armed:   panel.setDropState(refusing ? .refusing : .accepting)
+            case .drained: panel.setDropState(.drained)
+            case .idle:    panel.setDropState(.idle)
+            }
         }
     }
 
@@ -156,14 +200,14 @@ class DemoViewController: UIViewController, DragDropControllerDelegate {
     func dragDropController(_ controller: DragDropController,
                             dragDidHover drag: DragAction,
                             from source: DragDropController) {
-        panel(for: controller)?.setDropState(
-            wouldAccept(drag.view, from: source, into: controller) ? .accepting : .refusing)
+        highlight(armed: controller.dropTargetView,
+                  refusing: !wouldAccept(drag.view, from: source, into: controller))
     }
 
     func dragDropController(_ controller: DragDropController,
                             dragDidLeave drag: DragAction,
                             from source: DragDropController) {
-        panel(for: controller)?.setDropState(.idle)
+        highlight(armed: nil)
     }
 
     /// The destination's notice that a drop landed. Also the only end-of-drag

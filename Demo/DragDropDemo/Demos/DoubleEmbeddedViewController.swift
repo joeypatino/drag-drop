@@ -52,7 +52,7 @@ final class DoubleEmbeddedViewController: DemoViewController {
                                 height: phone.bounds.height - 52 - 28)
         let stackTarget = install(stack, in: phone, frame: stackFrame)
         stackTarget.accessibilityIdentifier = "panel-stack"
-        stackController?.dropTargetView = stackTarget
+        register(stackTarget, with: stackController)
         stackPanel = stack
 
         // Lower: an ordinary panel, the second target.
@@ -64,7 +64,7 @@ final class DoubleEmbeddedViewController: DemoViewController {
         let galleryTarget = install(gallery, in: view,
                                     frame: half.offsetBy(dx: 0, dy: half.height + 16))
         galleryTarget.accessibilityIdentifier = "panel-gallery"
-        galleryController?.dropTargetView = galleryTarget
+        register(galleryTarget, with: galleryController)
         galleryPanel = gallery
 
         // Three on the stack, five in the gallery -- the demo's original counts.

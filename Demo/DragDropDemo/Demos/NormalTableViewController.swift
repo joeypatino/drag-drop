@@ -56,14 +56,13 @@ final class NormalTableViewController: DemoViewController {
         let saved = PanelView(title: "Saved",
                               symbolName: "bookmark.fill",
                               hue: .indigo)
-        saved.isReceivingZone = true
         saved.emptyMessage = "Drag a track here"
         let panelFrame = CGRect(x: queueWidth, y: top,
                                 width: view.bounds.width - queueWidth,
                                 height: view.bounds.height - top)
         let target = install(saved, in: view, frame: panelFrame.insetBy(dx: 10, dy: 12))
         target.accessibilityIdentifier = "panel-saved"
-        savedController?.dropTargetView = target
+        register(target, with: savedController)
         savedPanel = saved
 
         refreshCount()

@@ -61,7 +61,7 @@ final class EmbeddedDropTargetViewController: DemoViewController {
         downloads.emptyMessage = "Nothing downloaded"
         let downloadsTarget = install(downloads, in: view, frame: half)
         downloadsTarget.accessibilityIdentifier = "panel-downloads"
-        downloadsController?.dropTargetView = downloadsTarget
+        register(downloadsTarget, with: downloadsController)
         downloadsPanel = downloads
 
         let documents = PanelView(title: "Documents",
@@ -71,7 +71,7 @@ final class EmbeddedDropTargetViewController: DemoViewController {
         let documentsTarget = install(documents, in: view,
                                       frame: half.offsetBy(dx: 0, dy: half.height + 16))
         documentsTarget.accessibilityIdentifier = "panel-documents"
-        documentsController?.dropTargetView = documentsTarget
+        register(documentsTarget, with: documentsController)
         documentsPanel = documents
 
         // Five in Downloads, three in Documents -- the demo's original counts.
@@ -114,7 +114,7 @@ final class EmbeddedDropTargetViewController: DemoViewController {
                             height: height)
         target.addSubview(tile)
 
-        folderController?.dropTargetView = tile
+        register(tile, with: folderController)
         folderTile = tile
     }
 

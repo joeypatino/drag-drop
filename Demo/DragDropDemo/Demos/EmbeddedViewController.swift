@@ -37,7 +37,7 @@ final class EmbeddedViewController: DemoViewController {
                              hue: .teal)
         let rollTarget = install(roll, in: view, frame: outer)
         rollTarget.accessibilityIdentifier = "panel-roll"
-        rollController?.dropTargetView = rollTarget
+        register(rollTarget, with: rollController)
         rollPanel = roll
 
         // The album is a subview of the roll's own drop target, which is what
@@ -46,7 +46,6 @@ final class EmbeddedViewController: DemoViewController {
                               subtitle: "Shared with 3 people",
                               symbolName: "person.2.fill",
                               hue: .indigo)
-        album.isReceivingZone = true
         album.emptyMessage = "Drag photos here to share them"
 
         // Starts just below the roll's first row of thumbnails, leaving the
@@ -58,7 +57,7 @@ final class EmbeddedViewController: DemoViewController {
                                 height: rollTarget.bounds.height - albumTop)
         let albumTarget = install(album, in: rollTarget, frame: albumFrame)
         albumTarget.accessibilityIdentifier = "panel-album"
-        albumController?.dropTargetView = albumTarget
+        register(albumTarget, with: albumController)
         albumPanel = album
 
         // Three in the album, five in the roll -- the demo's original counts.
