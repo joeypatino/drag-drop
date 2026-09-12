@@ -38,10 +38,13 @@ final class NormalCollectionViewController: DemoViewController {
             80 + CGFloat(DemoTheme.stableMix(index) % 121)
         }
 
-        let layout = UICollectionViewFlowLayout()
-        layout.minimumInteritemSpacing = 10
-        layout.minimumLineSpacing = 10
-        layout.sectionInset = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
+        // Masonry, not flow. Flow lays out in lines -- it fills a row, drops
+        // below the tallest item in it, and centres the shorter ones in the
+        // line -- so every short card sat in a gap. Columns that advance
+        // independently pack tight, which is what this screen has always
+        // claimed to be.
+        let layout = MasonryCollectionViewLayout()
+        layout.delegate = self
 
         let collection = UICollectionView(frame: view.bounds, collectionViewLayout: layout)
         // The Objective-C never set this: UICollectionView used to default to a
@@ -66,7 +69,7 @@ final class NormalCollectionViewController: DemoViewController {
 
 // MARK: -
 
-extension NormalCollectionViewController: UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
+extension NormalCollectionViewController: UICollectionViewDataSource, UICollectionViewDelegate {
 
     func numberOfSections(in collectionView: UICollectionView) -> Int { 1 }
 
@@ -104,15 +107,23 @@ extension NormalCollectionViewController: UICollectionViewDataSource, UICollecti
     }
 
     func collectionView(_ collectionView: UICollectionView,
-                        layout collectionViewLayout: UICollectionViewLayout,
-                        sizeForItemAt indexPath: IndexPath) -> CGSize {
-        CGSize(width: (view.bounds.width / 2) - 17, height: heights[indexPath.row])
-    }
-
-    func collectionView(_ collectionView: UICollectionView,
                         moveItemAt sourceIndexPath: IndexPath,
                         to destinationIndexPath: IndexPath) {
         let card = cards.remove(at: sourceIndexPath.row)
         cards.insert(card, at: destinationIndexPath.row)
+    }
+}
+
+// MARK: -
+
+extension NormalCollectionViewController: MasonryCollectionViewLayoutDelegate {
+
+    /// By position, not by card. The mosaic is a fixed set of tiles: reordering
+    /// cards leaves the height sequence -- and therefore every frame -- exactly
+    /// where it was, so a card takes the size of whichever tile it lands in and
+    /// nothing else moves.
+    func masonryLayout(_ layout: MasonryCollectionViewLayout,
+                       heightAt index: Int) -> CGFloat {
+        heights[index]
     }
 }
