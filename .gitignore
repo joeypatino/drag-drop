@@ -16,8 +16,13 @@ xcuserdata/
 # Byte-code from Tools/demo-media/regenerate.py
 __pycache__/
 
-# Internal notes: design docs, brainstorm scratch, and the UI test guide.
-# Kept on disk, not published.
+# Claude Code's project directory: worktrees, skills and internal notes.
+# Nothing in here is published.
+.claude/
+
+# Guards. These are the paths tooling would otherwise write internal notes
+# back to; the notes themselves now live under .claude/.
 docs/superpowers/
 .superpowers/
 Demo/DragDropDemoUITests/WRITING-UI-TESTS.md
+Tools/animation-trace/SKILL.md
