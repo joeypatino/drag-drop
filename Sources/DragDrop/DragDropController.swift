@@ -35,7 +35,7 @@ public final class DragDropController {
     public weak var dropTargetView: UIView?
 
     /// the view that our drag representations are translated across.
-    private var _dragInteractionView: DragInteractionView?
+    internal var _dragInteractionView: DragInteractionView?
 
     /// populated when the drag operation is above a drop target. otherwise nil
     private weak var currentDragDestination: DragDropController?
@@ -185,7 +185,7 @@ public final class DragDropController {
 
     // MARK: -
 
-    private func startDrag(_ drag: DragAction) {
+    internal func startDrag(_ drag: DragAction) {
         if isDragging || isDropping { return }
         guard let view = drag.view else { return }
 
@@ -216,13 +216,19 @@ public final class DragDropController {
                 self.dragDropDelegate?.dragDropController(self, willStartDrag: drag, animated: true)
             } completion: { _ in
 
+                // In case we have already dropped the view....
+                //
+                // A finger released inside the pickup animation runs `endDrag`
+                // first, and telling a drop target the drag entered it *after*
+                // the drop has begun opens a vacancy that nothing will close
+                // and leaves `currentDragDestination` set past the end of the
+                // drag. Both notices belong behind the one guard.
+                guard self.isDragging, !self.isDropping else { return }
+
                 self.notifyDropTarget(self.controllerForDrop(at: drag.currentLocation), of: drag)
 
-                // In case we have already dropped the view....
-                if self.isDragging && !self.isDropping {
-                    // if not, notify the delegate that the start of the drag has begun..
-                    self.dragDropDelegate?.dragDropController(self, didStartDrag: drag)
-                }
+                // Still dragging, so the start of the drag really has begun.
+                self.dragDropDelegate?.dragDropController(self, didStartDrag: drag)
             }
         }
     }
@@ -260,7 +266,7 @@ public final class DragDropController {
         }
     }
 
-    private func endDrag(_ drag: DragAction) {
+    internal func endDrag(_ drag: DragAction) {
         if !isDragging || isDropping { return }
         isDropping = true
 
@@ -297,7 +303,14 @@ public final class DragDropController {
 
             // The correct frame but adjusted to be in the current drag interaction views coordinates.
             // Used to animate the drag representation..
-            firstStepFrame = dropDestination.dropTargetView?.convert(firstStepFrame, to: nil) ?? firstStepFrame
+            //
+            // `to: nil` gave a window-space rect, which is only the same thing
+            // while the interaction view sits at the window's origin. It is
+            // assigned to `drag.view.frame`, whose superview is the interaction
+            // view, and the return-to-source branch below converts into that
+            // view too.
+            firstStepFrame = dropDestination.dropTargetView?
+                .convert(firstStepFrame, to: dragInteractionView) ?? firstStepFrame
 
             // After animating the drag representation view..
             animationCompletionBlock = { [weak self] _ in
@@ -424,11 +437,24 @@ public final class DragDropController {
                                    of drag: DragAction,
                                    handingTo receiver: DragDropController? = nil) {
 
+        // The location arrives in the window's coordinates, and each target is
+        // told it in its own. Every conversion therefore has to start from the
+        // window value: converting the value a *previous* target was handed
+        // puts the point out by that target's origin, which is exactly what a
+        // finger crossing straight from one target into another delivered. The
+        // action is left as it arrived, so nothing downstream inherits a
+        // location in some target's private space.
+        let windowLocation = drag.currentLocation
+        defer { drag.currentLocation = windowLocation }
+
+        func locate(_ controller: DragDropController?) {
+            guard let view = controller?.dropTargetView else { return }
+            drag.currentLocation = view.convert(windowLocation, from: nil)
+        }
+
         if let currentDragDestination, currentDragDestination === dropTarget {
 
-            if let dropTargetView = dropTarget?.dropTargetView {
-                drag.currentLocation = dropTargetView.convert(drag.currentLocation, from: nil)
-            }
+            locate(dropTarget)
 
             dragDropDelegate?.dragDropController(self, dragDidMove: drag, destinationController: currentDragDestination)
             currentDragDestination.dragDropDelegate?
@@ -437,9 +463,7 @@ public final class DragDropController {
 
             if let currentDragDestination {
 
-                if let dropTargetView = currentDragDestination.dropTargetView {
-                    drag.currentLocation = dropTargetView.convert(drag.currentLocation, from: nil)
-                }
+                locate(currentDragDestination)
                 dragDropDelegate?.dragDropController(self, dragDidExit: drag, destinationController: currentDragDestination)
 
                 if currentDragDestination !== receiver {
@@ -453,9 +477,7 @@ public final class DragDropController {
             if let dropTarget {
                 currentDragDestination = dropTarget
 
-                if let dropTargetView = dropTarget.dropTargetView {
-                    drag.currentLocation = dropTargetView.convert(drag.currentLocation, from: nil)
-                }
+                locate(dropTarget)
                 dragDropDelegate?.dragDropController(self, dragDidEnter: drag, destinationController: dropTarget)
                 dropTarget.dragDropDelegate?
                     .dragDropController(dropTarget, dragDidHover: drag, from: self)
