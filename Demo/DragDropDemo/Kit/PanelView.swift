@@ -27,9 +27,19 @@ final class PanelView: UIView {
     private let hue: DemoTheme.Hue
     private let hasHeader: Bool
 
-    /// Drawn with a heavier accent border, for a panel that exists to receive
-    /// things rather than to hold them.
-    var isReceivingZone = false { didSet { applyBorder() } }
+    /// Whether this panel receives drops. Derived by `DemoViewController` from
+    /// the targets a screen registers -- never set by hand.
+    ///
+    /// The flag this replaced was hand-set and wrong: Camera Roll is a drop
+    /// target and did not set it, so a well keyed off it would have drawn one
+    /// where the Shared Album screen needs two.
+    var isDropTarget = false {
+        didSet {
+            applyBorder()
+            applyWell()
+            contentView.accessibilityValue = isDropTarget ? "receiving" : "inert"
+        }
+    }
 
     var count: Int? {
         didSet {
@@ -164,6 +174,12 @@ final class PanelView: UIView {
         /// this shift". Saying nothing would be a lie; saying "yes" would be
         /// worse, so the panel visibly stands down.
         case refusing
+        /// A legal target that lost to one nested inside it. The well empties,
+        /// so exactly one lit well is on screen and it is the inner one.
+        ///
+        /// Deliberately not `refusing`: this drop is perfectly allowed here,
+        /// it is simply going somewhere closer to the finger.
+        case drained
     }
 
     private(set) var dropState: DropState = .idle
@@ -176,7 +192,7 @@ final class PanelView: UIView {
         dropState = state
 
         switch state {
-        case .idle:
+        case .idle, .drained:
             applyBorder()
             backgroundColor = DemoTheme.Surface.card
             layer.shadowOpacity = 0.06
@@ -186,7 +202,10 @@ final class PanelView: UIView {
         case .accepting:
             layer.borderColor = DemoTheme.color(hue).cgColor
             layer.borderWidth = DemoTheme.highlightWidth
-            backgroundColor = DemoTheme.tint(hue)
+            // The card keeps its own surface now. The accent goes on the well
+            // instead, so what lights up is the area the item will land in
+            // rather than the whole panel including its title.
+            backgroundColor = DemoTheme.Surface.card
             // Lifted, so "this one will take it" reads even peripherally,
             // with the finger and the dragged view covering the middle.
             layer.shadowOpacity = 0.18
@@ -200,17 +219,52 @@ final class PanelView: UIView {
             layer.shadowRadius = 8
             contentView.alpha = 0.45
         }
+
+        applyWell()
+    }
+
+    /// The landing area's recess. Drawn on `contentView`, so it marks where
+    /// items actually go rather than the whole card.
+    ///
+    /// No `clipsToBounds`: items are dragged out of here, and clipping would
+    /// cut the dragged view off at the edge of its own panel.
+    private func applyWell() {
+        contentView.layer.cornerRadius = DemoTheme.Radius.well
+        contentView.layer.cornerCurve = .continuous
+
+        guard isDropTarget else {
+            contentView.backgroundColor = .clear
+            contentView.layer.borderWidth = 0
+            return
+        }
+
+        switch dropState {
+        case .idle, .refusing:
+            contentView.backgroundColor = DemoTheme.Surface.well
+            contentView.layer.borderColor = DemoTheme.Surface.wellEdge.cgColor
+            contentView.layer.borderWidth = DemoTheme.hairlineWidth
+
+        case .accepting:
+            contentView.backgroundColor = DemoTheme.tint(hue)
+            contentView.layer.borderColor = DemoTheme.color(hue).cgColor
+            contentView.layer.borderWidth = 1.5
+
+        case .drained:
+            contentView.backgroundColor = .clear
+            contentView.layer.borderWidth = 0
+        }
     }
 
     private var borderWidthAtRest: CGFloat {
-        isReceivingZone ? 1.5 : DemoTheme.hairlineWidth
+        DemoTheme.hairlineWidth
     }
 
+    /// The heavier accent border a receiving panel used to carry at rest is
+    /// gone: the well says "this receives" now, and two signals saying the
+    /// same thing disagree at the edges.
     private func applyBorder() {
         layer.borderWidth = borderWidthAtRest
-        layer.borderColor = isReceivingZone
-            ? DemoTheme.color(hue).withAlphaComponent(0.4).cgColor
-            : DemoTheme.Surface.hairline.cgColor
+        layer.borderColor = DemoTheme.Surface.hairline.cgColor
     }
 
     /// Call after any drop or removal so the placeholder tracks reality.
