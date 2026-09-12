@@ -104,6 +104,27 @@ public enum DemoTheme {
         /// A card on a card.
         public static var raised: UIColor { .tertiarySystemGroupedBackground }
         public static var hairline: UIColor { .separator }
+
+        /// The landing area inside a card that receives drops. A recess rather
+        /// than another surface: nesting then reads as depth, which is what
+        /// tells a target inside a target apart from a target inside scenery.
+        public static var well: UIColor {
+            UIColor { traits in
+                traits.userInterfaceStyle == .dark
+                    ? UIColor(white: 1, alpha: 0.06)
+                    : UIColor(white: 0, alpha: 0.045)
+            }
+        }
+
+        /// The hairline around a well. Carries the recess where the fill alone
+        /// is too faint, notably over the Widget Composer wallpaper.
+        public static var wellEdge: UIColor {
+            UIColor { traits in
+                traits.userInterfaceStyle == .dark
+                    ? UIColor(white: 1, alpha: 0.10)
+                    : UIColor(white: 0, alpha: 0.07)
+            }
+        }
     }
 
     public enum Text {
@@ -120,6 +141,9 @@ public enum DemoTheme {
         public static let small: CGFloat = 8
         public static let medium: CGFloat = 12
         public static let large: CGFloat = 16
+        /// Slightly tighter than the card that holds it, so the recess looks
+        /// cut into the card rather than stuck on top of it.
+        public static let well: CGFloat = 10
     }
 
     public enum Space {

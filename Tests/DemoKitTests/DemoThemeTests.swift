@@ -82,4 +82,30 @@ final class DemoThemeTests: XCTestCase {
             XCTAssertGreaterThan(alpha, 0.0)
         }
     }
+
+    /// The well has to read as a recess in both appearances, so it is defined
+    /// against the card it sits in rather than as a fixed grey.
+    @MainActor
+    func testTheWellDiffersFromTheCardInBothAppearances() {
+        for style in [UIUserInterfaceStyle.light, .dark] {
+            let traits = UITraitCollection(userInterfaceStyle: style)
+            let card = DemoTheme.Surface.card.resolvedColor(with: traits)
+            let well = DemoTheme.Surface.well.resolvedColor(with: traits)
+            XCTAssertNotEqual(card, well, "well is invisible against the card in \(style)")
+        }
+    }
+
+    /// A well inside a well is how Shared Album shows a target inside a target,
+    /// so the recess cannot be so faint that the second one disappears.
+    @MainActor
+    func testTheWellIsVisibleButNotAFill() {
+        for style in [UIUserInterfaceStyle.light, .dark] {
+            let traits = UITraitCollection(userInterfaceStyle: style)
+            var alpha: CGFloat = 0
+            DemoTheme.Surface.well.resolvedColor(with: traits)
+                .getWhite(nil, alpha: &alpha)
+            XCTAssertGreaterThan(alpha, 0.02, "well is too faint to see in \(style)")
+            XCTAssertLessThan(alpha, 0.2, "well should be a recess, not a surface")
+        }
+    }
 }
