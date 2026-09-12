@@ -12,3 +12,6 @@ xcuserdata/
 
 # macOS
 .DS_Store
+
+# Byte-code from Tools/demo-media/regenerate.py
+__pycache__/
