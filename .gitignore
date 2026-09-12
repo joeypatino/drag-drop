@@ -16,6 +16,8 @@ xcuserdata/
 # Byte-code from Tools/demo-media/regenerate.py
 __pycache__/
 
-# Internal design docs and brainstorm scratch — kept locally, not published
+# Internal notes: design docs, brainstorm scratch, and the UI test guide.
+# Kept on disk, not published.
 docs/superpowers/
 .superpowers/
+Demo/DragDropDemoUITests/WRITING-UI-TESTS.md
