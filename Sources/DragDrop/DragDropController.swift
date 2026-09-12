@@ -284,7 +284,7 @@ public final class DragDropController {
             canDrop = true
         }
 
-        if let dropDestination, canDrop, let dataSource = dragDropDataSource, let view = drag.view {
+        if let dropDestination, canDrop, let view = drag.view {
             // In this case, we are moving the view to a different superview,
             // and to a different DragDropController.. Take the nesessary steps....
             receiver = dropDestination
@@ -524,7 +524,14 @@ public final class DragDropController {
         if let _dragInteractionView { return _dragInteractionView }
 
         let top = Self.topMostViewController
-        let interactionView = DragInteractionView(frame: top?.view.frame ?? .zero)
+        // `bounds`, not `frame`: this becomes a subview of `top.view`, so a
+        // frame -- which is stated in that view's *superview's* coordinates --
+        // offsets the interaction view by the host's own origin, and every
+        // drag position and drop frame inherits the error. The mask keeps it
+        // covering the host across a rotation or a resize, since the view is
+        // built once and cached.
+        let interactionView = DragInteractionView(frame: top?.view.bounds ?? .zero)
+        interactionView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         interactionView.hitTestHandler = { [weak interactionView] _, _ in
 
             var hitView: UIView?

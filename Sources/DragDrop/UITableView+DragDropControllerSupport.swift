@@ -87,7 +87,13 @@ internal extension UITableView {
         if let indexPath = indexPathForRow(at: location) { return indexPath }
         if location.y < 0 { return IndexPath(row: 0, section: 0) }
 
-        let section = max(numberOfSections - 1, 0)
+        // A table whose datasource currently reports no sections has no
+        // section 0 to count rows in; asking anyway raises. An empty table
+        // appends at the top, which is what `rectForRow(arrivingAt:)` -- which
+        // guards the same case just below -- measures out.
+        guard numberOfSections > 0 else { return IndexPath(row: 0, section: 0) }
+
+        let section = numberOfSections - 1
         return IndexPath(row: numberOfRows(inSection: section), section: section)
     }
 
