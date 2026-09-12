@@ -92,19 +92,19 @@ SETTLE_SECONDS = 2.5
 # Each demo, and the existing UI test that drives a representative drag on it.
 # A new demo needs a line here and a test that actually drags something.
 DEMOS = {
-    "FourByFourViewController":
+    "SeparateTargetsViewController":
         "DragDropDemoUITests/FreeFormDemoTests/testMovingSomeoneBetweenShiftsUpdatesBothPanels",
-    "EmbeddedViewController":
+    "TargetInsideTargetViewController":
         "DragDropDemoUITests/FreeFormDemoTests/testAPhotoMovesIntoTheNestedAlbum",
-    "DoubleEmbeddedViewController":
+    "TargetInsideNonTargetViewController":
         "DragDropDemoUITests/FreeFormDemoTests/testAWidgetDropsIntoTheStackInsideTheDecorativeFrame",
-    "EmbeddedDropTargetViewController":
+    "TargetOnAnItemViewController":
         "DragDropDemoUITests/FreeFormDemoTests/testDroppingAFileOnTheFolderFilesIt",
-    "NormalTableViewController":
+    "TableRowMoveViewController":
         "DragDropDemoUITests/ListDemoTests/testDraggingATrackOutOfTheQueueMovesItToSaved",
-    "NormalCollectionViewController":
+    "CollectionRearrangeViewController":
         "DragDropDemoUITests/ListDemoTests/testReorderingAMoodboardCardLeavesNoHoleAndNoOverlap",
-    "DoubleCollectionViewController":
+    "CollectionSwapViewController":
         "DragDropDemoUITests/ListDemoTests/testAPlayerMovesFromTheBenchToTheStarters",
 }
 
@@ -167,72 +167,117 @@ def duration(video):
     return float(out) if out else 0.0
 
 
-def app_on_screen(video):
-    """
-    (first, last) seconds the app is up, found by saturation.
+# Structure of every recording, at 10 samples a second. Measured rather than
+# assumed; a Shift Rota capture reads:
+#
+#     0.0 - 4.6   springboard          motion 0      saturation 81.7
+#     4.7 - 4.8   launch               motion 190    saturation 33 -> 5
+#     4.9 - 5.2   blank launch screen  motion 0      saturation 0.0
+#     5.3 - 5.8   index and push       motion 16-49  saturation rising
+#     5.9 - 10.1  demo screen settled  motion 0      saturation 8.6
+#     10.2 ...    the drag             motion 2-10   saturation 8.6
+#     14.6        teardown             motion 228    saturation 81.9
+#
+# The blank launch screen is what an earlier version of this locked on to: it
+# is the first thing that is not the springboard, and it is not saturated, so
+# a "when does the app appear" test lands there and the clip opens on white
+# followed by the navigation animation. What is wanted is the settled demo
+# screen, which is the first *sustained* still stretch that has some colour in
+# it. The drag is where that stretch ends.
 
-    Scene detection cannot answer this: the launch transition scores about the
-    same as a drag. The demo screens are near-white and the springboard
-    wallpaper is not, which separates them cleanly.
-    """
+SAMPLE_FPS = 10
+# The springboard's own saturation, measured from the first sample rather than
+# fixed: recording always starts there, and a wallpaper change would otherwise
+# silently break this. A screen counts as the springboard above three quarters
+# of it. Moodboard is the reason it is not a constant -- its grid of colour
+# swatches reads 43.5, which a fixed 40 took for the home screen, so the clip
+# ended on the frame it started.
+SPRINGBOARD_SHARE = 0.75
+STILL_MOTION = 1.0              # settled screens read 0.0, the drag 2 and up
+MIN_SETTLE_SECONDS = 0.8        # the blank launch screen is still for 0.3
+MIN_CONTENT_SATURATION = 2.0    # blank launch screen 0.0, demo screens 8.6+
+LEAD_IN_SECONDS = 0.6           # resting state shown before the drag starts
+TAIL_SECONDS = 0.6              # and after the last thing moves
+
+
+def timeline(video):
+    """Per sample: (seconds, motion since the last sample, mean saturation)."""
     with tempfile.TemporaryDirectory() as tmp:
         subprocess.run(["ffmpeg", "-v", "error", "-i", video,
-                        "-vf", "fps=5,scale=48:-1", "-y",
+                        "-vf", f"fps={SAMPLE_FPS},scale=64:-1", "-y",
                         os.path.join(tmp, "s_%05d.png")], check=True)
-        names = sorted(n for n in os.listdir(tmp) if n.endswith(".png"))
-        sats = [saturation(Image.open(os.path.join(tmp, name)).convert("RGB"))
-                for name in names]
+        frames = [Image.open(os.path.join(tmp, n)).convert("RGB")
+                  for n in sorted(os.listdir(tmp)) if n.endswith(".png")]
 
-    if not sats:
-        return None
-    low, high = min(sats), max(sats)
-    if high - low < 12:
-        return None
-
-    # Split at the midpoint of the observed range, not a fixed number, so a
-    # restyle of the demo palette does not silently break this.
-    cut = low + (high - low) * 0.45
-
-    runs, start = [], None
-    for index, value in enumerate(sats):
-        if value <= cut and start is None:
-            start = index
-        elif value > cut and start is not None:
-            runs.append((start, index - 1))
-            start = None
-    if start is not None:
-        runs.append((start, len(sats) - 1))
-    if not runs:
-        return None
-
-    first, last = max(runs, key=lambda r: r[1] - r[0])
-    return first / 5.0, last / 5.0
+    out, previous = [], None
+    for index, frame in enumerate(frames):
+        motion = 0.0
+        if previous is not None:
+            raw = ImageChops.difference(previous, frame).tobytes()
+            motion = sum(raw) / (len(raw) / 3)
+        out.append((index / SAMPLE_FPS, motion, saturation(frame)))
+        previous = frame
+    return out
 
 
 def window(video):
-    """The span to keep: app on screen, springboard trimmed off both ends."""
-    total = duration(video)
-    out = subprocess.run(
-        ["ffmpeg", "-v", "error", "-i", video,
-         "-vf", "select='gt(scene,0.004)',metadata=print:file=-",
-         "-an", "-f", "null", "-"],
-        capture_output=True, text=True).stdout
-    events = [(float(t), float(s)) for t, s in re.findall(
-        r"pts_time:([0-9.]+)\s*\nlavfi\.scene_score=([0-9.]+)", out)]
+    """
+    The span to keep: a beat of the settled screen, the drag, and a beat after.
 
-    appearing = app_on_screen(video)
-    floor = (appearing[0] + 0.3) if appearing else 0.0
+    Anchored to the drag rather than to the app appearing, because the useful
+    part of a 15 second recording is the two seconds around the gesture.
+    """
+    samples = timeline(video)
+    if len(samples) < 10:
+        return None
 
-    # `record.sh` sleeps 2s after the test, so that is the fallback tail.
-    limit = max(total - 2.0, floor)
-    for when, score in events:
-        if score > 0.45 and when > floor + 1.0:
-            limit = max(when - 0.4, floor)
+    total = samples[-1][0]
+    springboard = samples[0][2] * SPRINGBOARD_SHARE
+
+    # Everything before the app replaces the springboard is of no interest.
+    app_from = 0
+    for index, (_, _, sat) in enumerate(samples):
+        if sat < springboard:
+            app_from = index
             break
 
-    if limit - floor < 1.0:
+    # The first sustained still stretch with colour in it is the demo screen
+    # after its navigation animation has finished.
+    settle_start = settle_end = None
+    run = None
+    for index in range(app_from, len(samples)):
+        _, motion, sat = samples[index]
+        if motion < STILL_MOTION and sat > MIN_CONTENT_SATURATION:
+            if run is None:
+                run = index
+        else:
+            if run is not None and (index - run) / SAMPLE_FPS >= MIN_SETTLE_SECONDS:
+                settle_start, settle_end = run, index
+                break
+            run = None
+    if settle_start is None:
         return None
-    return floor, min(limit - floor, GIF_MAX_SECONDS)
+
+    drag_from = samples[settle_end][0]
+    start = max(samples[settle_start][0], drag_from - LEAD_IN_SECONDS)
+
+    # The clip ends after the last thing that moves, before the app is torn
+    # down. Teardown is the saturation going back to the springboard's.
+    end = total
+    for index in range(settle_end, len(samples)):
+        if samples[index][2] >= springboard:
+            end = samples[index][0]
+            break
+
+    last_motion = start
+    for when, motion, _ in samples:
+        if start < when < end and motion >= STILL_MOTION:
+            last_motion = when
+    end = min(end - 0.2, last_motion + TAIL_SECONDS)
+
+    if end - start < 1.0:
+        return None
+    return start, min(end - start, GIF_MAX_SECONDS)
 
 
 def to_gif(video, start, length, gif, work):
