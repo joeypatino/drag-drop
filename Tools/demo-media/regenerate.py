@@ -21,7 +21,7 @@ Options:
     --derived-data PATH    build location (default: a temp dir alongside)
     --no-commit            leave the new media uncommitted
 
-Requires a booted simulator, Xcode command line tools, ffmpeg/ffprobe, Pillow.
+Requires a booted simulator, Xcode command line tools, ffmpeg, Pillow.
 
 ---------------------------------------------------------------------------
 Why the trimming is the way it is
@@ -158,14 +158,6 @@ def record(device, segue, test, derived_data, work, reuse):
 
 # --------------------------------------------------------------------------
 # trimming
-
-def duration(video):
-    out = subprocess.run(
-        ["ffprobe", "-v", "error", "-show_entries", "format=duration",
-         "-of", "default=nw=1:nk=1", video],
-        capture_output=True, text=True).stdout.strip()
-    return float(out) if out else 0.0
-
 
 # Structure of every recording, at 10 samples a second. Measured rather than
 # assumed; a Shift Rota capture reads:
