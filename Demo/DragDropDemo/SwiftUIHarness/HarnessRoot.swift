@@ -33,8 +33,18 @@ struct HarnessRoot: View {
             PanelBoard(panels: [PanelSpec(id: "a", chips: 3), PanelSpec(id: "b", chips: 0)],
                        axis: .horizontal,
                        log: log)
+        case .siblings:
+            siblingBoards
         default:
             Text("Not built yet")
+        }
+    }
+
+    /// Two representables, each with its own coordinator.
+    var siblingBoards: some View {
+        HStack(spacing: 12) {
+            PanelBoard(panels: [PanelSpec(id: "a", chips: 3)], axis: .vertical, log: log)
+            PanelBoard(panels: [PanelSpec(id: "b", chips: 0)], axis: .vertical, log: log)
         }
     }
 }

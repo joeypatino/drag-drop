@@ -24,4 +24,26 @@ final class SwiftUIHostingTests: XCTestCase {
         XCTAssertEqual(probe(in: app), "ok")
         attachScreenshot(app, "baseline-after-drop")
     }
+
+    @MainActor
+    func testAChipCrossesBetweenTwoRepresentablesAndBack() {
+        let app = launchHarness("siblings")
+        let a = container("panel-a", in: app)
+        let b = container("panel-b", in: app)
+        let counts = app.staticTexts["counts"]
+        XCTAssertTrue(a.waitForExistence(timeout: 5))
+        waitForLabel(counts, "a:3 b:0")
+
+        let chips = waitFor("chip-", inside: a, of: app, toCount: 3)
+        drag(app.otherElements[chips[0]], onto: b)
+        waitFor("chip-", inside: b, of: app, toCount: 1)
+        waitForLabel(counts, "a:2 b:1")
+
+        drag(app.otherElements[chips[0]], onto: a)
+        waitFor("chip-", inside: a, of: app, toCount: 3)
+        waitForLabel(counts, "a:3 b:0")
+
+        XCTAssertEqual(probe(in: app), "ok")
+        attachScreenshot(app, "siblings-after-round-trip")
+    }
 }
