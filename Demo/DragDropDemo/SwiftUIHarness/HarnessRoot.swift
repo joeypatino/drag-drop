@@ -65,8 +65,10 @@ struct HarnessRoot: View {
                 HarnessCollection(id: "starters", model: lineup, log: log)
                 HarnessCollection(id: "bench", model: lineup, log: log)
             }
-        default:
-            Text("Not built yet")
+        case .pushed:
+            PushedHost(log: log)
+        case .tabs:
+            TabsHost(log: log)
         }
     }
 
@@ -145,6 +147,53 @@ struct DetentSheetHost: View {
                 .presentationDetents([.medium])
                 .presentationBackgroundInteraction(.enabled)
                 .interactiveDismissDisabled()
+        }
+    }
+}
+
+/// C8: a target on the root of a navigation stack, under a pushed screen.
+struct PushedHost: View {
+    let log: HarnessLog
+
+    var body: some View {
+        NavigationStack {
+            VStack {
+                NavigationLink("Open") {
+                    VStack {
+                        PanelBoard(panels: [PanelSpec(id: "a", chips: 3)], axis: .vertical, log: log)
+                            .frame(height: 200)
+                        Spacer()
+                    }
+                }
+                Spacer()
+                PanelBoard(panels: [PanelSpec(id: "home", chips: 0)], axis: .vertical, log: log)
+                    .frame(height: 300)
+            }
+        }
+    }
+}
+
+/// C8: a target on a tab that has been shown and then left.
+struct TabsHost: View {
+    let log: HarnessLog
+    @State private var selection = 0
+
+    var body: some View {
+        TabView(selection: $selection) {
+            Tab("First", systemImage: "1.circle", value: 0) {
+                VStack {
+                    Spacer()
+                    PanelBoard(panels: [PanelSpec(id: "hidden", chips: 0)], axis: .vertical, log: log)
+                        .frame(height: 300)
+                }
+            }
+            Tab("Second", systemImage: "2.circle", value: 1) {
+                VStack {
+                    PanelBoard(panels: [PanelSpec(id: "a", chips: 3)], axis: .vertical, log: log)
+                        .frame(height: 200)
+                    Spacer()
+                }
+            }
         }
     }
 }
