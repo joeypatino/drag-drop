@@ -40,6 +40,20 @@ struct HarnessRoot: View {
             PageSheetHost(log: log)
         case .detent:
             DetentSheetHost(log: log)
+        case .scroll:
+            ScrollView {
+                VStack(spacing: 16) {
+                    Text("Top").accessibilityIdentifier("scroll-top")
+                    boardForScrolling
+                    Color.clear.frame(height: 1200)
+                }
+            }
+        case .list:
+            List {
+                Text("Top").accessibilityIdentifier("scroll-top")
+                boardForScrolling
+                ForEach(0..<30, id: \.self) { Text("Row \($0)") }
+            }
         default:
             Text("Not built yet")
         }
@@ -51,6 +65,15 @@ struct HarnessRoot: View {
             PanelBoard(panels: [PanelSpec(id: "a", chips: 3)], axis: .vertical, log: log)
             PanelBoard(panels: [PanelSpec(id: "b", chips: 0)], axis: .vertical, log: log)
         }
+    }
+
+    /// C5: the panels inside a `ScrollView` or `List`, where a swipe starting
+    /// on a chip should scroll rather than drag.
+    private var boardForScrolling: some View {
+        PanelBoard(panels: [PanelSpec(id: "a", chips: 3), PanelSpec(id: "b", chips: 0)],
+                   axis: .vertical,
+                   log: log)
+            .frame(height: 400)
     }
 }
 
