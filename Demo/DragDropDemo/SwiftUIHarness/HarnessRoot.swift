@@ -19,8 +19,9 @@ struct HarnessRoot: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            Text(log.probe).accessibilityIdentifier("probe")
-            Text(log.summary).accessibilityIdentifier("counts")
+            if configuration != .sheet {
+                HarnessStatus(log: log)
+            }
             content
         }
         .padding(.horizontal, 16)
@@ -35,6 +36,10 @@ struct HarnessRoot: View {
                        log: log)
         case .siblings:
             siblingBoards
+        case .sheet:
+            PageSheetHost(log: log)
+        case .detent:
+            DetentSheetHost(log: log)
         default:
             Text("Not built yet")
         }
@@ -45,6 +50,67 @@ struct HarnessRoot: View {
         HStack(spacing: 12) {
             PanelBoard(panels: [PanelSpec(id: "a", chips: 3)], axis: .vertical, log: log)
             PanelBoard(panels: [PanelSpec(id: "b", chips: 0)], axis: .vertical, log: log)
+        }
+    }
+}
+
+/// The two texts a UI test reads. A page sheet is modal, so the texts under it
+/// are not reachable; that configuration shows its own copy inside the sheet
+/// and the root hides its copy, keeping each identifier unique on screen.
+struct HarnessStatus: View {
+    let log: HarnessLog
+
+    var body: some View {
+        VStack(spacing: 4) {
+            Text(log.probe).accessibilityIdentifier("probe")
+            Text(log.summary).accessibilityIdentifier("counts")
+        }
+    }
+}
+
+/// C3: the panels inside a page sheet, whose hosting view starts well below
+/// the window's top edge.
+struct PageSheetHost: View {
+    let log: HarnessLog
+    @State private var isPresented = true
+
+    var body: some View {
+        Color.clear
+            .sheet(isPresented: $isPresented) {
+                VStack(spacing: 8) {
+                    HarnessStatus(log: log)
+                    PanelBoard(panels: [PanelSpec(id: "a", chips: 3), PanelSpec(id: "b", chips: 0)],
+                               axis: .vertical,
+                               log: log)
+                        .frame(height: 232)
+                    Spacer()
+                }
+                .padding(16)
+                .interactiveDismissDisabled()
+            }
+    }
+}
+
+/// C4: the panels on the root screen, with a medium-detent sheet up that
+/// leaves the screen underneath usable. The drag happens *under* a presented
+/// controller.
+struct DetentSheetHost: View {
+    let log: HarnessLog
+    @State private var isPresented = true
+
+    var body: some View {
+        VStack {
+            PanelBoard(panels: [PanelSpec(id: "a", chips: 3), PanelSpec(id: "b", chips: 0)],
+                       axis: .horizontal,
+                       log: log)
+                .frame(height: 160)
+            Spacer()
+        }
+        .sheet(isPresented: $isPresented) {
+            Text("Inspector")
+                .presentationDetents([.medium])
+                .presentationBackgroundInteraction(.enabled)
+                .interactiveDismissDisabled()
         }
     }
 }

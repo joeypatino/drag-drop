@@ -46,4 +46,36 @@ final class SwiftUIHostingTests: XCTestCase {
         XCTAssertEqual(probe(in: app), "ok")
         attachScreenshot(app, "siblings-after-round-trip")
     }
+
+    /// C3. Predicted to fail today: defect F1.
+    @MainActor
+    func testAChipMovesBetweenPanelsInsideAPageSheet() {
+        let app = launchHarness("sheet")
+        let a = container("panel-a", in: app)
+        let b = container("panel-b", in: app)
+        XCTAssertTrue(a.waitForExistence(timeout: 5))
+
+        let chips = waitFor("chip-", inside: a, of: app, toCount: 3)
+        drag(app.otherElements[chips[0]], onto: b, at: CGVector(dx: 0.5, dy: 0.9))
+
+        attachScreenshot(app, "sheet-after-drop")
+        waitFor("chip-", inside: b, of: app, toCount: 1)
+        XCTAssertEqual(probe(in: app), "ok")
+    }
+
+    /// C4. Predicted to fail today: defect F2.
+    @MainActor
+    func testAChipMovesBetweenPanelsUnderADetentSheet() {
+        let app = launchHarness("detent")
+        XCTAssertTrue(app.staticTexts["Inspector"].waitForExistence(timeout: 5))
+        let a = container("panel-a", in: app)
+        let b = container("panel-b", in: app)
+
+        let chips = waitFor("chip-", inside: a, of: app, toCount: 3)
+        drag(app.otherElements[chips[0]], onto: b)
+
+        attachScreenshot(app, "detent-after-drop")
+        waitFor("chip-", inside: b, of: app, toCount: 1)
+        XCTAssertEqual(probe(in: app), "ok")
+    }
 }
