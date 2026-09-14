@@ -49,6 +49,10 @@ public final class DragDropController {
     /// the source frame of the view being dragged.
     private var sourceFrame: CGRect = .zero
 
+    /// The window the drag is happening in, captured before the view leaves
+    /// its superview. The interaction view is hosted here.
+    private weak var dragWindow: UIWindow?
+
     public init() {
         DragDropControllerRegistry.shared.add(self)
     }
@@ -202,6 +206,7 @@ public final class DragDropController {
         let canDrag = dragDropDataSource?.dragDropController(self, shouldDrag: view) ?? true
 
         if canDrag {
+            dragWindow = view.window
             isDragging = true
             isDropping = false
 
@@ -241,10 +246,13 @@ public final class DragDropController {
         }
     }
 
-    private func dragMoved(_ drag: DragAction) {
+    internal func dragMoved(_ drag: DragAction) {
         if !isDragging || isDropping { return }
 
-        let location = drag.currentLocation
+        // The location is the window's; the view is positioned in the
+        // interaction view. They agree only while the interaction view sits at
+        // the window's origin, so convert rather than rely on it.
+        let location = dragInteractionView.convert(drag.currentLocation, from: nil)
 
         // look for a draggable view within our drag interaction view. If one is not found, then something is wrong..
         if let subview = dragInteractionView.hitTest(location, with: nil) {
@@ -385,6 +393,7 @@ public final class DragDropController {
             // removing our drag interaction view since it's purpose is now fulfilled..
             self._dragInteractionView?.removeFromSuperview()
             self._dragInteractionView = nil
+            self.dragWindow = nil
         }
     }
 
@@ -540,8 +549,10 @@ public final class DragDropController {
         }
     }
 
+    /// `point` is in window coordinates, and candidates are measured in the
+    /// interaction view's, so the point is converted into that space first.
     private func controllerForDrop(at point: CGPoint) -> DragDropController? {
-        controllerForDrop(at: point,
+        controllerForDrop(at: dragInteractionView.convert(point, from: nil),
                           in: dragInteractionView,
                           among: DragDropControllerRegistry.shared.allControllers)
     }
@@ -575,14 +586,15 @@ public final class DragDropController {
 
         if let _dragInteractionView { return _dragInteractionView }
 
-        let top = Self.topMostViewController
-        // `bounds`, not `frame`: this becomes a subview of `top.view`, so a
-        // frame -- which is stated in that view's *superview's* coordinates --
-        // offsets the interaction view by the host's own origin, and every
-        // drag position and drop frame inherits the error. The mask keeps it
-        // covering the host across a rotation or a resize, since the view is
-        // built once and cached.
-        let interactionView = DragInteractionView(frame: top?.view.bounds ?? .zero)
+        // The window the drag is in, not the top view controller's view. A
+        // presented sheet, or a SwiftUI hosting view, sits below the window's
+        // top edge, so its coordinates disagree with the window-space
+        // locations a drag reports. A sheet that leaves the screen underneath
+        // usable is also the wrong host for a drag started under it. The
+        // window's own origin is the origin every location is stated from, and
+        // the mask keeps it covering the window across a rotation or resize.
+        let window = dragWindow
+        let interactionView = DragInteractionView(frame: window?.bounds ?? .zero)
         interactionView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         interactionView.hitTestHandler = { [weak interactionView] _, _ in
 
@@ -594,25 +606,9 @@ public final class DragDropController {
             return hitView
         }
 
-        top?.view.addSubview(interactionView)
+        window?.addSubview(interactionView)
         _dragInteractionView = interactionView
 
         return interactionView
-    }
-
-    /// The Objective-C used [UIApplication sharedApplication].keyWindow, which
-    /// is deprecated and returns nil in a scene-based application.
-    static var topMostViewController: UIViewController? {
-
-        let windowScenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
-        let scene = windowScenes.first { $0.activationState == .foregroundActive } ?? windowScenes.first
-
-        var topViewController = scene?.keyWindow?.rootViewController
-
-        while let presented = topViewController?.presentedViewController {
-            topViewController = presented
-        }
-
-        return topViewController
     }
 }
