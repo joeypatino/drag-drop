@@ -16,6 +16,12 @@ public final class DragDropGesture: UIGestureRecognizer {
 
     private var touchBeginTimestamp: TimeInterval = 0
 
+    /// Works `gestureBeginDelay` out from where the view is when a touch
+    /// lands, rather than when dragging was enabled. A SwiftUI representable
+    /// enables dragging before its view has a superview, so an enable-time
+    /// answer never sees the scroll view it later sits in.
+    var beginDelayProvider: (@MainActor (UIView) -> TimeInterval)?
+
     public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) {
         super.touchesBegan(touches, with: event)
 
@@ -29,6 +35,10 @@ public final class DragDropGesture: UIGestureRecognizer {
         // finishes, and the interaction view is left over the whole screen
         // swallowing every touch in the app. `reset()` re-arms us instead.
         guard state == .possible, numberOfTouches <= 1 else { return }
+
+        if let view, let beginDelayProvider {
+            gestureBeginDelay = beginDelayProvider(view)
+        }
 
         touchBeginTimestamp = event.timestamp
         touchBeginOffset = location(in: view)

@@ -65,13 +65,14 @@ public final class DragDropController {
         // The DragDropGesture is responsible for translating the view across the
         // screen in response to the users touch
         let gesture = DragDropGesture(target: self, action: #selector(handleDragDropGesture(_:)))
-        view.addGestureRecognizer(gesture)
 
-        // Add a delay on the gesture begin when embedded in a tableview, or tableview cell.
-        // This prevents the table from scrolling before the drag has begun..
-        if scrollingSuperView(of: view) != nil {
-            gesture.gestureBeginDelay = Self.dragPickupBeginDelay
-        }
+        // Inside a scroll view the gesture waits before it begins, so the
+        // scroll view wins a swipe. Decided now for a view already in place,
+        // and again on every touch for one that is not yet.
+        gesture.gestureBeginDelay = Self.pickupDelay(for: view)
+        gesture.beginDelayProvider = { Self.pickupDelay(for: $0) }
+
+        view.addGestureRecognizer(gesture)
     }
 
     /// The drop target's subviews that this controller has enabled dragging
@@ -567,7 +568,7 @@ public final class DragDropController {
         return depth
     }
 
-    private func scrollingSuperView(of view: UIView) -> UIView? {
+    private static func scrollingSuperView(of view: UIView) -> UIView? {
 
         if view is UITableView || view is UICollectionView
             || view is UITableViewCell || view is UICollectionViewCell
@@ -577,7 +578,11 @@ public final class DragDropController {
 
         guard let superview = view.superview else { return nil }
 
-        return scrollingSuperView(of: superview)
+        return Self.scrollingSuperView(of: superview)
+    }
+
+    private static func pickupDelay(for view: UIView) -> TimeInterval {
+        scrollingSuperView(of: view) != nil ? dragPickupBeginDelay : 0
     }
 
     // MARK: -
