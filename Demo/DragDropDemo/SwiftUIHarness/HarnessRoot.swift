@@ -16,6 +16,7 @@ enum HarnessConfiguration: String, CaseIterable {
 struct HarnessRoot: View {
     let configuration: HarnessConfiguration
     @State private var log = HarnessLog()
+    @State private var lineup = LineupModel()
 
     var body: some View {
         VStack(spacing: 8) {
@@ -53,6 +54,16 @@ struct HarnessRoot: View {
                 Text("Top").accessibilityIdentifier("scroll-top")
                 boardForScrolling
                 ForEach(0..<30, id: \.self) { Text("Row \($0)") }
+            }
+        case .table:
+            HStack(spacing: 12) {
+                HarnessTable(log: log)
+                PanelBoard(panels: [PanelSpec(id: "saved", chips: 0)], axis: .vertical, log: log)
+            }
+        case .collection:
+            HStack(spacing: 12) {
+                HarnessCollection(id: "starters", model: lineup, log: log)
+                HarnessCollection(id: "bench", model: lineup, log: log)
             }
         default:
             Text("Not built yet")
