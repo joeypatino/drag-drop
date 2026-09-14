@@ -2,6 +2,44 @@ import SwiftUI
 
 /// The SwiftUI arrangements the integration tests drive. Reached only with
 /// `-swiftui <rawValue>`; never listed in the demo index.
+///
+/// Once a drag begins, the library works entirely between UIKit views.
+/// SwiftUI can only change the boundary where a `UIViewRepresentable` meets
+/// it, so these configurations are chosen by boundary axis, not by demo, and
+/// each of the library's three entry points -- the controller, the table
+/// view extension, and the collection view extension -- gets at least one.
+///
+/// The axes:
+/// - A: interaction host (hosting root, sheets).
+/// - B: offset host (sheets and detents below the window's top edge).
+/// - C: ownership and re-render (coordinator-owned controllers, SwiftUI
+///   state changes mid-drag).
+/// - D: gesture arbitration (`ScrollView`, `List`).
+/// - E: visibility (screens kept alive by `NavigationStack` and `TabView`).
+///
+/// Which case covers which axis:
+/// - `baseline`: A
+/// - `siblings`: A, C
+/// - `sheet`: A, B
+/// - `detent`: A, B
+/// - `scroll` and `list`: D
+/// - `table`: A, C, table view extension
+/// - `collection`: A, C, collection view extension
+/// - `pushed` and `tabs`: E
+///
+/// Deliberately not tested, and why:
+/// - Nested, inset and item-as-target drop targets: pure UIKit hit testing,
+///   and every configuration already nests targets inside SwiftUI.
+/// - Reordering within one table or collection view: entirely inside one
+///   UIKit view, covered by the UIKit demo suite.
+/// - Datasource refusal: UIKit-only logic.
+/// - `scaleEffect` and `rotationEffect`: unsupported, documented in
+///   docs/swiftui.md.
+/// - Rotation and multiple windows: belong to separate rotation work.
+///
+/// This holds only while SwiftUI does not rebuild the UIKit subtree under the
+/// library: the coordinator owns the controllers, and `updateUIView` never
+/// rebuilds draggable views.
 enum HarnessConfiguration: String, CaseIterable {
     case baseline, siblings, sheet, detent, scroll, list, table, collection, pushed, tabs
 

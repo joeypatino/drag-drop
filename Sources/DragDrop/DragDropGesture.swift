@@ -12,6 +12,10 @@ import UIKit.UIGestureRecognizerSubclass
 @MainActor
 public final class DragDropGesture: UIGestureRecognizer {
     public private(set) var touchBeginOffset: CGPoint = .zero
+
+    /// For a gesture `DragDropController` creates, this is recalculated when
+    /// each touch lands, from whether the view is then inside a scroll view,
+    /// so a value set directly here does not persist.
     public var gestureBeginDelay: TimeInterval = 0
 
     private var touchBeginTimestamp: TimeInterval = 0

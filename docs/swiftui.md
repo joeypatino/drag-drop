@@ -48,12 +48,18 @@ no wiring between them.
 ## What is tested
 
 Drags work at a hosting root, between sibling representables, inside a sheet,
-under a sheet that leaves the screen usable, inside `ScrollView` and `List`, with
-wrapped table and collection views, and past screens kept alive behind a push
-or on another tab. Inside a scroll container a view must be held briefly before
+under a sheet that leaves the screen usable, inside `ScrollView` and `List`,
+and with wrapped table and collection views. A drop never lands in a target
+on a screen kept alive behind a `NavigationStack` push or on an unselected
+`TabView` tab. Inside a scroll container a view must be held briefly before
 it lifts, so a swipe still scrolls.
 
 ## Not supported
 
 `scaleEffect` and `rotationEffect` on a representable: a picked-up view leaves
 its transformed ancestor and changes size for the length of the drag.
+
+If SwiftUI tears down and rebuilds the representable -- a `List` row scrolled
+away and back, for example -- `makeUIView` runs again. Views and controllers
+held only in the UIKit subtree are then created fresh, so keep the model in
+your own state.
