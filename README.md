@@ -57,6 +57,7 @@ over another is handed across with no wiring between them.
 | [Dragging views](docs/dragging-views.md) | The core API: controllers, the datasource and delegate, closing the gap a dragged view leaves, and the scroll view pickup delay |
 | [Collection views](docs/collection-views.md) | Reordering, moving cells between two collection views, and the drop highlight |
 | [Table views](docs/table-views.md) | Rows dragging out and dropping in, the row-move datasource, and what it does not support |
+| [SwiftUI](docs/swiftui.md) | Wrapping drop targets in representables, who owns the controllers, and what is tested |
 | [The demo screens](docs/demos.md) | All seven, with what each one receives and what it proves |
 | [Testing](docs/testing.md) | Schemes, and the one that silently skips a bundle |
 

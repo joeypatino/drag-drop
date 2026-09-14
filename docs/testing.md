@@ -27,3 +27,8 @@ test per demo, records the simulator, and trims each clip down to the drag;
 run it after anything that changes how a demo looks. Renaming or adding a demo
 means updating its `DEMOS` map in the same commit, because that map is what
 pairs each demo with the test that drags something on it.
+
+The `SwiftUI*Tests` classes launch the demo app with `-swiftui <configuration>`,
+which replaces the storyboard root with a hosting controller. The harness is
+not in the demo index. Its configurations, and the argument for testing those
+and not every demo, are listed in `HarnessConfiguration`.
