@@ -145,6 +145,7 @@ struct PanelBoard: UIViewRepresentable {
 
 /// Lays the panels out along one axis and places each panel's chips once,
 /// on the first pass that has a size. After that the library owns the chips.
+@MainActor
 final class BoardView: UIView {
     private let axis: Axis
     private var panels: [UIView] = []
